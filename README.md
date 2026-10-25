@@ -17,6 +17,17 @@ Each label names the level(s) that were swept, for example `PDH+4h SMA21+Round`.
 2. Use an ES1! or MES1! **5-minute chart with extended hours on**. Premarket high/low and the ETH profile need overnight bars.
 3. For alerts, go to **Alerts → Create** and set Condition to *Journal Triggers → Any alert() function call*. You can also pick one of the named conditions instead.
 
+### thinkorswim version
+`thinkorswim/JournalTriggers.ts` has the same rules written in thinkScript.
+1. In ToS, open **Charts → Studies → Edit studies → Create**. Name the study `JournalTriggers`, paste the file contents, then click **OK** and **Apply**.
+2. Use a /ES or /MES 5-minute chart with **Show extended-hours trading session** turned on.
+3. Arrows and bubbles only appear after the signal candle closes. The `Alert()` calls ring inside ToS on the next bar's open.
+
+ToS limitations:
+- ToS scans and server-side study alerts don't allow secondary timeframes, and this study uses 1h/4h SMAs. Its alerts therefore only fire while the chart is open in ToS desktop, with no phone push.
+- On past days, ToS draws each day's *final* POC/VA on every bar. Historical arrows are optimistic as a result. Live signals use the profile as it develops.
+- The POC/VAH/VAL/VWAP lines are hidden by default, because you already chart them. Turn on `showProfileVwap` to compare them with your own studies.
+
 ### Tuning
 - `Signal window` defaults to 9:30–11:30 NY, when nearly all journal winners happened.
 - `Min score` defaults to 3. Raise it to 4 or 5 for fewer, A+ signals only.
