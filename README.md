@@ -23,6 +23,12 @@ Each label names the level(s) that were swept, for example `PDH+4h SMA21+Round`.
 2. Use a /ES or /MES 5-minute chart with **Show extended-hours trading session** turned on.
 3. Arrows and bubbles only appear after the signal candle closes. The `Alert()` calls ring inside ToS on the next bar's open.
 
+The ToS version adds four things:
+- **Repeat-rejection bonus.** It counts separate rejections of the swept level over the last `touchLook` bars (48 bars = 4h on 5m). Each touch past the first adds +1 to the score, up to `touchBonusCap`. The bubble shows the count, for example `3x rejected`.
+- **HTF bias filter (`biasMode`).** A fade only fires if both the 1h and 4h are on its side, judged by the last close vs the SMA50 / SMA21. It also fires if the sweep happened *at* an HTF level: PDH/PDL, PWH/PWL, an HTF SMA or a round number. POC reclaims never fire against the HTF trend. The top label shows HTF BEAR / BULL / MIXED.
+- **Opening-range candle.** The high/low of the first `orMinutes` of RTH (yellow dashes) become sweep levels from 9:35.
+- **Scorecard.** Every signal is followed to target, stop, or a `maxHoldBars` time-out, one trade at a time, and the labels tally the results by setup. Scores of `aPlusScore` and up get their own tally, along with average hold and net points. Green and red dots show where each signal hit its target or stop. Load 30+ days of 5m bars so the counts are meaningful.
+
 ToS limitations:
 - ToS scans and server-side study alerts don't allow secondary timeframes, and this study uses 1h/4h SMAs. Its alerts therefore only fire while the chart is open in ToS desktop, with no phone push.
 - On past days, ToS draws each day's *final* POC/VA on every bar. Historical arrows are optimistic as a result. Live signals use the profile as it develops.
