@@ -1,0 +1,347 @@
+//@version=6
+// Journal Triggers — flags the setups behind the winning trades in the Notion trading journal.
+//
+//  1. SWEEP & REJECT (short) — price is stretched (above VAH / upper VWAP band / upper Bollinger),
+//     wicks into a key level (PDH, PMH, week high, HTF SMA, VAH, round number...), fails to close
+//     above it, then a 5m candle closes back below the level and the fast EMA with CVD rolling over.
+//     Target: nearest magnet below (POC, VWAP, VAL, BB mid...).
+//  2. SWEEP & RECLAIM (long) — mirror image: stretched below value, sweeps PML / PDL / week low /
+//     HTF support, next candle closes back above. Target: nearest magnet above.
+//  3. POC RECLAIM (continuation) — price rotates from VAL (or VAH) and the first candle closes
+//     through POC with CVD agreeing. Target: the other side of value.
+//
+// Signals only fire on CLOSED candles (journal rule: "no entry mid-candle or on wicks").
+// Bookmap liquidity can't be seen from TradingView — that checklist item stays manual.
+indicator("Journal Triggers", overlay = true, max_labels_count = 500, max_lines_count = 500)
+
+const string TZ = "America/New_York"
+
+// ───────────────────────── Inputs ─────────────────────────
+const string G_SES = "Session"
+string tradeWindow = input.session("0930-1130", "Signal window (NY time)", group = G_SES)
+string rthSess     = input.session("0930-1600", "RTH session (NY time)", group = G_SES)
+string vpMode      = input.string("ETH (full day)", "Volume profile resets on", options = ["ETH (full day)", "RTH open"], group = G_SES)
+
+const string G_VP = "Volume profile"
+float rowSize = input.float(1.0, "Row size (points)", minval = 0.01, group = G_VP)
+float vaPct   = input.float(70, "Value area %", minval = 10, maxval = 100, group = G_VP) / 100
+
+const string G_IND = "Indicators"
+int    emaLen  = input.int(9, "Fast EMA", minval = 1, group = G_IND)
+int    smaLen  = input.int(50, "Chart SMA", minval = 1, group = G_IND)
+int    bbLen   = input.int(20, "Bollinger length", minval = 1, group = G_IND)
+float  bbMult  = input.float(2.0, "Bollinger stdev", group = G_IND)
+float  vwMult  = input.float(1.0, "VWAP band stdev", group = G_IND)
+string htf1Tf  = input.timeframe("60", "HTF SMA #1 timeframe", group = G_IND, inline = "h1")
+int    htf1Len = input.int(50, "length", group = G_IND, inline = "h1")
+string htf2Tf  = input.timeframe("240", "HTF SMA #2 timeframe", group = G_IND, inline = "h2")
+int    htf2Len = input.int(21, "length", group = G_IND, inline = "h2")
+string htf3Tf  = input.timeframe("240", "HTF SMA #3 timeframe", group = G_IND, inline = "h3")
+int    htf3Len = input.int(200, "length", group = G_IND, inline = "h3")
+bool   useRound  = input.bool(true, "Use round numbers as levels", group = G_IND, inline = "rn")
+float  roundStep = input.float(50, "step", group = G_IND, inline = "rn")
+
+const string G_TRG = "Trigger rules"
+float lvlTol       = input.float(1.0, "Level touch tolerance (pts)", group = G_TRG)
+float acceptTol    = input.float(1.0, "Max close beyond swept level (pts)", group = G_TRG, tooltip = "If any candle in the sweep window closed further than this past the level, price accepted there — no rejection.")
+int   sweepLook    = input.int(3, "Sweep lookback (bars)", minval = 1, group = G_TRG)
+float clusterTol   = input.float(3.0, "Confluence cluster width (pts)", group = G_TRG, tooltip = "Levels within this distance of the swept level each add +1 to the score.")
+int   stretchLook  = input.int(6, "Stretch lookback (bars)", minval = 1, group = G_TRG)
+int   reclaimLook  = input.int(12, "POC reclaim: bars since VAL/VAH touch", minval = 1, group = G_TRG)
+bool  shortNeedEma = input.bool(true, "Shorts: require close below fast EMA", group = G_TRG)
+bool  longNeedEma  = input.bool(false, "Longs: require close above fast EMA", group = G_TRG)
+bool  needCvd      = input.bool(true, "Require CVD turning with the trade", group = G_TRG)
+int   cvdLook      = input.int(3, "CVD turn lookback (bars)", minval = 1, group = G_TRG)
+int   minScore     = input.int(3, "Min score (sweep setups)", minval = 1, group = G_TRG)
+bool  useReclaim   = input.bool(true, "Enable POC Reclaim setup", group = G_TRG)
+
+const string G_RISK = "Risk"
+float minTgt   = input.float(6, "Min target distance (pts)", group = G_RISK)
+float stopBuf  = input.float(1.0, "Stop buffer beyond sweep (pts)", group = G_RISK)
+float maxStop  = input.float(10, "Max stop distance (pts)", group = G_RISK)
+float minRR    = input.float(1.0, "Min reward:risk", group = G_RISK)
+int   cooldown = input.int(6, "Min bars between same-side signals", minval = 0, group = G_RISK)
+
+const string G_DSP = "Display"
+bool showLevels = input.bool(true, "Plot key levels", group = G_DSP)
+bool showTrade  = input.bool(true, "Draw target / stop lines", group = G_DSP)
+
+// ───────────────────────── Sessions ─────────────────────────
+bool newDay     = timeframe.change("D")
+bool rth        = not na(time(timeframe.period, rthSess, TZ))
+bool inWindow   = not na(time(timeframe.period, tradeWindow, TZ))
+bool rthOpen    = rth and not rth[1]
+bool vpReset    = vpMode == "RTH open" ? rthOpen : newDay
+bool vpCollect  = vpMode == "RTH open" ? rth : true
+
+// ───────────────────────── Indicators ─────────────────────────
+float emaF = ta.ema(close, emaLen)
+float smaC = ta.sma(close, smaLen)
+[bbMid, bbUp, bbLo] = ta.bb(close, bbLen, bbMult)
+[vwap_, vwUp, vwLo] = ta.vwap(hlc3, newDay, vwMult)
+
+float htf1 = request.security(syminfo.tickerid, htf1Tf, ta.sma(close, htf1Len)[1], lookahead = barmerge.lookahead_on)
+float htf2 = request.security(syminfo.tickerid, htf2Tf, ta.sma(close, htf2Len)[1], lookahead = barmerge.lookahead_on)
+float htf3 = request.security(syminfo.tickerid, htf3Tf, ta.sma(close, htf3Len)[1], lookahead = barmerge.lookahead_on)
+[pdH, pdL] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+[pwH, pwL] = request.security(syminfo.tickerid, "W", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+
+tfName(string tf) =>
+    str.tostring(timeframe.in_seconds(tf) / 3600) + "h"
+
+// CVD approximation from candle close location (TradingView has no tick delta on standard plans).
+float rng      = high - low
+float barDelta = rng > 0 ? nz(volume) * ((close - low) - (high - close)) / rng : 0.0
+var float cvd = 0.0
+cvd := newDay ? barDelta : cvd + barDelta
+bool cvdUp = barDelta > 0 and cvd > cvd[cvdLook]
+bool cvdDn = barDelta < 0 and cvd < cvd[cvdLook]
+
+// ───────────────────────── Premarket high / low ─────────────────────────
+var float onHi    = na
+var float onLo    = na
+var bool  rthSeen = false
+if newDay
+    rthSeen := false
+    onHi    := high
+    onLo    := low
+if rth
+    rthSeen := true
+else if not rthSeen and not newDay
+    onHi := math.max(onHi, high)
+    onLo := math.min(onLo, low)
+
+// ───────────────────────── Developing volume profile ─────────────────────────
+var map<int, float> vp = map.new<int, float>()
+var int   vpLo    = na
+var int   vpHi    = na
+var float vpTot   = 0.0
+var float devPOC  = na
+var float devVAH  = na
+var float devVAL  = na
+var float prevPOC = na
+var float prevVAH = na
+var float prevVAL = na
+
+if barstate.isconfirmed
+    if vpReset and vp.size() > 0
+        prevPOC := devPOC
+        prevVAH := devVAH
+        prevVAL := devVAL
+        vp.clear()
+        vpLo  := na
+        vpHi  := na
+        vpTot := 0.0
+    if vpCollect and nz(volume) > 0
+        int lo = math.floor(low / rowSize)
+        int hi = math.floor(high / rowSize)
+        float per = volume / (hi - lo + 1)
+        for i = lo to hi
+            vp.put(i, nz(vp.get(i)) + per)
+        vpLo  := na(vpLo) ? lo : math.min(vpLo, lo)
+        vpHi  := na(vpHi) ? hi : math.max(vpHi, hi)
+        vpTot += volume
+        int   pocI = vpLo
+        float pocV = -1.0
+        for i = vpLo to vpHi
+            float v = nz(vp.get(i))
+            if v > pocV
+                pocV := v
+                pocI := i
+        int   up  = pocI
+        int   dn  = pocI
+        float acc = pocV
+        while acc < vpTot * vaPct and (up < vpHi or dn > vpLo)
+            float upV = up < vpHi ? nz(vp.get(up + 1)) : -1.0
+            float dnV = dn > vpLo ? nz(vp.get(dn - 1)) : -1.0
+            if upV >= dnV
+                up  += 1
+                acc += upV
+            else
+                dn  -= 1
+                acc += dnV
+        devPOC := (pocI + 0.5) * rowSize
+        devVAH := (up + 1) * rowSize
+        devVAL := dn * rowSize
+
+// ───────────────────────── Key levels ─────────────────────────
+addLvl(array<float> a, array<string> n, float v, string s) =>
+    if not na(v)
+        a.push(v)
+        n.push(s)
+
+array<float>  lv = array.new<float>()
+array<string> nm = array.new<string>()
+addLvl(lv, nm, pdH, "PDH")
+addLvl(lv, nm, pdL, "PDL")
+addLvl(lv, nm, pwH, "PWH")
+addLvl(lv, nm, pwL, "PWL")
+addLvl(lv, nm, rthSeen ? onHi : na, "PMH")
+addLvl(lv, nm, rthSeen ? onLo : na, "PML")
+addLvl(lv, nm, devPOC, "POC")
+addLvl(lv, nm, devVAH, "VAH")
+addLvl(lv, nm, devVAL, "VAL")
+addLvl(lv, nm, prevPOC, "pPOC")
+addLvl(lv, nm, prevVAH, "pVAH")
+addLvl(lv, nm, prevVAL, "pVAL")
+addLvl(lv, nm, vwap_, "VWAP")
+addLvl(lv, nm, smaC, "SMA" + str.tostring(smaLen))
+addLvl(lv, nm, htf1, tfName(htf1Tf) + " SMA" + str.tostring(htf1Len))
+addLvl(lv, nm, htf2, tfName(htf2Tf) + " SMA" + str.tostring(htf2Len))
+addLvl(lv, nm, htf3, tfName(htf3Tf) + " SMA" + str.tostring(htf3Len))
+if useRound
+    addLvl(lv, nm, math.ceil(close / roundStep) * roundStep, "Round")
+    addLvl(lv, nm, math.floor(close / roundStep) * roundStep, "Round")
+
+// ───────────────────────── Setup logic ─────────────────────────
+float wHigh = ta.highest(high, sweepLook)
+float wLow  = ta.lowest(low, sweepLook)
+float wMaxC = ta.highest(close, sweepLook)
+float wMinC = ta.lowest(close, sweepLook)
+
+// Stretch: was price extended outside value / bands recently?
+bool upVAH = nz(ta.highest(high - devVAH, stretchLook), -1) >= 0
+bool upVW  = nz(ta.highest(high - vwUp, stretchLook), -1) >= 0
+bool upBB  = nz(ta.highest(high - bbUp, stretchLook), -1) >= 0
+bool dnVAL = nz(ta.lowest(low - devVAL, stretchLook), 1) <= 0
+bool dnVW  = nz(ta.lowest(low - vwLo, stretchLook), 1) <= 0
+bool dnBB  = nz(ta.lowest(low - bbLo, stretchLook), 1) <= 0
+
+// Finds the swept level with the most confluence. Short: wicked to/through L, never accepted above, closed back below.
+scanSweep(array<float> levels, array<string> names, bool isShort) =>
+    float  best     = na
+    string bestName = ""
+    int    bestConf = 0
+    for i = 0 to math.max(levels.size() - 1, 0)
+        if levels.size() == 0
+            break
+        float L  = levels.get(i)
+        bool  ok = isShort ? wHigh >= L - lvlTol and wMaxC <= L + acceptTol and close < L : wLow <= L + lvlTol and wMinC >= L - acceptTol and close > L
+        if ok
+            int    conf  = 0
+            string tag  = ""
+            for j = 0 to levels.size() - 1
+                if math.abs(levels.get(j) - L) <= clusterTol
+                    conf += 1
+                    tag  += (tag == "" ? "" : "+") + names.get(j)
+            if conf > bestConf
+                best     := L
+                bestName := tag
+                bestConf := conf
+    [best, bestName, bestConf]
+
+// Nearest magnet in the trade direction that is at least minDist away.
+nearestMagnet(array<float> mags, bool below, float ref, float minDist) =>
+    float best = na
+    for i = 0 to mags.size() - 1
+        float m = mags.get(i)
+        if not na(m)
+            float d = below ? ref - m : m - ref
+            if d >= minDist and (na(best) or d < math.abs(best - ref))
+                best := m
+    best
+
+array<float> shortMags = array.from(devPOC, vwap_, devVAL, prevPOC, prevVAL, bbMid, vwLo, pdL, rthSeen ? onLo : na)
+array<float> longMags  = array.from(devPOC, vwap_, devVAH, prevPOC, prevVAH, bbMid, emaF, vwUp, pdH, rthSeen ? onHi : na)
+
+var int lastShortBar = -100000
+var int lastLongBar  = -100000
+bool shortReady = barstate.isconfirmed and inWindow and bar_index - lastShortBar > cooldown
+bool longReady  = barstate.isconfirmed and inWindow and bar_index - lastLongBar > cooldown
+
+// 1) Sweep & Reject (short)
+[sLvl, sNm, sConf] = scanSweep(lv, nm, true)
+int   sStretch = (upVAH ? 1 : 0) + (upVW ? 1 : 0) + (upBB ? 1 : 0)
+int   sScore   = sConf + sStretch + (cvdDn ? 1 : 0)
+float sStop    = wHigh + stopBuf
+float sTgt     = nearestMagnet(shortMags, true, close, minTgt)
+float sRisk    = sStop - close
+float sRR      = sRisk > 0 and not na(sTgt) ? (close - sTgt) / sRisk : na
+bool sweepShort = shortReady and not na(sLvl) and close < open and (not shortNeedEma or close < emaF) and (not needCvd or cvdDn) and sScore >= minScore and not na(sRR) and sRR >= minRR and sRisk <= maxStop
+
+// 2) Sweep & Reclaim (long)
+[lLvl, lNm, lConf] = scanSweep(lv, nm, false)
+int   lStretch = (dnVAL ? 1 : 0) + (dnVW ? 1 : 0) + (dnBB ? 1 : 0)
+int   lScore   = lConf + lStretch + (cvdUp ? 1 : 0)
+float lStop    = wLow - stopBuf
+float lTgt     = nearestMagnet(longMags, false, close, minTgt)
+float lRisk    = close - lStop
+float lRR      = lRisk > 0 and not na(lTgt) ? (lTgt - close) / lRisk : na
+bool sweepLong = longReady and not na(lLvl) and close > open and (not longNeedEma or close > emaF) and (not needCvd or cvdUp) and lScore >= minScore and not na(lRR) and lRR >= minRR and lRisk <= maxStop
+
+// 3) POC Reclaim (continuation through value)
+bool  crossUpPOC = ta.crossover(close, devPOC)
+bool  crossDnPOC = ta.crossunder(close, devPOC)
+bool  fromVAL    = nz(ta.lowest(low - devVAL, reclaimLook), 1) <= lvlTol
+bool  fromVAH    = nz(ta.highest(high - devVAH, reclaimLook), -1) >= -lvlTol
+float swingLo    = ta.lowest(low, 5)
+float swingHi    = ta.highest(high, 5)
+
+float rlStop = swingLo - stopBuf
+float rlTgt  = nearestMagnet(array.from(devVAH, vwap_, vwUp, pdH, rthSeen ? onHi : na), false, close, minTgt)
+float rlRisk = close - rlStop
+float rlRR   = rlRisk > 0 and not na(rlTgt) ? (rlTgt - close) / rlRisk : na
+bool reclaimLong = useReclaim and longReady and not sweepLong and crossUpPOC and fromVAL and close > emaF and close > open and (not needCvd or cvdUp) and not na(rlRR) and rlRR >= minRR and rlRisk <= maxStop
+
+float rsStop = swingHi + stopBuf
+float rsTgt  = nearestMagnet(array.from(devVAL, vwap_, vwLo, pdL, rthSeen ? onLo : na), true, close, minTgt)
+float rsRisk = rsStop - close
+float rsRR   = rsRisk > 0 and not na(rsTgt) ? (close - rsTgt) / rsRisk : na
+bool reclaimShort = useReclaim and shortReady and not sweepShort and crossDnPOC and fromVAH and close < emaF and close < open and (not needCvd or cvdDn) and not na(rsRR) and rsRR >= minRR and rsRisk <= maxStop
+
+// ───────────────────────── Output ─────────────────────────
+fmt(float x) =>
+    str.tostring(x, format.mintick)
+
+drawTrade(float tgt, float stp) =>
+    if showTrade
+        line.new(bar_index, tgt, bar_index + 12, tgt, color = color.new(color.green, 0), style = line.style_dashed, width = 2)
+        line.new(bar_index, stp, bar_index + 12, stp, color = color.new(color.red, 0), style = line.style_dashed, width = 2)
+
+string msg = ""
+if sweepShort
+    lastShortBar := bar_index
+    msg := str.format("SWEEP SHORT {0} | score {1} | rejected {2} @ {3} | entry {4} T {5} S {6} R:R {7}", syminfo.ticker, sScore, sNm, fmt(sLvl), fmt(close), fmt(sTgt), fmt(sStop), str.tostring(sRR, "#.##"))
+    label.new(bar_index, high, str.format("SWEEP SHORT ({0})\n{1}\nT {2}  S {3}  R:R {4}", sScore, sNm, fmt(sTgt), fmt(sStop), str.tostring(sRR, "#.##")), style = label.style_label_down, color = color.red, textcolor = color.white, size = size.small)
+    drawTrade(sTgt, sStop)
+else if reclaimShort
+    lastShortBar := bar_index
+    msg := str.format("POC REJECT SHORT {0} | entry {1} T {2} S {3} R:R {4}", syminfo.ticker, fmt(close), fmt(rsTgt), fmt(rsStop), str.tostring(rsRR, "#.##"))
+    label.new(bar_index, high, str.format("POC LOSS SHORT\nT {0}  S {1}  R:R {2}", fmt(rsTgt), fmt(rsStop), str.tostring(rsRR, "#.##")), style = label.style_label_down, color = color.new(color.maroon, 0), textcolor = color.white, size = size.small)
+    drawTrade(rsTgt, rsStop)
+
+if sweepLong
+    lastLongBar := bar_index
+    msg += (msg == "" ? "" : " || ") + str.format("SWEEP LONG {0} | score {1} | reclaimed {2} @ {3} | entry {4} T {5} S {6} R:R {7}", syminfo.ticker, lScore, lNm, fmt(lLvl), fmt(close), fmt(lTgt), fmt(lStop), str.tostring(lRR, "#.##"))
+    label.new(bar_index, low, str.format("SWEEP LONG ({0})\n{1}\nT {2}  S {3}  R:R {4}", lScore, lNm, fmt(lTgt), fmt(lStop), str.tostring(lRR, "#.##")), style = label.style_label_up, color = color.green, textcolor = color.white, size = size.small)
+    drawTrade(lTgt, lStop)
+else if reclaimLong
+    lastLongBar := bar_index
+    msg += (msg == "" ? "" : " || ") + str.format("POC RECLAIM LONG {0} | entry {1} T {2} S {3} R:R {4}", syminfo.ticker, fmt(close), fmt(rlTgt), fmt(rlStop), str.tostring(rlRR, "#.##"))
+    label.new(bar_index, low, str.format("POC RECLAIM LONG\nT {0}  S {1}  R:R {2}", fmt(rlTgt), fmt(rlStop), str.tostring(rlRR, "#.##")), style = label.style_label_up, color = color.new(color.teal, 0), textcolor = color.white, size = size.small)
+    drawTrade(rlTgt, rlStop)
+
+if msg != ""
+    alert(msg + " | check Bookmap liquidity before entry", alert.freq_once_per_bar_close)
+
+alertcondition(sweepShort, "Sweep Short", "Journal trigger: SWEEP SHORT on {{ticker}} @ {{close}}")
+alertcondition(sweepLong, "Sweep Long", "Journal trigger: SWEEP LONG on {{ticker}} @ {{close}}")
+alertcondition(reclaimLong, "POC Reclaim Long", "Journal trigger: POC RECLAIM LONG on {{ticker}} @ {{close}}")
+alertcondition(reclaimShort, "POC Loss Short", "Journal trigger: POC LOSS SHORT on {{ticker}} @ {{close}}")
+
+plotshape(sweepShort, "Sweep Short", shape.triangledown, location.abovebar, color.red, size = size.tiny)
+plotshape(sweepLong, "Sweep Long", shape.triangleup, location.belowbar, color.green, size = size.tiny)
+plotshape(reclaimShort, "POC Loss Short", shape.xcross, location.abovebar, color.maroon, size = size.tiny)
+plotshape(reclaimLong, "POC Reclaim Long", shape.xcross, location.belowbar, color.teal, size = size.tiny)
+
+plot(showLevels ? devPOC : na, "POC", color.orange, 2, plot.style_linebr)
+plot(showLevels ? devVAH : na, "VAH", color.new(color.orange, 50), 1, plot.style_linebr)
+plot(showLevels ? devVAL : na, "VAL", color.new(color.orange, 50), 1, plot.style_linebr)
+plot(showLevels ? vwap_ : na, "VWAP", color.blue, 2)
+plot(showLevels ? vwUp : na, "VWAP upper", color.new(color.blue, 70))
+plot(showLevels ? vwLo : na, "VWAP lower", color.new(color.blue, 70))
+plot(showLevels ? emaF : na, "Fast EMA", color.new(color.yellow, 30))
+plot(showLevels ? pdH : na, "PDH", color.new(color.gray, 20), 1, plot.style_linebr)
+plot(showLevels ? pdL : na, "PDL", color.new(color.gray, 20), 1, plot.style_linebr)
+plot(showLevels and rthSeen ? onHi : na, "PMH", color.new(color.purple, 20), 1, plot.style_linebr)
+plot(showLevels and rthSeen ? onLo : na, "PML", color.new(color.purple, 20), 1, plot.style_linebr)
