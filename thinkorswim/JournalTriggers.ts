@@ -464,7 +464,28 @@ VWAPLine.SetDefaultColor(Color.CYAN);
 AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | CVD est " + Round(cvd / 1000, 1) + "k | short " + sScore + " (lvl " + sConf + " rej " + sTouch + " str " + (upVAH + upVW + upBB) + " cvd " + cvdDn + ") | long " + lScore + " (lvl " + lConf + " rej " + lTouch + " str " + (dnVAL + dnVW + dnBB) + " cvd " + cvdUp + ")",
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
 
-# Which rule is blocking a sweep signal on the current bar (turn off with showDebug)
+# Funnel: across all loaded history, how many in-window bars survive each rule in order.
+# The step where the count collapses is the rule that is blocking signals.
+def fS1 = inWin and sConf > 0;
+def fS2 = fS1 and sBiasOK;
+def fS3 = fS2 and close < open and (!shortNeedEma or close < emaF);
+def fS4 = fS3 and (!needCvd or cvdDn);
+def fS5 = fS4 and sScore >= minScore;
+def fS6 = fS5 and sRisk <= maxStop;
+def fS7 = fS6 and sRR >= minRR;
+def fL1 = inWin and lConf > 0;
+def fL2 = fL1 and lBiasOK;
+def fL3 = fL2 and close > open and (!longNeedEma or close > emaF);
+def fL4 = fL3 and (!needCvd or cvdUp);
+def fL5 = fL4 and lScore >= minScore;
+def fL6 = fL5 and lRisk <= maxStop;
+def fL7 = fL6 and lRR >= minRR;
+AddLabel(showDebug, "S funnel: window bars " + TotalSum(inWin) + " > swept " + TotalSum(fS1) + " > bias " + TotalSum(fS2) + " > candle/EMA " + TotalSum(fS3) +
+    " > CVD " + TotalSum(fS4) + " > score " + TotalSum(fS5) + " > stop " + TotalSum(fS6) + " > RR " + TotalSum(fS7) + " > fired " + TotalSum(sweepShort), Color.LIGHT_GRAY);
+AddLabel(showDebug, "L funnel: swept " + TotalSum(fL1) + " > bias " + TotalSum(fL2) + " > candle/EMA " + TotalSum(fL3) +
+    " > CVD " + TotalSum(fL4) + " > score " + TotalSum(fL5) + " > stop " + TotalSum(fL6) + " > RR " + TotalSum(fL7) + " > fired " + TotalSum(sweepLong), Color.LIGHT_GRAY);
+
+# Which rule is blocking a sweep signal on the LATEST bar (labels always show the last bar) (turn off with showDebug)
 AddLabel(showDebug, "Short: " + (if rawSS then "SIGNAL" else if sConf == 0 then "no level swept" else
     (if !inWin then "outside window " else "") + (if !sBiasOK then "HTF bias " else "") + (if close >= open then "not red " else "") +
     (if shortNeedEma and close >= emaF then "above EMA " else "") + (if needCvd and !cvdDn then "CVD " else "") +
