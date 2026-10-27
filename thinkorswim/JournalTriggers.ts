@@ -54,7 +54,7 @@ input longNeedEma = no;
 input needCvd = yes;
 input cvdLook = 3;
 input minScore = 3;
-input useReclaim = yes;
+input useReclaim = no;
 input biasMode = {default ALIGNED_OR_AT_HTF_LEVEL, ALIGNED_ONLY, OFF};
 
 # ----- VAL / VAH Flip (failed breakdown after a flush, or failed breakout after a blow-off)
@@ -73,6 +73,17 @@ input cancelPts = 2.0;
 input cancelLook = 6;
 input zoneTol = 3.0;
 
+# ----- Failed breakout of an HTF SMA (accepted beyond it, then closes back through it)
+input useFbo = yes;
+input fboLook = 24;
+input fboEnd = 1300;
+
+# ----- Chop filter: many EMA crosses inside a tight range pauses every signal
+input useChop = yes;
+input chopLook = 12;
+input chopCrosses = 5;
+input chopRange = 15.0;
+
 # ----- Risk
 input minTgt = 6.0;
 input stopBuf = 1.0;
@@ -81,9 +92,8 @@ input minRR = 1.0;
 input cooldown = 6;
 
 # ----- Scorecard
-input showScorecard = yes;
+input showScorecard = no;
 input maxHoldBars = 12;
-input aPlusScore = 6;
 
 # ----- Display
 input showKeyLevels = yes;
@@ -91,6 +101,8 @@ input showProfileVwap = no;
 input showDebug = no;
 input showHtfLines = yes;
 input showGhosts = yes;
+input showOutcomes = yes;
+input showT2Line = yes;
 
 # ===== Helpers
 # Short side: 0 if no sweep-rejection of lvl on this bar, otherwise the number of separate rejections of lvl
@@ -127,6 +139,33 @@ script Dist {
     input minD = 6.0;
     def d = if below then close - m else m - close;
     plot r = if IsNaN(m) then 99999 else if d >= minD then d else 99999;
+}
+# Round a price to the instrument's tick (ES/MES = 0.25)
+script RT {
+    input x = 0.0;
+    plot r = Round(x / TickSize(), 0) * TickSize();
+}
+# Failed breakout, short side: price was ACCEPTED above L (2+ closes more than cancelPts above it within look bars)
+# and this candle is the first close back below L.
+script FboS {
+    input L = 0.0;
+    input cancelPts = 2.0;
+    input look = 24;
+    def accHit = if IsNaN(L) then 0 else if close > L + cancelPts then 1 else 0;
+    def accepted = GetValue(Sum(accHit, look), 1) >= 2;
+    def crossBack = if IsNaN(L) or IsNaN(L[1]) then 0 else if close < L and close[1] >= L[1] then 1 else 0;
+    def raw = accepted and crossBack;
+    plot r = if IsNaN(raw) then 0 else raw;
+}
+script FboL {
+    input L = 0.0;
+    input cancelPts = 2.0;
+    input look = 24;
+    def accHit = if IsNaN(L) then 0 else if close < L - cancelPts then 1 else 0;
+    def accepted = GetValue(Sum(accHit, look), 1) >= 2;
+    def crossBack = if IsNaN(L) or IsNaN(L[1]) then 0 else if close > L and close[1] <= L[1] then 1 else 0;
+    def raw = accepted and crossBack;
+    plot r = if IsNaN(raw) then 0 else raw;
 }
 # HTF level rejection, short side. 0 = no signal, 1 = rejection, 2 = rejection on the FIRST touch in firstLook bars.
 # Needs: price came from BELOW (no close above L in the firstLook bars before the sweep window), wicked into L +/- tol,
@@ -402,7 +441,6 @@ def hsStop = Max(Highest(high, sweepLook), hLvlS) + stopBuf;
 def hsRisk = hsStop - close;
 def hsNeed = Max(minTgt, minRR * hsRisk);
 def hsTgtD = Min(Min(Dist(vah, yes, hsNeed), Dist(poc, yes, hsNeed)), Min(Min(Dist(vw, yes, hsNeed), Dist(bbMid, yes, hsNeed)), Dist(val, yes, hsNeed)));
-def hsT2D = Min(Min(Dist(poc, yes, hsTgtD + minTgt), Dist(vw, yes, hsTgtD + minTgt)), Min(Dist(val, yes, hsTgtD + minTgt), Dist(bbMid, yes, hsTgtD + minTgt)));
 def hsRR = if hsTgtD < 99999 and hsRisk > 0 then hsTgtD / hsRisk else 0;
 def rawHS = useHtf and inWin and hSelS > 0 and close < open and (!shortNeedEma or close < emaF) and hsRR >= minRR and hsRisk <= maxStop;
 
@@ -417,61 +455,109 @@ def hlStop = Min(Lowest(low, sweepLook), hLvlL) - stopBuf;
 def hlRisk = close - hlStop;
 def hlNeed = Max(minTgt, minRR * hlRisk);
 def hlTgtD = Min(Min(Dist(val, no, hlNeed), Dist(poc, no, hlNeed)), Min(Min(Dist(vw, no, hlNeed), Dist(bbMid, no, hlNeed)), Dist(vah, no, hlNeed)));
-def hlT2D = Min(Min(Dist(poc, no, hlTgtD + minTgt), Dist(vw, no, hlTgtD + minTgt)), Min(Dist(vah, no, hlTgtD + minTgt), Dist(bbMid, no, hlTgtD + minTgt)));
 def hlRR = if hlTgtD < 99999 and hlRisk > 0 then hlTgtD / hlRisk else 0;
 def rawHL = useHtf and inWin and hSelL > 0 and close > open and (!longNeedEma or close > emaF) and hlRR >= minRR and hlRisk <= maxStop;
 
 
+# ===== 6) Failed breakout of a 4h/1h SMA (trapped breakout traders). Allowed until fboEnd (ET).
+def fboWin = SecondsFromTime(winStart) >= 0 and SecondsTillTime(fboEnd) > 0;
+def fb3S = FboS(htf3, cancelPts, fboLook);
+def fb2S = FboS(htf2, cancelPts, fboLook);
+def fb1S = FboS(htf1, cancelPts, fboLook);
+def fbSelS = if fb3S then 3 else if fb2S then 2 else if fb1S then 1 else 0;
+def fbsStop = Highest(high, sweepLook) + stopBuf;
+def fbsRisk = fbsStop - close;
+def fbsNeed = Max(minTgt, minRR * fbsRisk);
+def fbsTgtD = Min(Min(Dist(vah, yes, fbsNeed), Dist(poc, yes, fbsNeed)), Min(Min(Dist(vw, yes, fbsNeed), Dist(bbMid, yes, fbsNeed)), Dist(val, yes, fbsNeed)));
+def fbsRR = if fbsTgtD < 99999 and fbsRisk > 0 then fbsTgtD / fbsRisk else 0;
+def rawBS = useFbo and fboWin and fbSelS > 0 and close < open and close < emaF and fbsRR >= minRR and fbsRisk <= maxStop;
+
+def fb3L = FboL(htf3, cancelPts, fboLook);
+def fb2L = FboL(htf2, cancelPts, fboLook);
+def fb1L = FboL(htf1, cancelPts, fboLook);
+def fbSelL = if fb3L then 3 else if fb2L then 2 else if fb1L then 1 else 0;
+def fblStop = Lowest(low, sweepLook) - stopBuf;
+def fblRisk = close - fblStop;
+def fblNeed = Max(minTgt, minRR * fblRisk);
+def fblTgtD = Min(Min(Dist(val, no, fblNeed), Dist(poc, no, fblNeed)), Min(Min(Dist(vw, no, fblNeed), Dist(bbMid, no, fblNeed)), Dist(vah, no, fblNeed)));
+def fblRR = if fblTgtD < 99999 and fblRisk > 0 then fblTgtD / fblRisk else 0;
+def rawBL = useFbo and fboWin and fbSelL > 0 and close > open and close > emaF and fblRR >= minRR and fblRisk <= maxStop;
+
+# ===== Chop filter: >= chopCrosses EMA crosses in the last chopLook bars while the whole range is <= chopRange
+def emaSide = close > emaF;
+def emaCross = if IsNaN(emaF[1]) then 0 else if emaSide != emaSide[1] then 1 else 0;
+def chopN = Sum(emaCross, chopLook);
+def chopRng = Highest(high, chopLook) - Lowest(low, chopLook);
+def isChop = if IsNaN(chopN) or IsNaN(chopRng) then 0 else useChop and chopN >= chopCrosses and chopRng <= chopRange;
+
 # ===== Cooldown (same side)
 # A single N/A inside a running (recursive) value would stick forever and block every later signal,
 # so each condition is forced to 0/1 first and the cooldown recovers from N/A.
-def okSS = if IsNaN(rawSS) then 0 else rawSS;
-def okRS = if IsNaN(rawRS) then 0 else rawRS;
-def okSL = if IsNaN(rawSL) then 0 else rawSL;
-def okRL = if IsNaN(rawRL) then 0 else rawRL;
-def okFS = if IsNaN(rawFS) then 0 else rawFS;
-def okFL = if IsNaN(rawFL) then 0 else rawFL;
-def okHS = if IsNaN(rawHS) then 0 else rawHS;
-def okHL = if IsNaN(rawHL) then 0 else rawHL;
-def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
-def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
-# Priority when several fire on one candle: HTF level, then Flip, then Sweep, then POC.
+def okSS = if IsNaN(rawSS) or isChop then 0 else rawSS;
+def okRS = if IsNaN(rawRS) or isChop then 0 else rawRS;
+def okSL = if IsNaN(rawSL) or isChop then 0 else rawSL;
+def okRL = if IsNaN(rawRL) or isChop then 0 else rawRL;
+def okFS = if IsNaN(rawFS) or isChop then 0 else rawFS;
+def okFL = if IsNaN(rawFL) or isChop then 0 else rawFL;
+def okHS = if IsNaN(rawHS) or isChop then 0 else rawHS;
+def okHL = if IsNaN(rawHL) or isChop then 0 else rawHL;
+def okBS = if IsNaN(rawBS) or isChop then 0 else rawBS;
+def okBL = if IsNaN(rawBL) or isChop then 0 else rawBL;
+def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okBS or okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
+def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okBL or okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
+# Priority when several fire on one candle: HTF level, then Failed breakout, then Flip, then Sweep, then POC.
 # A Flip that also passes the Sweep rules shows ONE bubble marked "+ SWEEP".
 def htfShort = okHS and lastS == bn;
-def flipShort = !okHS and okFS and lastS == bn;
-def sweepShort = !okHS and !okFS and okSS and lastS == bn;
-def reclaimShort = !okHS and !okFS and !okSS and okRS and lastS == bn;
+def fboShort = !okHS and okBS and lastS == bn;
+def flipShort = !okHS and !okBS and okFS and lastS == bn;
+def sweepShort = !okHS and !okBS and !okFS and okSS and lastS == bn;
+def reclaimShort = !okHS and !okBS and !okFS and !okSS and okRS and lastS == bn;
 def htfLong = okHL and lastL == bn;
-def flipLong = !okHL and okFL and lastL == bn;
-def sweepLong = !okHL and !okFL and okSL and lastL == bn;
-def reclaimLong = !okHL and !okFL and !okSL and okRL and lastL == bn;
+def fboLong = !okHL and okBL and lastL == bn;
+def flipLong = !okHL and !okBL and okFL and lastL == bn;
+def sweepLong = !okHL and !okBL and !okFL and okSL and lastL == bn;
+def reclaimLong = !okHL and !okBL and !okFL and !okSL and okRL and lastL == bn;
 
 # Ghosts: a setup that qualified but was not shown because the same-side cooldown was running.
 # Shown as a small gray bubble with only T / S / RR, on the first candle of each run.
-def anyS = okHS or okFS or okSS or okRS;
-def anyL = okHL or okFL or okSL or okRL;
-def shownS = htfShort or flipShort or sweepShort or reclaimShort;
-def shownL = htfLong or flipLong or sweepLong or reclaimLong;
+def anyS = okHS or okBS or okFS or okSS or okRS;
+def anyL = okHL or okBL or okFL or okSL or okRL;
+def shownS = htfShort or fboShort or flipShort or sweepShort or reclaimShort;
+def shownL = htfLong or fboLong or flipLong or sweepLong or reclaimLong;
 def ghostS = anyS and !shownS and !anyS[1];
 def ghostL = anyL and !shownL and !anyL[1];
-def gTgtS = if okHS then close - hsTgtD else if okFS then close - fsTgtD else if okSS then close - sTgtD else close - rsTgtD;
-def gStpS = if okHS then hsStop else if okFS then fsStop else if okSS then sStop else rsStop;
-def gRRS = if okHS then hsRR else if okFS then fsRR else if okSS then sRR else rsRR;
-def gTgtL = if okHL then close + hlTgtD else if okFL then close + flTgtD else if okSL then close + lTgtD else close + rlTgtD;
-def gStpL = if okHL then hlStop else if okFL then flStop else if okSL then lStop else rlStop;
-def gRRL = if okHL then hlRR else if okFL then flRR else if okSL then lRR else rlRR;
+def gTgtS = if okHS then close - hsTgtD else if okBS then close - fbsTgtD else if okFS then close - fsTgtD else if okSS then close - sTgtD else close - rsTgtD;
+def gStpS = if okHS then hsStop else if okBS then fbsStop else if okFS then fsStop else if okSS then sStop else rsStop;
+def gRRS = if okHS then hsRR else if okBS then fbsRR else if okFS then fsRR else if okSS then sRR else rsRR;
+def gTgtL = if okHL then close + hlTgtD else if okBL then close + fblTgtD else if okFL then close + flTgtD else if okSL then close + lTgtD else close + rlTgtD;
+def gStpL = if okHL then hlStop else if okBL then fblStop else if okFL then flStop else if okSL then lStop else rlStop;
+def gRRL = if okHL then hlRR else if okBL then fblRR else if okFL then flRR else if okSL then lRR else rlRR;
 
 # Only show a signal once its candle has closed (a newer bar exists)
 def done = !IsNaN(close[-1]);
 
 # ===== Scorecard - one tracked trade at a time: enter at signal close, exit at target / stop / time-out
-def sigDirRaw = if htfShort or sweepShort or flipShort or reclaimShort then -1 else if htfLong or sweepLong or flipLong or reclaimLong then 1 else 0;
-def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else if htfShort then 7 else if htfLong then 8 else 0;
-def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else if htfShort then close - hsTgtD else if htfLong then close + hlTgtD else 0;
-def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else if htfShort then hsStop else if htfLong then hlStop else 0;
+def sigDirRaw = if htfShort or fboShort or sweepShort or flipShort or reclaimShort then -1 else if htfLong or fboLong or sweepLong or flipLong or reclaimLong then 1 else 0;
+def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else if htfShort then 7 else if htfLong then 8 else if fboShort then 9 else if fboLong then 10 else 0;
+def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else if htfShort then close - hsTgtD else if htfLong then close + hlTgtD else if fboShort then close - fbsTgtD else if fboLong then close + fblTgtD else 0;
+def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else if htfShort then hsStop else if htfLong then hlStop else if fboShort then fbsStop else if fboLong then fblStop else 0;
 def sigScore = if htfShort then hsScore else if htfLong then hlScore else if sweepShort or (flipShort and okSS) then sScore else if sweepLong or (flipLong and okSL) then lScore else 0;
 # Only track a signal whose target and stop are real numbers
 def sigDir = if IsNaN(sigTgt) or IsNaN(sigStp) or IsNaN(sigScore) then 0 else sigDirRaw;
+
+# T2 (runner): the next level beyond T1, at least minTgt further, for whichever signal fired this candle
+def t1DS = if htfShort then hsTgtD else if fboShort then fbsTgtD else if flipShort then fsTgtD else if sweepShort then sTgtD else rsTgtD;
+def t1DL = if htfLong then hlTgtD else if fboLong then fblTgtD else if flipLong then flTgtD else if sweepLong then lTgtD else rlTgtD;
+def t2DS = Min(Min(Min(Dist(poc, yes, t1DS + minTgt), Dist(vw, yes, t1DS + minTgt)), Min(Dist(val, yes, t1DS + minTgt), Dist(vah, yes, t1DS + minTgt))),
+               Min(Min(Dist(bbMid, yes, t1DS + minTgt), Dist(pdL, yes, t1DS + minTgt)), Min(Dist(pmL, yes, t1DS + minTgt), Dist(pPOC, yes, t1DS + minTgt))));
+def t2DL = Min(Min(Min(Dist(poc, no, t1DL + minTgt), Dist(vw, no, t1DL + minTgt)), Min(Dist(val, no, t1DL + minTgt), Dist(vah, no, t1DL + minTgt))),
+               Min(Min(Dist(bbMid, no, t1DL + minTgt), Dist(pdH, no, t1DL + minTgt)), Min(Dist(pmH, no, t1DL + minTgt), Dist(pPOC, no, t1DL + minTgt))));
+def sigT2 = if sigDir < 0 and t2DS < 99999 then RT(close - t2DS) else if sigDir > 0 and t2DL < 99999 then RT(close + t2DL) else 0;
+def sigT2ok = if IsNaN(sigT2) then 0 else sigT2 != 0;
+def sigTgtR = RT(sigTgt);
+def sigStpR = RT(sigStp);
+# With the HTF bias = short while HTF BEAR, long while HTF BULL
+def sigAlign = if sigDir < 0 then htfBear else if sigDir > 0 then htfBull else 0;
 
 def oDir;
 def oEnt;
@@ -480,6 +566,7 @@ def oStp;
 def oBar;
 def oType;
 def oScore;
+def oAlign;
 def openPrev = if bn <= 1 or IsNaN(oDir[1]) then 0 else oDir[1] != 0;
 def hitT = if !openPrev then 0 else if oDir[1] < 0 then low <= oTgt[1] else high >= oTgt[1];
 def hitS = if !openPrev then 0 else if oDir[1] < 0 then high >= oStp[1] else low <= oStp[1];
@@ -492,11 +579,12 @@ def isScratch = tOut;
 if (!openPrev or resolved) and sigDir != 0 {
     oDir = sigDir;
     oEnt = close;
-    oTgt = sigTgt;
-    oStp = sigStp;
+    oTgt = sigTgtR;
+    oStp = sigStpR;
     oBar = bn;
     oType = sigType;
     oScore = sigScore;
+    oAlign = sigAlign;
 } else if openPrev and !resolved {
     oDir = oDir[1];
     oEnt = oEnt[1];
@@ -505,6 +593,7 @@ if (!openPrev or resolved) and sigDir != 0 {
     oBar = oBar[1];
     oType = oType[1];
     oScore = oScore[1];
+    oAlign = oAlign[1];
 } else {
     oDir = 0;
     oEnt = 0;
@@ -513,7 +602,37 @@ if (!openPrev or resolved) and sigDir != 0 {
     oBar = 0;
     oType = 0;
     oScore = 0;
+    oAlign = 0;
 }
+
+# T2 runner tracker: opened with each tracked signal that has a T2; T2 counts as reached if price gets there
+# before the original stop, within 2 x maxHoldBars, inside RTH.
+def openedNow = (!openPrev or resolved) and sigDir != 0;
+def t2Dir;
+def t2Lvl;
+def t2Stp;
+def t2Bar;
+def t2Open = if bn <= 1 or IsNaN(t2Dir[1]) then 0 else t2Dir[1] != 0;
+def t2Hit = if !t2Open then 0 else if t2Dir[1] < 0 then low <= t2Lvl[1] else high >= t2Lvl[1];
+def t2Fail = t2Open and !t2Hit and ((if t2Dir[1] < 0 then high >= t2Stp[1] else low <= t2Stp[1]) or bn - t2Bar[1] >= 2 * maxHoldBars or !isRTH);
+if openedNow and sigT2ok {
+    t2Dir = sigDir;
+    t2Lvl = sigT2;
+    t2Stp = sigStpR;
+    t2Bar = bn;
+} else if t2Open and !t2Hit and !t2Fail {
+    t2Dir = t2Dir[1];
+    t2Lvl = t2Lvl[1];
+    t2Stp = t2Stp[1];
+    t2Bar = t2Bar[1];
+} else {
+    t2Dir = 0;
+    t2Lvl = 0;
+    t2Stp = 0;
+    t2Bar = 0;
+}
+def t2Reached = TotalSum(t2Hit);
+def t2Total = TotalSum(openedNow and sigT2ok);
 
 def rType = if resolved then oType[1] else 0;
 def ptsR = if isWin then AbsValue(oTgt[1] - oEnt[1]) else if isLoss then -AbsValue(oStp[1] - oEnt[1]) else if isScratch then oDir[1] * (close - oEnt[1]) else 0;
@@ -534,8 +653,14 @@ def w7 = TotalSum(isWin and rType == 7);
 def l7 = TotalSum(isLoss and rType == 7);
 def w8 = TotalSum(isWin and rType == 8);
 def l8 = TotalSum(isLoss and rType == 8);
-def wA = TotalSum(isWin and oScore[1] >= aPlusScore);
-def lA = TotalSum(isLoss and oScore[1] >= aPlusScore);
+def w9 = TotalSum(isWin and rType == 9);
+def l9 = TotalSum(isLoss and rType == 9);
+def w10 = TotalSum(isWin and rType == 10);
+def l10 = TotalSum(isLoss and rType == 10);
+def wAl = TotalSum(isWin and oAlign[1]);
+def lAl = TotalSum(isLoss and oAlign[1]);
+def wAg = TotalSum(isWin and !oAlign[1]);
+def lAg = TotalSum(isLoss and !oAlign[1]);
 def scr = TotalSum(isScratch);
 def nRes = TotalSum(resolved);
 def holdSum = TotalSum(if resolved then bn - oBar[1] else 0);
@@ -594,14 +719,33 @@ H1Line.SetDefaultColor(Color.LIGHT_GRAY);
 H1Line.SetStyle(Curve.LONG_DASH);
 
 # Outcome dots: where each tracked signal hit its target (green) or stop (red)
-plot TargetHit = if showScorecard and isWin then oTgt[1] else Double.NaN;
+plot TargetHit = if showOutcomes and isWin then oTgt[1] else Double.NaN;
 TargetHit.SetPaintingStrategy(PaintingStrategy.POINTS);
 TargetHit.SetDefaultColor(Color.GREEN);
 TargetHit.SetLineWeight(4);
-plot StopHit = if showScorecard and isLoss then oStp[1] else Double.NaN;
+plot StopHit = if showOutcomes and isLoss then oStp[1] else Double.NaN;
 StopHit.SetPaintingStrategy(PaintingStrategy.POINTS);
 StopHit.SetDefaultColor(Color.RED);
 StopHit.SetLineWeight(4);
+
+# T2 runner level while a tracked trade is live
+plot T2Line = if showT2Line and t2Dir != 0 then t2Lvl else Double.NaN;
+T2Line.SetDefaultColor(Color.GREEN);
+T2Line.SetStyle(Curve.SHORT_DASH);
+T2Line.SetLineWeight(2);
+
+# Failed-breakout arrows
+plot FboShortSig = if fboShort and done then high + TickSize() * 4 else Double.NaN;
+FboShortSig.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
+FboShortSig.SetDefaultColor(Color.VIOLET);
+FboShortSig.SetLineWeight(5);
+plot FboLongSig = if fboLong and done then low - TickSize() * 4 else Double.NaN;
+FboLongSig.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
+FboLongSig.SetDefaultColor(Color.VIOLET);
+FboLongSig.SetLineWeight(5);
+
+# Chop zone shading
+AddCloud(if isChop then Highest(high, chopLook) else Double.NaN, if isChop then Lowest(low, chopLook) else Double.NaN, Color.DARK_ORANGE, Color.DARK_ORANGE);
 
 AddChartBubble(sweepShort and done, high,
     "SWEEP SHORT (" + sScore + ")" + (if sTouch > 1 then "  " + sTouch + "x rejected" else "") + (if htfBear then "  HTF bear" else "  at HTF lvl") + "\n" +
@@ -609,7 +753,7 @@ AddChartBubble(sweepShort and done, high,
     (if sVAH then "VAH " else "") + (if sPOC then "POC " else "") + (if sPPOC then "pPOC " else "") +
     (if sVW then "VWAP " else "") + (if sSMA then "SMA " else "") + (if sH1 then "H1SMA " else "") +
     (if sH2 then "H2SMA " else "") + (if sH3 then "H3SMA " else "") + (if sRU or sRD then "Round " else "") +
-    "\nT " + AsPrice(close - sTgtD) + "  S " + AsPrice(sStop) + "  RR " + Round(sRR, 2),
+    "\nT1 " + AsPrice(RT(close - sTgtD)) + (if t2DS < 99999 then "  T2 " + AsPrice(RT(close - t2DS)) else "") + "  S " + AsPrice(RT(sStop)) + "  RR " + Round(sRR, 2),
     Color.RED, yes);
 
 AddChartBubble(sweepLong and done, low,
@@ -618,38 +762,48 @@ AddChartBubble(sweepLong and done, low,
     (if lVAL then "VAL " else "") + (if lPOC then "POC " else "") + (if lPPOC then "pPOC " else "") +
     (if lVW then "VWAP " else "") + (if lSMA then "SMA " else "") + (if lH1 then "H1SMA " else "") +
     (if lH2 then "H2SMA " else "") + (if lH3 then "H3SMA " else "") + (if lRU or lRD then "Round " else "") +
-    "\nT " + AsPrice(close + lTgtD) + "  S " + AsPrice(lStop) + "  RR " + Round(lRR, 2),
+    "\nT1 " + AsPrice(RT(close + lTgtD)) + (if t2DL < 99999 then "  T2 " + AsPrice(RT(close + t2DL)) else "") + "  S " + AsPrice(RT(lStop)) + "  RR " + Round(lRR, 2),
     Color.GREEN, no);
 
 AddChartBubble(reclaimShort and done, high,
-    "POC LOSS SHORT\nT " + AsPrice(close - rsTgtD) + "  S " + AsPrice(rsStop) + "  RR " + Round(rsRR, 2),
+    "POC LOSS SHORT\nT " + AsPrice(RT(close - rsTgtD)) + "  S " + AsPrice(RT(rsStop)) + "  RR " + Round(rsRR, 2),
     Color.DARK_RED, yes);
 
 AddChartBubble(htfShort and done, high,
     (if hSelS == 3 then "4H SMA200" else if hSelS == 2 then "4H SMA21" else "1H SMA50") + " REJECT (" + hsScore + ")" + (if hFirstS then "  FIRST TOUCH" else "") + "\n" +
-    "T1 " + AsPrice(close - hsTgtD) + (if hsT2D < 99999 then "  T2 " + AsPrice(close - hsT2D) else "") + "  S " + AsPrice(hsStop) + "  RR " + Round(hsRR, 2),
+    "T1 " + AsPrice(RT(close - hsTgtD)) + (if t2DS < 99999 then "  T2 " + AsPrice(RT(close - t2DS)) else "") + "  S " + AsPrice(RT(hsStop)) + "  RR " + Round(hsRR, 2),
     Color.MAGENTA, yes);
 
 AddChartBubble(htfLong and done, low,
     (if hSelL == 3 then "4H SMA200" else if hSelL == 2 then "4H SMA21" else "1H SMA50") + " HOLD (" + hlScore + ")" + (if hFirstL then "  FIRST TOUCH" else "") + "\n" +
-    "T1 " + AsPrice(close + hlTgtD) + (if hlT2D < 99999 then "  T2 " + AsPrice(close + hlT2D) else "") + "  S " + AsPrice(hlStop) + "  RR " + Round(hlRR, 2),
+    "T1 " + AsPrice(RT(close + hlTgtD)) + (if t2DL < 99999 then "  T2 " + AsPrice(RT(close + t2DL)) else "") + "  S " + AsPrice(RT(hlStop)) + "  RR " + Round(hlRR, 2),
     Color.MAGENTA, no);
 
+AddChartBubble(fboShort and done, high,
+    "FAILED BREAKOUT SHORT  " + (if fbSelS == 3 then "4h SMA200" else if fbSelS == 2 then "4h SMA21" else "1h SMA50") + "\n" +
+    "T1 " + AsPrice(RT(close - fbsTgtD)) + (if t2DS < 99999 then "  T2 " + AsPrice(RT(close - t2DS)) else "") + "  S " + AsPrice(RT(fbsStop)) + "  RR " + Round(fbsRR, 2),
+    Color.VIOLET, yes);
+
+AddChartBubble(fboLong and done, low,
+    "FAILED BREAKDOWN LONG  " + (if fbSelL == 3 then "4h SMA200" else if fbSelL == 2 then "4h SMA21" else "1h SMA50") + "\n" +
+    "T1 " + AsPrice(RT(close + fblTgtD)) + (if t2DL < 99999 then "  T2 " + AsPrice(RT(close + t2DL)) else "") + "  S " + AsPrice(RT(fblStop)) + "  RR " + Round(fblRR, 2),
+    Color.VIOLET, no);
+
 AddChartBubble(showGhosts and ghostS and done, high,
-    "T " + AsPrice(gTgtS) + "  S " + AsPrice(gStpS) + "  RR " + Round(gRRS, 2), Color.GRAY, yes);
+    "T " + AsPrice(RT(gTgtS)) + "  S " + AsPrice(RT(gStpS)) + "  RR " + Round(gRRS, 2), Color.GRAY, yes);
 AddChartBubble(showGhosts and ghostL and done, low,
-    "T " + AsPrice(gTgtL) + "  S " + AsPrice(gStpL) + "  RR " + Round(gRRL, 2), Color.GRAY, no);
+    "T " + AsPrice(RT(gTgtL)) + "  S " + AsPrice(RT(gStpL)) + "  RR " + Round(gRRL, 2), Color.GRAY, no);
 
 AddChartBubble(flipShort and done, high,
-    "VAH FLIP SHORT" + (if okSS then " + SWEEP (" + sScore + ")" else "") + "  +" + Round(fsDepth, 2) + " above VAH\nT " + AsPrice(close - fsTgtD) + "  S " + AsPrice(fsStop) + "  RR " + Round(fsRR, 2),
+    "VAH FLIP SHORT" + (if okSS then " + SWEEP (" + sScore + ")" else "") + "  +" + Round(fsDepth, 2) + " above VAH\nT1 " + AsPrice(RT(close - fsTgtD)) + (if t2DS < 99999 then "  T2 " + AsPrice(RT(close - t2DS)) else "") + "  S " + AsPrice(RT(fsStop)) + "  RR " + Round(fsRR, 2),
     Color.ORANGE, yes);
 
 AddChartBubble(flipLong and done, low,
-    "VAL FLIP LONG" + (if okSL then " + SWEEP (" + lScore + ")" else "") + "  -" + Round(flDepth, 2) + " under VAL\nT " + AsPrice(close + flTgtD) + "  S " + AsPrice(flStop) + "  RR " + Round(flRR, 2),
+    "VAL FLIP LONG" + (if okSL then " + SWEEP (" + lScore + ")" else "") + "  -" + Round(flDepth, 2) + " under VAL\nT1 " + AsPrice(RT(close + flTgtD)) + (if t2DL < 99999 then "  T2 " + AsPrice(RT(close + t2DL)) else "") + "  S " + AsPrice(RT(flStop)) + "  RR " + Round(flRR, 2),
     Color.LIME, no);
 
 AddChartBubble(reclaimLong and done, low,
-    "POC RECLAIM LONG\nT " + AsPrice(close + rlTgtD) + "  S " + AsPrice(rlStop) + "  RR " + Round(rlRR, 2),
+    "POC RECLAIM LONG\nT " + AsPrice(RT(close + rlTgtD)) + "  S " + AsPrice(RT(rlStop)) + "  RR " + Round(rlRR, 2),
     Color.CYAN, no);
 
 # Alerts fire on the first tick of the bar AFTER the signal candle closes
@@ -658,6 +812,8 @@ Alert(sweepLong[1], "Journal: SWEEP LONG - check Bookmap", Alert.BAR, Sound.Ring
 Alert(reclaimShort[1], "Journal: POC LOSS SHORT - check Bookmap", Alert.BAR, Sound.Chimes);
 Alert(reclaimLong[1], "Journal: POC RECLAIM LONG - check Bookmap", Alert.BAR, Sound.Chimes);
 Alert(flipShort[1], "Journal: VAH FLIP SHORT - check Bookmap", Alert.BAR, Sound.Ring);
+Alert(fboShort[1], "Journal: FAILED BREAKOUT SHORT - check Bookmap", Alert.BAR, Sound.Bell);
+Alert(fboLong[1], "Journal: FAILED BREAKDOWN LONG - check Bookmap", Alert.BAR, Sound.Bell);
 Alert(flipLong[1], "Journal: VAL FLIP LONG - check Bookmap", Alert.BAR, Sound.Ring);
 Alert(htfShort[1], "Journal: HTF SMA REJECT SHORT - check Bookmap", Alert.BAR, Sound.Bell);
 Alert(htfLong[1], "Journal: HTF SMA HOLD LONG - check Bookmap", Alert.BAR, Sound.Bell);
@@ -694,24 +850,28 @@ VWAPLine.SetDefaultColor(Color.CYAN);
 # ===== Labels
 AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | short " + sScore + " | long " + lScore,
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
+AddLabel(isChop, "CHOP: " + chopN + " EMA crosses / " + chopLook + " bars - signals paused", Color.ORANGE);
 
 # HTF zone heads-up: price within zoneTol of a 4h/1h SMA. Shows the study's value (completed HTF bars)
 # and the chart's value (includes the forming HTF bar), which side price is testing from,
 # and that fades are allowed at the level even when the bias label disagrees.
-def d3 = AbsValue(close - htf3);
-def d2 = AbsValue(close - htf2);
-def d1 = AbsValue(close - htf1);
+def d3 = if IsNaN(htf3) then 99999 else AbsValue(close - htf3);
+def d2 = if IsNaN(htf2) then 99999 else AbsValue(close - htf2);
+def d1 = if IsNaN(htf1) then 99999 else AbsValue(close - htf1);
 def zSel = if d3 <= zoneTol then 3 else if d2 <= zoneTol then 2 else if d1 <= zoneTol then 1 else 0;
 def zLvl = if zSel == 3 then htf3 else if zSel == 2 then htf2 else htf1;
 def zLive = if zSel == 3 then Average(close(period = htf3Agg), htf3Len) else if zSel == 2 then Average(close(period = htf2Agg), htf2Len) else Average(close(period = htf1Agg), htf1Len);
-AddLabel(zSel > 0, "HTF ZONE: " + (if zSel == 3 then "4h SMA200 " else if zSel == 2 then "4h SMA21 " else "1h SMA50 ") + AsPrice(zLvl) + " (chart " + AsPrice(zLive) + ") | " +
+AddLabel(zSel > 0, "HTF ZONE: " + (if zSel == 3 then "4h SMA200 " else if zSel == 2 then "4h SMA21 " else "1h SMA50 ") + AsPrice(RT(zLvl)) + " (chart " + AsPrice(RT(zLive)) + ") | " +
     (if close < zLvl then "testing from BELOW" else "testing from ABOVE") +
     (if close < zLvl and htfBull then " | HTF BULL -> at level: fades allowed" else if close > zLvl and htfBear then " | HTF BEAR -> at level: holds allowed" else ""),
     Color.YELLOW);
 
-AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | POC S " + w2 + "/" + l2 + " | POC L " + w4 + "/" + l4 + " | VAH flip " + w5 + "/" + l5 + " | VAL flip " + w6 + "/" + l6 + " | HTF S " + w7 + "/" + l7 + " | HTF L " + w8 + "/" + l8 +
-    " | " + aPlusScore + "+ " + wA + "/" + lA + " | net " + Round(netPts, 1) + " pts (W/L, history optimistic)",
+# Scorecard (off by default - turn on showScorecard to review results, not while trading)
+AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | VAH flip " + w5 + "/" + l5 + " | VAL flip " + w6 + "/" + l6 + " | HTF S " + w7 + "/" + l7 + " | HTF L " + w8 + "/" + l8 +
+    " | Fail BO S " + w9 + "/" + l9 + " | Fail BO L " + w10 + "/" + l10 + " | net " + Round(netPts, 1) + " pts (W/L, history optimistic)",
     if netPts >= 0 then Color.GREEN else Color.RED);
+AddLabel(showScorecard, "With HTF bias " + wAl + "/" + lAl + " | Against HTF bias " + wAg + "/" + lAg + " | T2 reached " + t2Reached + " of " + t2Total + " runners",
+    Color.LIGHT_GRAY);
 
 # ----- Debug labels (showDebug = yes) -----
 AddLabel(showDebug, "CVD est " + Round(cvd / 1000, 1) + "k | short (lvl " + sConf + " rej " + sTouch + " str " + (upVAH + upVW + upBB) + " cvd " + cvdDn + ") | long (lvl " + lConf + " rej " + lTouch + " str " + (dnVAL + dnVW + dnBB) + " cvd " + cvdUp + ") | time-outs " + scr + " | avg hold " + (if nRes > 0 then Round(holdSum / nRes, 1) else 0) + " bars",
