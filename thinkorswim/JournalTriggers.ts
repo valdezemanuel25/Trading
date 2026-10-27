@@ -19,6 +19,11 @@ input winStart = 0930;
 input winEnd = 1130;
 input profileReset = {default ETH, RTH};
 input valueAreaPct = 70;
+# PROFILE: ToS volume profile (matches your Volume Profile study, but today's earlier candles are re-checked
+#          against the latest POC/VA, so today's bubbles can change during the session).
+# VWAP_STATIC: POC = VWAP, VAH/VAL = VWAP +/- 1 stdev (~70% of volume). Uses only candles already printed,
+#          so bubbles never change after they appear.
+input vaSource = {default PROFILE, VWAP_STATIC};
 input orMinutes = 5;
 
 # ----- Indicators
@@ -174,9 +179,13 @@ def rDn = if useRound then Floor(close / roundStep) * roundStep else Double.NaN;
 def vpNew = if profileReset == profileReset.RTH then rthOpen else newDay;
 profile vp = VolumeProfile("startNewProfile" = vpNew, "onExpansion" = no, "numberOfProfiles" = 1000, "pricePerRow" = PricePerRow.TICKSIZE, "value area percent" = valueAreaPct);
 # The profile can return N/A on some bars; carry the last value forward (same as TOS's own VolumeProfile study)
-def poc = CompoundValue(1, if IsNaN(vp.GetPointOfControl()) then poc[1] else vp.GetPointOfControl(), Double.NaN);
-def vah = CompoundValue(1, if IsNaN(vp.GetHighestValueArea()) then vah[1] else vp.GetHighestValueArea(), Double.NaN);
-def val = CompoundValue(1, if IsNaN(vp.GetLowestValueArea()) then val[1] else vp.GetLowestValueArea(), Double.NaN);
+def vpPOC = CompoundValue(1, if IsNaN(vp.GetPointOfControl()) then vpPOC[1] else vp.GetPointOfControl(), Double.NaN);
+def vpVAH = CompoundValue(1, if IsNaN(vp.GetHighestValueArea()) then vpVAH[1] else vp.GetHighestValueArea(), Double.NaN);
+def vpVAL = CompoundValue(1, if IsNaN(vp.GetLowestValueArea()) then vpVAL[1] else vp.GetLowestValueArea(), Double.NaN);
+def staticVA = vaSource == vaSource.VWAP_STATIC;
+def poc = if staticVA then vw else vpPOC;
+def vah = if staticVA then vw + vwSd else vpVAH;
+def val = if staticVA then vw - vwSd else vpVAL;
 def pPOC = CompoundValue(1, if vpNew then poc[1] else pPOC[1], Double.NaN);
 
 # CVD estimate from candle close location, reset each session
@@ -344,13 +353,14 @@ def okFS = if IsNaN(rawFS) then 0 else rawFS;
 def okFL = if IsNaN(rawFL) then 0 else rawFL;
 def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
 def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
-# Priority when several fire on one candle: Sweep, then Flip, then POC
-def sweepShort = okSS and lastS == bn;
-def flipShort = !okSS and okFS and lastS == bn;
-def reclaimShort = !okSS and !okFS and okRS and lastS == bn;
-def sweepLong = okSL and lastL == bn;
-def flipLong = !okSL and okFL and lastL == bn;
-def reclaimLong = !okSL and !okFL and okRL and lastL == bn;
+# Priority when several fire on one candle: Flip (the stronger, more specific move), then Sweep, then POC.
+# A Flip that also passes the Sweep rules shows ONE bubble marked "+ SWEEP".
+def flipShort = okFS and lastS == bn;
+def sweepShort = !okFS and okSS and lastS == bn;
+def reclaimShort = !okFS and !okSS and okRS and lastS == bn;
+def flipLong = okFL and lastL == bn;
+def sweepLong = !okFL and okSL and lastL == bn;
+def reclaimLong = !okFL and !okSL and okRL and lastL == bn;
 
 # Only show a signal once its candle has closed (a newer bar exists)
 def done = !IsNaN(close[-1]);
@@ -360,7 +370,7 @@ def sigDirRaw = if sweepShort or flipShort or reclaimShort then -1 else if sweep
 def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else 0;
 def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else 0;
 def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else 0;
-def sigScore = if sweepShort then sScore else if sweepLong then lScore else 0;
+def sigScore = if sweepShort or (flipShort and okSS) then sScore else if sweepLong or (flipLong and okSL) then lScore else 0;
 # Only track a signal whose target and stop are real numbers
 def sigDir = if IsNaN(sigTgt) or IsNaN(sigStp) or IsNaN(sigScore) then 0 else sigDirRaw;
 
@@ -490,11 +500,11 @@ AddChartBubble(reclaimShort and done, high,
     Color.DARK_RED, yes);
 
 AddChartBubble(flipShort and done, high,
-    "VAH FLIP SHORT  +" + Round(fsDepth, 2) + " above VAH\nT " + AsPrice(close - fsTgtD) + "  S " + AsPrice(fsStop) + "  RR " + Round(fsRR, 2),
+    "VAH FLIP SHORT" + (if okSS then " + SWEEP (" + sScore + ")" else "") + "  +" + Round(fsDepth, 2) + " above VAH\nT " + AsPrice(close - fsTgtD) + "  S " + AsPrice(fsStop) + "  RR " + Round(fsRR, 2),
     Color.ORANGE, yes);
 
 AddChartBubble(flipLong and done, low,
-    "VAL FLIP LONG  -" + Round(flDepth, 2) + " under VAL\nT " + AsPrice(close + flTgtD) + "  S " + AsPrice(flStop) + "  RR " + Round(flRR, 2),
+    "VAL FLIP LONG" + (if okSL then " + SWEEP (" + lScore + ")" else "") + "  -" + Round(flDepth, 2) + " under VAL\nT " + AsPrice(close + flTgtD) + "  S " + AsPrice(flStop) + "  RR " + Round(flRR, 2),
     Color.LIME, no);
 
 AddChartBubble(reclaimLong and done, low,
