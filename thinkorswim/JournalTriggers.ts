@@ -52,6 +52,14 @@ input minScore = 3;
 input useReclaim = yes;
 input biasMode = {default ALIGNED_OR_AT_HTF_LEVEL, ALIGNED_ONLY, OFF};
 
+# ----- VAL / VAH Flip (failed breakdown after a flush, or failed breakout after a blow-off)
+input useFlip = yes;
+input flushPts = 15.0;
+input flushLook = 12;
+input flipLook = 6;
+input flipMaxBeyond = 8.0;
+input flipNeedBias = no;
+
 # ----- Risk
 input minTgt = 6.0;
 input stopBuf = 1.0;
@@ -292,6 +300,39 @@ def rsTgtD = Min(Min(Dist(val, yes, rsNeed), Dist(vw, yes, rsNeed)), Min(Min(Dis
 def rsRR = if rsTgtD < 99999 and rsRisk > 0 then rsTgtD / rsRisk else 0;
 def rawRS = useReclaim and inWin and (biasMode == biasMode.OFF or !htfBull) and crossDnPOC and fromVAH and close < emaF and close < open and (!needCvd or cvdDn) and rsRR >= minRR and rsRisk <= maxStop;
 
+# ===== 4) VAL Flip long / VAH Flip short
+# Long: price flushed >= flushPts in the last flushLook bars, traded below VAL (by no more than flipMaxBeyond)
+# within flipLook bars, was stretched (lower VWAP band or BB), and this green candle closes back above VAL
+# in the upper part of its range with buyers stepping in (positive bar delta). CVD does NOT need to have turned:
+# at a flush bottom it is still falling, as in the 06-25 and 10-15 journal longs.
+def flLow = Lowest(low, flipLook);
+def flushDn = Highest(high, flushLook) - flLow >= flushPts;
+def flDepth = val - flLow;
+def flBelow = if IsNaN(flDepth) then 0 else flDepth > lvlTol and flDepth <= flipMaxBeyond;
+def flPrevNear = if IsNaN(val[1]) then 0 else Min(close[1] - val[1], close[2] - val[2]) <= lvlTol;
+def flStrong = close > open and close - low >= 0.6 * (high - low);
+def flStretch = dnVW or dnBB;
+def flStop = flLow - stopBuf;
+def flRisk = close - flStop;
+def flNeed = Max(minTgt, minRR * flRisk);
+def flTgtD = Min(Min(Dist(poc, no, flNeed), Dist(vw, no, flNeed)), Min(Min(Dist(pPOC, no, flNeed), Dist(bbMid, no, flNeed)), Dist(vah, no, flNeed)));
+def flRR = if flTgtD < 99999 and flRisk > 0 then flTgtD / flRisk else 0;
+def rawFL = useFlip and inWin and (!flipNeedBias or lBiasOK) and close > val and flPrevNear and flBelow and flushDn and flStretch and flStrong and barDelta > 0 and flRR >= minRR and flRisk <= maxStop;
+
+def fsHigh = Highest(high, flipLook);
+def flushUp = fsHigh - Lowest(low, flushLook) >= flushPts;
+def fsDepth = fsHigh - vah;
+def fsAbove = if IsNaN(fsDepth) then 0 else fsDepth > lvlTol and fsDepth <= flipMaxBeyond;
+def fsPrevNear = if IsNaN(vah[1]) then 0 else Max(close[1] - vah[1], close[2] - vah[2]) >= -lvlTol;
+def fsStrong = close < open and high - close >= 0.6 * (high - low);
+def fsStretch = upVW or upBB;
+def fsStop = fsHigh + stopBuf;
+def fsRisk = fsStop - close;
+def fsNeed = Max(minTgt, minRR * fsRisk);
+def fsTgtD = Min(Min(Dist(poc, yes, fsNeed), Dist(vw, yes, fsNeed)), Min(Min(Dist(pPOC, yes, fsNeed), Dist(bbMid, yes, fsNeed)), Dist(val, yes, fsNeed)));
+def fsRR = if fsTgtD < 99999 and fsRisk > 0 then fsTgtD / fsRisk else 0;
+def rawFS = useFlip and inWin and (!flipNeedBias or sBiasOK) and close < vah and fsPrevNear and fsAbove and flushUp and fsStretch and fsStrong and barDelta < 0 and fsRR >= minRR and fsRisk <= maxStop;
+
 # ===== Cooldown (same side)
 # A single N/A inside a running (recursive) value would stick forever and block every later signal,
 # so each condition is forced to 0/1 first and the cooldown recovers from N/A.
@@ -299,21 +340,26 @@ def okSS = if IsNaN(rawSS) then 0 else rawSS;
 def okRS = if IsNaN(rawRS) then 0 else rawRS;
 def okSL = if IsNaN(rawSL) then 0 else rawSL;
 def okRL = if IsNaN(rawRL) then 0 else rawRL;
-def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okSS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
-def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okSL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
+def okFS = if IsNaN(rawFS) then 0 else rawFS;
+def okFL = if IsNaN(rawFL) then 0 else rawFL;
+def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
+def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
+# Priority when several fire on one candle: Sweep, then Flip, then POC
 def sweepShort = okSS and lastS == bn;
-def reclaimShort = !okSS and okRS and lastS == bn;
+def flipShort = !okSS and okFS and lastS == bn;
+def reclaimShort = !okSS and !okFS and okRS and lastS == bn;
 def sweepLong = okSL and lastL == bn;
-def reclaimLong = !okSL and okRL and lastL == bn;
+def flipLong = !okSL and okFL and lastL == bn;
+def reclaimLong = !okSL and !okFL and okRL and lastL == bn;
 
 # Only show a signal once its candle has closed (a newer bar exists)
 def done = !IsNaN(close[-1]);
 
 # ===== Scorecard - one tracked trade at a time: enter at signal close, exit at target / stop / time-out
-def sigDirRaw = if sweepShort or reclaimShort then -1 else if sweepLong or reclaimLong then 1 else 0;
-def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else 0;
-def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else 0;
-def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else 0;
+def sigDirRaw = if sweepShort or flipShort or reclaimShort then -1 else if sweepLong or flipLong or reclaimLong then 1 else 0;
+def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else 0;
+def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else 0;
+def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else 0;
 def sigScore = if sweepShort then sScore else if sweepLong then lScore else 0;
 # Only track a signal whose target and stop are real numbers
 def sigDir = if IsNaN(sigTgt) or IsNaN(sigStp) or IsNaN(sigScore) then 0 else sigDirRaw;
@@ -371,6 +417,10 @@ def w3 = TotalSum(isWin and rType == 3);
 def l3 = TotalSum(isLoss and rType == 3);
 def w4 = TotalSum(isWin and rType == 4);
 def l4 = TotalSum(isLoss and rType == 4);
+def w5 = TotalSum(isWin and rType == 5);
+def l5 = TotalSum(isLoss and rType == 5);
+def w6 = TotalSum(isWin and rType == 6);
+def l6 = TotalSum(isLoss and rType == 6);
 def wA = TotalSum(isWin and oScore[1] >= aPlusScore);
 def lA = TotalSum(isLoss and oScore[1] >= aPlusScore);
 def scr = TotalSum(isScratch);
@@ -396,6 +446,16 @@ PocLossSig.SetDefaultColor(Color.DARK_RED);
 plot PocReclaimSig = if reclaimLong and done then low - TickSize() * 4 else Double.NaN;
 PocReclaimSig.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
 PocReclaimSig.SetDefaultColor(Color.CYAN);
+
+plot VahFlipSig = if flipShort and done then high + TickSize() * 4 else Double.NaN;
+VahFlipSig.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
+VahFlipSig.SetDefaultColor(Color.ORANGE);
+VahFlipSig.SetLineWeight(3);
+
+plot ValFlipSig = if flipLong and done then low - TickSize() * 4 else Double.NaN;
+ValFlipSig.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
+ValFlipSig.SetDefaultColor(Color.LIME);
+ValFlipSig.SetLineWeight(3);
 
 # Outcome dots: where each tracked signal hit its target (green) or stop (red)
 plot TargetHit = if showScorecard and isWin then oTgt[1] else Double.NaN;
@@ -429,6 +489,14 @@ AddChartBubble(reclaimShort and done, high,
     "POC LOSS SHORT\nT " + AsPrice(close - rsTgtD) + "  S " + AsPrice(rsStop) + "  RR " + Round(rsRR, 2),
     Color.DARK_RED, yes);
 
+AddChartBubble(flipShort and done, high,
+    "VAH FLIP SHORT  +" + Round(fsDepth, 2) + " above VAH\nT " + AsPrice(close - fsTgtD) + "  S " + AsPrice(fsStop) + "  RR " + Round(fsRR, 2),
+    Color.ORANGE, yes);
+
+AddChartBubble(flipLong and done, low,
+    "VAL FLIP LONG  -" + Round(flDepth, 2) + " under VAL\nT " + AsPrice(close + flTgtD) + "  S " + AsPrice(flStop) + "  RR " + Round(flRR, 2),
+    Color.LIME, no);
+
 AddChartBubble(reclaimLong and done, low,
     "POC RECLAIM LONG\nT " + AsPrice(close + rlTgtD) + "  S " + AsPrice(rlStop) + "  RR " + Round(rlRR, 2),
     Color.CYAN, no);
@@ -438,6 +506,8 @@ Alert(sweepShort[1], "Journal: SWEEP SHORT - check Bookmap", Alert.BAR, Sound.Ri
 Alert(sweepLong[1], "Journal: SWEEP LONG - check Bookmap", Alert.BAR, Sound.Ring);
 Alert(reclaimShort[1], "Journal: POC LOSS SHORT - check Bookmap", Alert.BAR, Sound.Chimes);
 Alert(reclaimLong[1], "Journal: POC RECLAIM LONG - check Bookmap", Alert.BAR, Sound.Chimes);
+Alert(flipShort[1], "Journal: VAH FLIP SHORT - check Bookmap", Alert.BAR, Sound.Ring);
+Alert(flipLong[1], "Journal: VAL FLIP LONG - check Bookmap", Alert.BAR, Sound.Ring);
 
 # ===== Levels
 plot PDHLine = if showKeyLevels then pdH else Double.NaN;
@@ -472,7 +542,7 @@ VWAPLine.SetDefaultColor(Color.CYAN);
 AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | short " + sScore + " | long " + lScore,
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
 
-AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | POC S " + w2 + "/" + l2 + " | POC L " + w4 + "/" + l4 +
+AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | POC S " + w2 + "/" + l2 + " | POC L " + w4 + "/" + l4 + " | VAH flip " + w5 + "/" + l5 + " | VAL flip " + w6 + "/" + l6 +
     " | " + aPlusScore + "+ " + wA + "/" + lA + " | net " + Round(netPts, 1) + " pts (W/L, history optimistic)",
     if netPts >= 0 then Color.GREEN else Color.RED);
 
