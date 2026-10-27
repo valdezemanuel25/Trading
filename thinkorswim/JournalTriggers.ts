@@ -449,7 +449,7 @@ plot VWAPLine = if showProfileVwap then vw else Double.NaN;
 VWAPLine.SetDefaultColor(Color.CYAN);
 
 # ===== Labels
-AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | CVD est " + Round(cvd / 1000, 1) + "k | short score " + sScore + " | long score " + lScore,
+AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | CVD est " + Round(cvd / 1000, 1) + "k | short " + sScore + " (lvl " + sConf + " rej " + sTouch + " str " + (upVAH + upVW + upBB) + " cvd " + cvdDn + ") | long " + lScore + " (lvl " + lConf + " rej " + lTouch + " str " + (dnVAL + dnVW + dnBB) + " cvd " + cvdUp + ")",
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
 
 AddLabel(showScorecard, "Sweep S " + w1 + "W/" + l1 + "L" + (if w1 + l1 > 0 then " " + Round(100 * w1 / (w1 + l1), 0) + "%" else ""),
