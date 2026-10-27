@@ -1,7 +1,7 @@
-# Journal Triggers — thinkorswim study built from the Notion trading journal winners
+# Journal Triggers - thinkorswim study built from the Notion trading journal winners
 #
 #  SWEEP SHORT  : stretched above value, wicked a key level, closed back below it (+ below fast EMA), CVD rolling over
-#  SWEEP LONG   : mirror — swept a key level from below value, closed back above it
+#  SWEEP LONG   : mirror - swept a key level from below value, closed back above it
 #  POC RECLAIM  : rotated off VAL (VAH), first close through POC with CVD agreeing
 #
 #  Score = swept levels + repeat-rejection bonus ("rejected 3x") + stretch (VAH / VWAP band / BB) + CVD
@@ -10,18 +10,18 @@
 #  Scorecard: every signal is tracked to target / stop / time-out and tallied in the chart labels
 #
 # Signals are shown only once the candle has CLOSED; alerts fire on the open of the next bar.
-# Bookmap liquidity is not visible here — still check it before entry.
+# Bookmap liquidity is not visible here - still check it before entry.
 
 declare upper;
 
-# ───── Session
+# ----- Session
 input winStart = 0930;
 input winEnd = 1130;
 input profileReset = {default ETH, RTH};
 input valueAreaPct = 70;
 input orMinutes = 5;
 
-# ───── Indicators
+# ----- Indicators
 input emaLen = 9;
 input smaLen = 50;
 input bbLen = 20;
@@ -36,7 +36,7 @@ input htf3Len = 200;
 input useRound = yes;
 input roundStep = 50.0;
 
-# ───── Trigger rules
+# ----- Trigger rules
 input lvlTol = 1.0;
 input acceptTol = 1.0;
 input sweepLook = 3;
@@ -52,23 +52,23 @@ input minScore = 3;
 input useReclaim = yes;
 input biasMode = {default ALIGNED_OR_AT_HTF_LEVEL, ALIGNED_ONLY, OFF};
 
-# ───── Risk
+# ----- Risk
 input minTgt = 6.0;
 input stopBuf = 1.0;
 input maxStop = 10.0;
 input minRR = 1.0;
 input cooldown = 6;
 
-# ───── Scorecard
+# ----- Scorecard
 input showScorecard = yes;
 input maxHoldBars = 12;
 input aPlusScore = 6;
 
-# ───── Display
+# ----- Display
 input showKeyLevels = yes;
 input showProfileVwap = no;
 
-# ═════ Helpers
+# ===== Helpers
 # Short side: 0 if no sweep-rejection of lvl on this bar, otherwise the number of separate rejections of lvl
 # (wicks to it that closed below) in the last touchLook bars, minimum 1.
 script SwS {
@@ -102,7 +102,7 @@ script Dist {
     plot r = if !IsNaN(m) and d >= minD then d else 99999;
 }
 
-# ═════ Sessions
+# ===== Sessions
 def bn = BarNumber();
 def newDay = GetYYYYMMDD() != GetYYYYMMDD()[1];
 def isRTH = SecondsFromTime(0930) >= 0 and SecondsTillTime(1600) > 0;
@@ -123,7 +123,7 @@ def orLo = CompoundValue(1, if rthOpen then low else if inOR then Min(orLo[1], l
 def or5H = if isRTH and !inOR then orHi else Double.NaN;
 def or5L = if isRTH and !inOR then orLo else Double.NaN;
 
-# ═════ Indicators
+# ===== Indicators
 def emaF = ExpAverage(close, emaLen);
 def smaC = Average(close, smaLen);
 def bbMid = Average(close, bbLen);
@@ -173,7 +173,7 @@ def cvd = CompoundValue(1, if newDay then barDelta else cvd[1] + barDelta, barDe
 def cvdUp = barDelta > 0 and cvd > GetValue(cvd, cvdLook);
 def cvdDn = barDelta < 0 and cvd < GetValue(cvd, cvdLook);
 
-# ═════ 1) Sweep & Reject (short)
+# ===== 1) Sweep & Reject (short)
 def sPDH = SwS(pdH, lvlTol, acceptTol, sweepLook, touchLook);
 def sPDL = SwS(pdL, lvlTol, acceptTol, sweepLook, touchLook);
 def sPWH = SwS(pwH, lvlTol, acceptTol, sweepLook, touchLook);
@@ -213,7 +213,7 @@ def sTgtD = Min(Min(Min(Dist(poc, yes, minTgt), Dist(vw, yes, minTgt)), Min(Dist
 def sRR = if sTgtD < 99999 and sRisk > 0 then sTgtD / sRisk else 0;
 def rawSS = inWin and sConf > 0 and sBiasOK and close < open and (!shortNeedEma or close < emaF) and (!needCvd or cvdDn) and sScore >= minScore and sRR >= minRR and sRisk <= maxStop;
 
-# ═════ 2) Sweep & Reclaim (long)
+# ===== 2) Sweep & Reclaim (long)
 def lPDH = SwL(pdH, lvlTol, acceptTol, sweepLook, touchLook);
 def lPDL = SwL(pdL, lvlTol, acceptTol, sweepLook, touchLook);
 def lPWH = SwL(pwH, lvlTol, acceptTol, sweepLook, touchLook);
@@ -253,7 +253,7 @@ def lTgtD = Min(Min(Min(Dist(poc, no, minTgt), Dist(vw, no, minTgt)), Min(Dist(v
 def lRR = if lTgtD < 99999 and lRisk > 0 then lTgtD / lRisk else 0;
 def rawSL = inWin and lConf > 0 and lBiasOK and close > open and (!longNeedEma or close > emaF) and (!needCvd or cvdUp) and lScore >= minScore and lRR >= minRR and lRisk <= maxStop;
 
-# ═════ 3) POC Reclaim / POC Loss (continuation — never against the HTF trend)
+# ===== 3) POC Reclaim / POC Loss (continuation - never against the HTF trend)
 def crossUpPOC = close > poc and close[1] <= poc[1];
 def crossDnPOC = close < poc and close[1] >= poc[1];
 def fromVAL = Lowest(low - val, reclaimLook) <= lvlTol;
@@ -271,7 +271,7 @@ def rsTgtD = Min(Min(Dist(val, yes, minTgt), Dist(vw, yes, minTgt)), Min(Min(Dis
 def rsRR = if rsTgtD < 99999 and rsRisk > 0 then rsTgtD / rsRisk else 0;
 def rawRS = useReclaim and inWin and (biasMode == biasMode.OFF or !htfBull) and crossDnPOC and fromVAH and close < emaF and close < open and (!needCvd or cvdDn) and rsRR >= minRR and rsRisk <= maxStop;
 
-# ═════ Cooldown (same side)
+# ===== Cooldown (same side)
 def lastS = CompoundValue(1, if (rawSS or rawRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
 def lastL = CompoundValue(1, if (rawSL or rawRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
 def sweepShort = rawSS and lastS == bn;
@@ -282,7 +282,7 @@ def reclaimLong = !rawSL and rawRL and lastL == bn;
 # Only show a signal once its candle has closed (a newer bar exists)
 def done = !IsNaN(close[-1]);
 
-# ═════ Scorecard — one tracked trade at a time: enter at signal close, exit at target / stop / time-out
+# ===== Scorecard - one tracked trade at a time: enter at signal close, exit at target / stop / time-out
 def sigDir = if sweepShort or reclaimShort then -1 else if sweepLong or reclaimLong then 1 else 0;
 def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else 0;
 def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else 0;
@@ -349,7 +349,7 @@ def nRes = TotalSum(resolved);
 def holdSum = TotalSum(if resolved then bn - oBar[1] else 0);
 def netPts = TotalSum(ptsR);
 
-# ═════ Output
+# ===== Output
 plot SweepShortSig = if sweepShort and done then high + TickSize() * 4 else Double.NaN;
 SweepShortSig.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
 SweepShortSig.SetDefaultColor(Color.RED);
@@ -405,12 +405,12 @@ AddChartBubble(reclaimLong and done, low,
     Color.CYAN, no);
 
 # Alerts fire on the first tick of the bar AFTER the signal candle closes
-Alert(sweepShort[1], "Journal: SWEEP SHORT — check Bookmap", Alert.BAR, Sound.Ring);
-Alert(sweepLong[1], "Journal: SWEEP LONG — check Bookmap", Alert.BAR, Sound.Ring);
-Alert(reclaimShort[1], "Journal: POC LOSS SHORT — check Bookmap", Alert.BAR, Sound.Chimes);
-Alert(reclaimLong[1], "Journal: POC RECLAIM LONG — check Bookmap", Alert.BAR, Sound.Chimes);
+Alert(sweepShort[1], "Journal: SWEEP SHORT - check Bookmap", Alert.BAR, Sound.Ring);
+Alert(sweepLong[1], "Journal: SWEEP LONG - check Bookmap", Alert.BAR, Sound.Ring);
+Alert(reclaimShort[1], "Journal: POC LOSS SHORT - check Bookmap", Alert.BAR, Sound.Chimes);
+Alert(reclaimLong[1], "Journal: POC RECLAIM LONG - check Bookmap", Alert.BAR, Sound.Chimes);
 
-# ═════ Levels
+# ===== Levels
 plot PDHLine = if showKeyLevels then pdH else Double.NaN;
 PDHLine.SetDefaultColor(Color.GRAY);
 PDHLine.SetStyle(Curve.SHORT_DASH);
@@ -439,7 +439,7 @@ VALLine.SetDefaultColor(Color.DARK_ORANGE);
 plot VWAPLine = if showProfileVwap then vw else Double.NaN;
 VWAPLine.SetDefaultColor(Color.CYAN);
 
-# ═════ Labels
+# ===== Labels
 AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | CVD est " + Round(cvd / 1000, 1) + "k | short score " + sScore + " | long score " + lScore,
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
 
@@ -452,4 +452,4 @@ AddLabel(showScorecard, "Score " + aPlusScore + "+: " + wA + "W/" + lA + "L" + (
     if wA >= lA then Color.GREEN else Color.RED);
 AddLabel(showScorecard, "Time-outs " + scr + " | avg hold " + (if nRes > 0 then Round(holdSum / nRes, 1) else 0) + " bars | net " + Round(netPts, 2) + " pts",
     if netPts >= 0 then Color.GREEN else Color.RED);
-AddLabel(showScorecard, "History uses final-day POC/VA — treat as optimistic", Color.DARK_GRAY);
+AddLabel(showScorecard, "History uses final-day POC/VA - treat as optimistic", Color.DARK_GRAY);
