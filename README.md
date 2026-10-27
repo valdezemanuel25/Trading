@@ -30,7 +30,7 @@ The ToS version adds four things:
 - **Scorecard.** Every signal is followed to target, stop, or a `maxHoldBars` time-out, one trade at a time, and the labels tally the results by setup. Scores of `aPlusScore` and up get their own tally, along with average hold and net points. Green and red dots show where each signal hit its target or stop. Load 30+ days of 5m bars so the counts are meaningful.
 
 - **Targets.** The ToS version targets the nearest level that is at least `minTgt` away *and* gives at least `minRR` for that stop. If POC is too close for 1:1, it targets VAH/VWAP instead. The max stop is 12 pts.
-- **Debug labels.** The `Short:` / `Long:` labels name the rule blocking a signal on the bar under your cursor. Turn them off with `showDebug`.
+- **Labels.** Two labels show by default: the HTF bias with the current short/long score, and a one-line scorecard (W/L per setup and net points). Set `showDebug = yes` to add the score breakdown and the **funnel**. The funnel counts, over the loaded history, how many in-window bars survive each rule, so the step where the count collapses is the rule blocking signals.
 
 ToS limitations:
 - ToS scans and server-side study alerts don't allow secondary timeframes, and this study uses 1h/4h SMAs. Its alerts therefore only fire while the chart is open in ToS desktop, with no phone push.

@@ -67,7 +67,7 @@ input aPlusScore = 6;
 # ----- Display
 input showKeyLevels = yes;
 input showProfileVwap = no;
-input showDebug = yes;
+input showDebug = no;
 
 # ===== Helpers
 # Short side: 0 if no sweep-rejection of lvl on this bar, otherwise the number of separate rejections of lvl
@@ -293,22 +293,30 @@ def rsRR = if rsTgtD < 99999 and rsRisk > 0 then rsTgtD / rsRisk else 0;
 def rawRS = useReclaim and inWin and (biasMode == biasMode.OFF or !htfBull) and crossDnPOC and fromVAH and close < emaF and close < open and (!needCvd or cvdDn) and rsRR >= minRR and rsRisk <= maxStop;
 
 # ===== Cooldown (same side)
-def lastS = CompoundValue(1, if (rawSS or rawRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
-def lastL = CompoundValue(1, if (rawSL or rawRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
-def sweepShort = rawSS and lastS == bn;
-def reclaimShort = !rawSS and rawRS and lastS == bn;
-def sweepLong = rawSL and lastL == bn;
-def reclaimLong = !rawSL and rawRL and lastL == bn;
+# A single N/A inside a running (recursive) value would stick forever and block every later signal,
+# so each condition is forced to 0/1 first and the cooldown recovers from N/A.
+def okSS = if IsNaN(rawSS) then 0 else rawSS;
+def okRS = if IsNaN(rawRS) then 0 else rawRS;
+def okSL = if IsNaN(rawSL) then 0 else rawSL;
+def okRL = if IsNaN(rawRL) then 0 else rawRL;
+def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okSS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
+def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okSL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
+def sweepShort = okSS and lastS == bn;
+def reclaimShort = !okSS and okRS and lastS == bn;
+def sweepLong = okSL and lastL == bn;
+def reclaimLong = !okSL and okRL and lastL == bn;
 
 # Only show a signal once its candle has closed (a newer bar exists)
 def done = !IsNaN(close[-1]);
 
 # ===== Scorecard - one tracked trade at a time: enter at signal close, exit at target / stop / time-out
-def sigDir = if sweepShort or reclaimShort then -1 else if sweepLong or reclaimLong then 1 else 0;
+def sigDirRaw = if sweepShort or reclaimShort then -1 else if sweepLong or reclaimLong then 1 else 0;
 def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else 0;
 def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else 0;
 def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else 0;
 def sigScore = if sweepShort then sScore else if sweepLong then lScore else 0;
+# Only track a signal whose target and stop are real numbers
+def sigDir = if IsNaN(sigTgt) or IsNaN(sigStp) or IsNaN(sigScore) then 0 else sigDirRaw;
 
 def oDir;
 def oEnt;
@@ -317,9 +325,9 @@ def oStp;
 def oBar;
 def oType;
 def oScore;
-def openPrev = bn > 1 and oDir[1] != 0;
-def hitT = openPrev and (if oDir[1] < 0 then low <= oTgt[1] else high >= oTgt[1]);
-def hitS = openPrev and (if oDir[1] < 0 then high >= oStp[1] else low <= oStp[1]);
+def openPrev = if bn <= 1 or IsNaN(oDir[1]) then 0 else oDir[1] != 0;
+def hitT = if !openPrev then 0 else if oDir[1] < 0 then low <= oTgt[1] else high >= oTgt[1];
+def hitS = if !openPrev then 0 else if oDir[1] < 0 then high >= oStp[1] else low <= oStp[1];
 def tOut = openPrev and !hitT and !hitS and (bn - oBar[1] >= maxHoldBars or !isRTH);
 def resolved = hitT or hitS or tOut;
 def isWin = hitT and !hitS;  # target and stop in the same bar counts as a loss
@@ -461,8 +469,16 @@ plot VWAPLine = if showProfileVwap then vw else Double.NaN;
 VWAPLine.SetDefaultColor(Color.CYAN);
 
 # ===== Labels
-AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | CVD est " + Round(cvd / 1000, 1) + "k | short " + sScore + " (lvl " + sConf + " rej " + sTouch + " str " + (upVAH + upVW + upBB) + " cvd " + cvdDn + ") | long " + lScore + " (lvl " + lConf + " rej " + lTouch + " str " + (dnVAL + dnVW + dnBB) + " cvd " + cvdUp + ")",
+AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | short " + sScore + " | long " + lScore,
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
+
+AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | POC S " + w2 + "/" + l2 + " | POC L " + w4 + "/" + l4 +
+    " | " + aPlusScore + "+ " + wA + "/" + lA + " | net " + Round(netPts, 1) + " pts (W/L, history optimistic)",
+    if netPts >= 0 then Color.GREEN else Color.RED);
+
+# ----- Debug labels (showDebug = yes) -----
+AddLabel(showDebug, "CVD est " + Round(cvd / 1000, 1) + "k | short (lvl " + sConf + " rej " + sTouch + " str " + (upVAH + upVW + upBB) + " cvd " + cvdDn + ") | long (lvl " + lConf + " rej " + lTouch + " str " + (dnVAL + dnVW + dnBB) + " cvd " + cvdUp + ") | time-outs " + scr + " | avg hold " + (if nRes > 0 then Round(holdSum / nRes, 1) else 0) + " bars",
+    Color.LIGHT_GRAY);
 
 # Funnel: across all loaded history, how many in-window bars survive each rule in order.
 # The step where the count collapses is the rule that is blocking signals.
@@ -484,26 +500,3 @@ AddLabel(showDebug, "S funnel: window bars " + TotalSum(inWin) + " > swept " + T
     " > CVD " + TotalSum(fS4) + " > score " + TotalSum(fS5) + " > stop " + TotalSum(fS6) + " > RR " + TotalSum(fS7) + " > fired " + TotalSum(sweepShort), Color.LIGHT_GRAY);
 AddLabel(showDebug, "L funnel: swept " + TotalSum(fL1) + " > bias " + TotalSum(fL2) + " > candle/EMA " + TotalSum(fL3) +
     " > CVD " + TotalSum(fL4) + " > score " + TotalSum(fL5) + " > stop " + TotalSum(fL6) + " > RR " + TotalSum(fL7) + " > fired " + TotalSum(sweepLong), Color.LIGHT_GRAY);
-
-# Which rule is blocking a sweep signal on the LATEST bar (labels always show the last bar) (turn off with showDebug)
-AddLabel(showDebug, "Short: " + (if rawSS then "SIGNAL" else if sConf == 0 then "no level swept" else
-    (if !inWin then "outside window " else "") + (if !sBiasOK then "HTF bias " else "") + (if close >= open then "not red " else "") +
-    (if shortNeedEma and close >= emaF then "above EMA " else "") + (if needCvd and !cvdDn then "CVD " else "") +
-    (if sScore < minScore then "score " else "") + (if sTgtD >= 99999 then "no 1:1 target " else if sRR < minRR then "RR " + Round(sRR, 2) + " " else "") +
-    (if sRisk > maxStop then "stop " + Round(sRisk, 2) + "pt" else "")), Color.LIGHT_GRAY);
-AddLabel(showDebug, "Long: " + (if rawSL then "SIGNAL" else if lConf == 0 then "no level swept" else
-    (if !inWin then "outside window " else "") + (if !lBiasOK then "HTF bias " else "") + (if close <= open then "not green " else "") +
-    (if longNeedEma and close <= emaF then "below EMA " else "") + (if needCvd and !cvdUp then "CVD " else "") +
-    (if lScore < minScore then "score " else "") + (if lTgtD >= 99999 then "no 1:1 target " else if lRR < minRR then "RR " + Round(lRR, 2) + " " else "") +
-    (if lRisk > maxStop then "stop " + Round(lRisk, 2) + "pt" else "")), Color.LIGHT_GRAY);
-
-AddLabel(showScorecard, "Sweep S " + w1 + "W/" + l1 + "L" + (if w1 + l1 > 0 then " " + Round(100 * w1 / (w1 + l1), 0) + "%" else ""),
-    if w1 >= l1 then Color.GREEN else Color.RED);
-AddLabel(showScorecard, "Sweep L " + w3 + "W/" + l3 + "L" + (if w3 + l3 > 0 then " " + Round(100 * w3 / (w3 + l3), 0) + "%" else ""),
-    if w3 >= l3 then Color.GREEN else Color.RED);
-AddLabel(showScorecard, "POC S " + w2 + "W/" + l2 + "L | POC L " + w4 + "W/" + l4 + "L", Color.GRAY);
-AddLabel(showScorecard, "Score " + aPlusScore + "+: " + wA + "W/" + lA + "L" + (if wA + lA > 0 then " " + Round(100 * wA / (wA + lA), 0) + "%" else ""),
-    if wA >= lA then Color.GREEN else Color.RED);
-AddLabel(showScorecard, "Time-outs " + scr + " | avg hold " + (if nRes > 0 then Round(holdSum / nRes, 1) else 0) + " bars | net " + Round(netPts, 2) + " pts",
-    if netPts >= 0 then Color.GREEN else Color.RED);
-AddLabel(showScorecard, "History uses final-day POC/VA - treat as optimistic", Color.DARK_GRAY);
