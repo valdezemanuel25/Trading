@@ -161,9 +161,10 @@ def rDn = if useRound then Floor(close / roundStep) * roundStep else Double.NaN;
 # so historical signals (and the scorecard) are optimistic; live signals use the developing profile.
 def vpNew = if profileReset == profileReset.RTH then rthOpen else newDay;
 profile vp = VolumeProfile("startNewProfile" = vpNew, "onExpansion" = no, "numberOfProfiles" = 1000, "pricePerRow" = PricePerRow.TICKSIZE, "value area percent" = valueAreaPct);
-def poc = vp.GetPointOfControl();
-def vah = vp.GetHighestValueArea();
-def val = vp.GetLowestValueArea();
+# The profile can return N/A on some bars; carry the last value forward (same as TOS's own VolumeProfile study)
+def poc = CompoundValue(1, if IsNaN(vp.GetPointOfControl()) then poc[1] else vp.GetPointOfControl(), Double.NaN);
+def vah = CompoundValue(1, if IsNaN(vp.GetHighestValueArea()) then vah[1] else vp.GetHighestValueArea(), Double.NaN);
+def val = CompoundValue(1, if IsNaN(vp.GetLowestValueArea()) then val[1] else vp.GetLowestValueArea(), Double.NaN);
 def pPOC = CompoundValue(1, if vpNew then poc[1] else pPOC[1], Double.NaN);
 
 # CVD estimate from candle close location, reset each session
@@ -200,9 +201,12 @@ def sTouch = Max(Max(Max(Max(sPDH, sPDL), Max(sPWH, sPWL)), Max(Max(sPMH, sPML),
              Max(Max(Max(Max(sPOC, sVAH), Max(sVAL, sPPOC)), Max(Max(sVW, sSMA), Max(sH1, sH2))), Max(sH3, Max(sRU, sRD))));
 def sAtHtf = (sPDH > 0) or (sPWH > 0) or (sH1 > 0) or (sH2 > 0) or (sH3 > 0) or (sRU > 0) or (sRD > 0);
 
-def upVAH = Highest(high - vah, stretchLook) >= 0;
-def upVW = Highest(high - vwUp, stretchLook) >= 0;
-def upBB = Highest(high - bbUp, stretchLook) >= 0;
+def hiVAH = Highest(high - vah, stretchLook);
+def upVAH = if IsNaN(hiVAH) then 0 else hiVAH >= 0;
+def hiVW = Highest(high - vwUp, stretchLook);
+def upVW = if IsNaN(hiVW) then 0 else hiVW >= 0;
+def hiBB = Highest(high - bbUp, stretchLook);
+def upBB = if IsNaN(hiBB) then 0 else hiBB >= 0;
 def sScore = sConf + Min(Max(sTouch - 1, 0), touchBonusCap) + upVAH + upVW + upBB + cvdDn;
 def sBiasOK = biasMode == biasMode.OFF or htfBear or (biasMode == biasMode.ALIGNED_OR_AT_HTF_LEVEL and sAtHtf);
 
@@ -240,9 +244,12 @@ def lTouch = Max(Max(Max(Max(lPDH, lPDL), Max(lPWH, lPWL)), Max(Max(lPMH, lPML),
              Max(Max(Max(Max(lPOC, lVAH), Max(lVAL, lPPOC)), Max(Max(lVW, lSMA), Max(lH1, lH2))), Max(lH3, Max(lRU, lRD))));
 def lAtHtf = (lPDL > 0) or (lPWL > 0) or (lH1 > 0) or (lH2 > 0) or (lH3 > 0) or (lRU > 0) or (lRD > 0);
 
-def dnVAL = Lowest(low - val, stretchLook) <= 0;
-def dnVW = Lowest(low - vwLo, stretchLook) <= 0;
-def dnBB = Lowest(low - bbLo, stretchLook) <= 0;
+def loVAL = Lowest(low - val, stretchLook);
+def dnVAL = if IsNaN(loVAL) then 0 else loVAL <= 0;
+def loVW = Lowest(low - vwLo, stretchLook);
+def dnVW = if IsNaN(loVW) then 0 else loVW <= 0;
+def loBB = Lowest(low - bbLo, stretchLook);
+def dnBB = if IsNaN(loBB) then 0 else loBB <= 0;
 def lScore = lConf + Min(Max(lTouch - 1, 0), touchBonusCap) + dnVAL + dnVW + dnBB + cvdUp;
 def lBiasOK = biasMode == biasMode.OFF or htfBull or (biasMode == biasMode.ALIGNED_OR_AT_HTF_LEVEL and lAtHtf);
 
@@ -256,8 +263,10 @@ def rawSL = inWin and lConf > 0 and lBiasOK and close > open and (!longNeedEma o
 # ===== 3) POC Reclaim / POC Loss (continuation - never against the HTF trend)
 def crossUpPOC = close > poc and close[1] <= poc[1];
 def crossDnPOC = close < poc and close[1] >= poc[1];
-def fromVAL = Lowest(low - val, reclaimLook) <= lvlTol;
-def fromVAH = Highest(high - vah, reclaimLook) >= -lvlTol;
+def loRecl = Lowest(low - val, reclaimLook);
+def fromVAL = if IsNaN(loRecl) then 0 else loRecl <= lvlTol;
+def hiRecl = Highest(high - vah, reclaimLook);
+def fromVAH = if IsNaN(hiRecl) then 0 else hiRecl >= -lvlTol;
 
 def rlStop = Lowest(low, 5) - stopBuf;
 def rlRisk = close - rlStop;
