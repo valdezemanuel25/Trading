@@ -55,7 +55,7 @@ input biasMode = {default ALIGNED_OR_AT_HTF_LEVEL, ALIGNED_ONLY, OFF};
 # ----- Risk
 input minTgt = 6.0;
 input stopBuf = 1.0;
-input maxStop = 10.0;
+input maxStop = 12.0;
 input minRR = 1.0;
 input cooldown = 6;
 
@@ -216,8 +216,10 @@ def sBiasOK = biasMode == biasMode.OFF or htfBear or (biasMode == biasMode.ALIGN
 
 def sStop = Highest(high, sweepLook) + stopBuf;
 def sRisk = sStop - close;
-def sTgtD = Min(Min(Min(Dist(poc, yes, minTgt), Dist(vw, yes, minTgt)), Min(Dist(val, yes, minTgt), Dist(pPOC, yes, minTgt))),
-                Min(Min(Dist(bbMid, yes, minTgt), Dist(vwLo, yes, minTgt)), Min(Dist(pdL, yes, minTgt), Dist(pmL, yes, minTgt))));
+# Nearest level that is at least minTgt away AND gives at least minRR for this stop
+def sNeed = Max(minTgt, minRR * sRisk);
+def sTgtD = Min(Min(Min(Dist(poc, yes, sNeed), Dist(vw, yes, sNeed)), Min(Dist(val, yes, sNeed), Dist(pPOC, yes, sNeed))),
+                Min(Min(Dist(bbMid, yes, sNeed), Dist(vwLo, yes, sNeed)), Min(Dist(pdL, yes, sNeed), Dist(pmL, yes, sNeed))));
 def sRR = if sTgtD < 99999 and sRisk > 0 then sTgtD / sRisk else 0;
 def rawSS = inWin and sConf > 0 and sBiasOK and close < open and (!shortNeedEma or close < emaF) and (!needCvd or cvdDn) and sScore >= minScore and sRR >= minRR and sRisk <= maxStop;
 
@@ -259,8 +261,10 @@ def lBiasOK = biasMode == biasMode.OFF or htfBull or (biasMode == biasMode.ALIGN
 
 def lStop = Lowest(low, sweepLook) - stopBuf;
 def lRisk = close - lStop;
-def lTgtD = Min(Min(Min(Dist(poc, no, minTgt), Dist(vw, no, minTgt)), Min(Dist(vah, no, minTgt), Dist(pPOC, no, minTgt))),
-                Min(Min(Min(Dist(bbMid, no, minTgt), Dist(emaF, no, minTgt)), Dist(vwUp, no, minTgt)), Min(Dist(pdH, no, minTgt), Dist(pmH, no, minTgt))));
+# Nearest level that is at least minTgt away AND gives at least minRR for this stop
+def lNeed = Max(minTgt, minRR * lRisk);
+def lTgtD = Min(Min(Min(Dist(poc, no, lNeed), Dist(vw, no, lNeed)), Min(Dist(vah, no, lNeed), Dist(pPOC, no, lNeed))),
+                Min(Min(Min(Dist(bbMid, no, lNeed), Dist(emaF, no, lNeed)), Dist(vwUp, no, lNeed)), Min(Dist(pdH, no, lNeed), Dist(pmH, no, lNeed))));
 def lRR = if lTgtD < 99999 and lRisk > 0 then lTgtD / lRisk else 0;
 def rawSL = inWin and lConf > 0 and lBiasOK and close > open and (!longNeedEma or close > emaF) and (!needCvd or cvdUp) and lScore >= minScore and lRR >= minRR and lRisk <= maxStop;
 
@@ -274,13 +278,17 @@ def fromVAH = if IsNaN(hiRecl) then 0 else hiRecl >= -lvlTol;
 
 def rlStop = Lowest(low, 5) - stopBuf;
 def rlRisk = close - rlStop;
-def rlTgtD = Min(Min(Dist(vah, no, minTgt), Dist(vw, no, minTgt)), Min(Min(Dist(vwUp, no, minTgt), Dist(pdH, no, minTgt)), Dist(pmH, no, minTgt)));
+# Nearest level that is at least minTgt away AND gives at least minRR for this stop
+def rlNeed = Max(minTgt, minRR * rlRisk);
+def rlTgtD = Min(Min(Dist(vah, no, rlNeed), Dist(vw, no, rlNeed)), Min(Min(Dist(vwUp, no, rlNeed), Dist(pdH, no, rlNeed)), Dist(pmH, no, rlNeed)));
 def rlRR = if rlTgtD < 99999 and rlRisk > 0 then rlTgtD / rlRisk else 0;
 def rawRL = useReclaim and inWin and (biasMode == biasMode.OFF or !htfBear) and crossUpPOC and fromVAL and close > emaF and close > open and (!needCvd or cvdUp) and rlRR >= minRR and rlRisk <= maxStop;
 
 def rsStop = Highest(high, 5) + stopBuf;
 def rsRisk = rsStop - close;
-def rsTgtD = Min(Min(Dist(val, yes, minTgt), Dist(vw, yes, minTgt)), Min(Min(Dist(vwLo, yes, minTgt), Dist(pdL, yes, minTgt)), Dist(pmL, yes, minTgt)));
+# Nearest level that is at least minTgt away AND gives at least minRR for this stop
+def rsNeed = Max(minTgt, minRR * rsRisk);
+def rsTgtD = Min(Min(Dist(val, yes, rsNeed), Dist(vw, yes, rsNeed)), Min(Min(Dist(vwLo, yes, rsNeed), Dist(pdL, yes, rsNeed)), Dist(pmL, yes, rsNeed)));
 def rsRR = if rsTgtD < 99999 and rsRisk > 0 then rsTgtD / rsRisk else 0;
 def rawRS = useReclaim and inWin and (biasMode == biasMode.OFF or !htfBull) and crossDnPOC and fromVAH and close < emaF and close < open and (!needCvd or cvdDn) and rsRR >= minRR and rsRisk <= maxStop;
 
@@ -460,12 +468,12 @@ AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else 
 AddLabel(showDebug, "Short: " + (if rawSS then "SIGNAL" else if sConf == 0 then "no level swept" else
     (if !inWin then "outside window " else "") + (if !sBiasOK then "HTF bias " else "") + (if close >= open then "not red " else "") +
     (if shortNeedEma and close >= emaF then "above EMA " else "") + (if needCvd and !cvdDn then "CVD " else "") +
-    (if sScore < minScore then "score " else "") + (if sRR < minRR then "RR " + Round(sRR, 2) + " " else "") +
+    (if sScore < minScore then "score " else "") + (if sTgtD >= 99999 then "no 1:1 target " else if sRR < minRR then "RR " + Round(sRR, 2) + " " else "") +
     (if sRisk > maxStop then "stop " + Round(sRisk, 2) + "pt" else "")), Color.LIGHT_GRAY);
 AddLabel(showDebug, "Long: " + (if rawSL then "SIGNAL" else if lConf == 0 then "no level swept" else
     (if !inWin then "outside window " else "") + (if !lBiasOK then "HTF bias " else "") + (if close <= open then "not green " else "") +
     (if longNeedEma and close <= emaF then "below EMA " else "") + (if needCvd and !cvdUp then "CVD " else "") +
-    (if lScore < minScore then "score " else "") + (if lRR < minRR then "RR " + Round(lRR, 2) + " " else "") +
+    (if lScore < minScore then "score " else "") + (if lTgtD >= 99999 then "no 1:1 target " else if lRR < minRR then "RR " + Round(lRR, 2) + " " else "") +
     (if lRisk > maxStop then "stop " + Round(lRisk, 2) + "pt" else "")), Color.LIGHT_GRAY);
 
 AddLabel(showScorecard, "Sweep S " + w1 + "W/" + l1 + "L" + (if w1 + l1 > 0 then " " + Round(100 * w1 / (w1 + l1), 0) + "%" else ""),
