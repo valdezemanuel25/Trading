@@ -67,6 +67,7 @@ input aPlusScore = 6;
 # ----- Display
 input showKeyLevels = yes;
 input showProfileVwap = no;
+input showDebug = yes;
 
 # ===== Helpers
 # Short side: 0 if no sweep-rejection of lvl on this bar, otherwise the number of separate rejections of lvl
@@ -454,6 +455,18 @@ VWAPLine.SetDefaultColor(Color.CYAN);
 # ===== Labels
 AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | CVD est " + Round(cvd / 1000, 1) + "k | short " + sScore + " (lvl " + sConf + " rej " + sTouch + " str " + (upVAH + upVW + upBB) + " cvd " + cvdDn + ") | long " + lScore + " (lvl " + lConf + " rej " + lTouch + " str " + (dnVAL + dnVW + dnBB) + " cvd " + cvdUp + ")",
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
+
+# Which rule is blocking a sweep signal on the current bar (turn off with showDebug)
+AddLabel(showDebug, "Short: " + (if rawSS then "SIGNAL" else if sConf == 0 then "no level swept" else
+    (if !inWin then "outside window " else "") + (if !sBiasOK then "HTF bias " else "") + (if close >= open then "not red " else "") +
+    (if shortNeedEma and close >= emaF then "above EMA " else "") + (if needCvd and !cvdDn then "CVD " else "") +
+    (if sScore < minScore then "score " else "") + (if sRR < minRR then "RR " + Round(sRR, 2) + " " else "") +
+    (if sRisk > maxStop then "stop " + Round(sRisk, 2) + "pt" else "")), Color.LIGHT_GRAY);
+AddLabel(showDebug, "Long: " + (if rawSL then "SIGNAL" else if lConf == 0 then "no level swept" else
+    (if !inWin then "outside window " else "") + (if !lBiasOK then "HTF bias " else "") + (if close <= open then "not green " else "") +
+    (if longNeedEma and close <= emaF then "below EMA " else "") + (if needCvd and !cvdUp then "CVD " else "") +
+    (if lScore < minScore then "score " else "") + (if lRR < minRR then "RR " + Round(lRR, 2) + " " else "") +
+    (if lRisk > maxStop then "stop " + Round(lRisk, 2) + "pt" else "")), Color.LIGHT_GRAY);
 
 AddLabel(showScorecard, "Sweep S " + w1 + "W/" + l1 + "L" + (if w1 + l1 > 0 then " " + Round(100 * w1 / (w1 + l1), 0) + "%" else ""),
     if w1 >= l1 then Color.GREEN else Color.RED);
