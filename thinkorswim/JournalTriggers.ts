@@ -77,10 +77,12 @@ script SwS {
     input acc = 1.0;
     input look = 3;
     input touchLook = 48;
-    def touch = !IsNaN(lvl) and high >= lvl - tol and close < lvl;
-    def touches = Sum(touch and !touch[1], touchLook);
-    def swept = !IsNaN(lvl) and Highest(high, look) >= lvl - tol and Highest(close, look) <= lvl + acc and close < lvl;
-    plot r = if swept then Max(touches, 1) else 0;
+    # Every step returns 0 (never N/A) when the level doesn't exist yet, e.g. PMH before the open
+    def touch = if IsNaN(lvl) then 0 else if high >= lvl - tol and close < lvl then 1 else 0;
+    def tStart = CompoundValue(1, if touch and !touch[1] then 1 else 0, 0);
+    def touches = Sum(tStart, touchLook);
+    def swept = if IsNaN(lvl) then 0 else if Highest(high, look) >= lvl - tol and Highest(close, look) <= lvl + acc and close < lvl then 1 else 0;
+    plot r = if !swept then 0 else if IsNaN(touches) then 1 else Max(touches, 1);
 }
 script SwL {
     input lvl = 0.0;
@@ -88,10 +90,11 @@ script SwL {
     input acc = 1.0;
     input look = 3;
     input touchLook = 48;
-    def touch = !IsNaN(lvl) and low <= lvl + tol and close > lvl;
-    def touches = Sum(touch and !touch[1], touchLook);
-    def swept = !IsNaN(lvl) and Lowest(low, look) <= lvl + tol and Lowest(close, look) >= lvl - acc and close > lvl;
-    plot r = if swept then Max(touches, 1) else 0;
+    def touch = if IsNaN(lvl) then 0 else if low <= lvl + tol and close > lvl then 1 else 0;
+    def tStart = CompoundValue(1, if touch and !touch[1] then 1 else 0, 0);
+    def touches = Sum(tStart, touchLook);
+    def swept = if IsNaN(lvl) then 0 else if Lowest(low, look) <= lvl + tol and Lowest(close, look) >= lvl - acc and close > lvl then 1 else 0;
+    plot r = if !swept then 0 else if IsNaN(touches) then 1 else Max(touches, 1);
 }
 # Distance to a magnet in the trade direction, or 99999 if it is missing / closer than minD
 script Dist {
@@ -99,7 +102,7 @@ script Dist {
     input below = yes;
     input minD = 6.0;
     def d = if below then close - m else m - close;
-    plot r = if !IsNaN(m) and d >= minD then d else 99999;
+    plot r = if IsNaN(m) then 99999 else if d >= minD then d else 99999;
 }
 
 # ===== Sessions
