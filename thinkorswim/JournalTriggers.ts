@@ -65,6 +65,14 @@ input flipLook = 6;
 input flipMaxBeyond = 8.0;
 input flipNeedBias = no;
 
+# ----- HTF level test (4h SMA200 / 4h SMA21 / 1h SMA50)
+input useHtf = yes;
+input htfTol = 2.0;
+input firstLook = 156;
+input cancelPts = 2.0;
+input cancelLook = 6;
+input zoneTol = 3.0;
+
 # ----- Risk
 input minTgt = 6.0;
 input stopBuf = 1.0;
@@ -81,6 +89,8 @@ input aPlusScore = 6;
 input showKeyLevels = yes;
 input showProfileVwap = no;
 input showDebug = no;
+input showHtfLines = yes;
+input showGhosts = yes;
 
 # ===== Helpers
 # Short side: 0 if no sweep-rejection of lvl on this bar, otherwise the number of separate rejections of lvl
@@ -117,6 +127,43 @@ script Dist {
     input minD = 6.0;
     def d = if below then close - m else m - close;
     plot r = if IsNaN(m) then 99999 else if d >= minD then d else 99999;
+}
+# HTF level rejection, short side. 0 = no signal, 1 = rejection, 2 = rejection on the FIRST touch in firstLook bars.
+# Needs: price came from BELOW (no close above L in the firstLook bars before the sweep window), wicked into L +/- tol,
+# closes back below L, and has NOT been accepted above (2+ closes > L + cancelPts in the last cancelLook bars).
+script HtfRejS {
+    input L = 0.0;
+    input tol = 2.0;
+    input cancelPts = 2.0;
+    input cancelLook = 6;
+    input look = 156;
+    input sweepLook = 3;
+    def zone = if IsNaN(L) then 0 else if high >= L - tol and low <= L + tol then 1 else 0;
+    def closeAbove = if IsNaN(L) then 0 else if close > L then 1 else 0;
+    def cancelHit = if IsNaN(L) then 0 else if close > L + cancelPts then 1 else 0;
+    def priorAbove = GetValue(Sum(closeAbove, look), sweepLook);
+    def priorTouch = GetValue(Sum(zone, look), sweepLook);
+    def accepted = Sum(cancelHit, cancelLook) >= 2;
+    def swept = if IsNaN(L) then 0 else Highest(high, sweepLook) >= L - tol;
+    def raw = if IsNaN(L) then 0 else if swept and priorAbove == 0 and !accepted and close < L then (if priorTouch == 0 then 2 else 1) else 0;
+    plot r = if IsNaN(raw) then 0 else raw;
+}
+script HtfRejL {
+    input L = 0.0;
+    input tol = 2.0;
+    input cancelPts = 2.0;
+    input cancelLook = 6;
+    input look = 156;
+    input sweepLook = 3;
+    def zone = if IsNaN(L) then 0 else if high >= L - tol and low <= L + tol then 1 else 0;
+    def closeBelow = if IsNaN(L) then 0 else if close < L then 1 else 0;
+    def cancelHit = if IsNaN(L) then 0 else if close < L - cancelPts then 1 else 0;
+    def priorBelow = GetValue(Sum(closeBelow, look), sweepLook);
+    def priorTouch = GetValue(Sum(zone, look), sweepLook);
+    def accepted = Sum(cancelHit, cancelLook) >= 2;
+    def swept = if IsNaN(L) then 0 else Lowest(low, sweepLook) <= L + tol;
+    def raw = if IsNaN(L) then 0 else if swept and priorBelow == 0 and !accepted and close > L then (if priorTouch == 0 then 2 else 1) else 0;
+    plot r = if IsNaN(raw) then 0 else raw;
 }
 
 # ===== Sessions
@@ -342,6 +389,39 @@ def fsTgtD = Min(Min(Dist(poc, yes, fsNeed), Dist(vw, yes, fsNeed)), Min(Min(Dis
 def fsRR = if fsTgtD < 99999 and fsRisk > 0 then fsTgtD / fsRisk else 0;
 def rawFS = useFlip and inWin and (!flipNeedBias or sBiasOK) and close < vah and fsPrevNear and fsAbove and flushUp and fsStretch and fsStrong and barDelta < 0 and fsRR >= minRR and fsRisk <= maxStop;
 
+# ===== 5) HTF level test: rejection of a 4h/1h SMA (priority 4h SMA200, then 4h SMA21, then 1h SMA50)
+# Short = tested from below and rejected (your 06-23, 07-31, 09-22, 09-25 shorts). Long = tested from above and held.
+def h3S = HtfRejS(htf3, htfTol, cancelPts, cancelLook, firstLook, sweepLook);
+def h2S = HtfRejS(htf2, htfTol, cancelPts, cancelLook, firstLook, sweepLook);
+def h1S = HtfRejS(htf1, htfTol, cancelPts, cancelLook, firstLook, sweepLook);
+def hSelS = if h3S > 0 then 3 else if h2S > 0 then 2 else if h1S > 0 then 1 else 0;
+def hLvlS = if hSelS == 3 then htf3 else if hSelS == 2 then htf2 else if hSelS == 1 then htf1 else Double.NaN;
+def hFirstS = (if hSelS == 3 then h3S else if hSelS == 2 then h2S else h1S) == 2;
+def hsScore = 3 + (if hFirstS then 2 else 0) + upVAH + upVW + upBB + cvdDn + sConf;
+def hsStop = Max(Highest(high, sweepLook), hLvlS) + stopBuf;
+def hsRisk = hsStop - close;
+def hsNeed = Max(minTgt, minRR * hsRisk);
+def hsTgtD = Min(Min(Dist(vah, yes, hsNeed), Dist(poc, yes, hsNeed)), Min(Min(Dist(vw, yes, hsNeed), Dist(bbMid, yes, hsNeed)), Dist(val, yes, hsNeed)));
+def hsT2D = Min(Min(Dist(poc, yes, hsTgtD + minTgt), Dist(vw, yes, hsTgtD + minTgt)), Min(Dist(val, yes, hsTgtD + minTgt), Dist(bbMid, yes, hsTgtD + minTgt)));
+def hsRR = if hsTgtD < 99999 and hsRisk > 0 then hsTgtD / hsRisk else 0;
+def rawHS = useHtf and inWin and hSelS > 0 and close < open and (!shortNeedEma or close < emaF) and hsRR >= minRR and hsRisk <= maxStop;
+
+def h3L = HtfRejL(htf3, htfTol, cancelPts, cancelLook, firstLook, sweepLook);
+def h2L = HtfRejL(htf2, htfTol, cancelPts, cancelLook, firstLook, sweepLook);
+def h1L = HtfRejL(htf1, htfTol, cancelPts, cancelLook, firstLook, sweepLook);
+def hSelL = if h3L > 0 then 3 else if h2L > 0 then 2 else if h1L > 0 then 1 else 0;
+def hLvlL = if hSelL == 3 then htf3 else if hSelL == 2 then htf2 else if hSelL == 1 then htf1 else Double.NaN;
+def hFirstL = (if hSelL == 3 then h3L else if hSelL == 2 then h2L else h1L) == 2;
+def hlScore = 3 + (if hFirstL then 2 else 0) + dnVAL + dnVW + dnBB + cvdUp + lConf;
+def hlStop = Min(Lowest(low, sweepLook), hLvlL) - stopBuf;
+def hlRisk = close - hlStop;
+def hlNeed = Max(minTgt, minRR * hlRisk);
+def hlTgtD = Min(Min(Dist(val, no, hlNeed), Dist(poc, no, hlNeed)), Min(Min(Dist(vw, no, hlNeed), Dist(bbMid, no, hlNeed)), Dist(vah, no, hlNeed)));
+def hlT2D = Min(Min(Dist(poc, no, hlTgtD + minTgt), Dist(vw, no, hlTgtD + minTgt)), Min(Dist(vah, no, hlTgtD + minTgt), Dist(bbMid, no, hlTgtD + minTgt)));
+def hlRR = if hlTgtD < 99999 and hlRisk > 0 then hlTgtD / hlRisk else 0;
+def rawHL = useHtf and inWin and hSelL > 0 and close > open and (!longNeedEma or close > emaF) and hlRR >= minRR and hlRisk <= maxStop;
+
+
 # ===== Cooldown (same side)
 # A single N/A inside a running (recursive) value would stick forever and block every later signal,
 # so each condition is forced to 0/1 first and the cooldown recovers from N/A.
@@ -351,26 +431,45 @@ def okSL = if IsNaN(rawSL) then 0 else rawSL;
 def okRL = if IsNaN(rawRL) then 0 else rawRL;
 def okFS = if IsNaN(rawFS) then 0 else rawFS;
 def okFL = if IsNaN(rawFL) then 0 else rawFL;
-def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
-def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
-# Priority when several fire on one candle: Flip (the stronger, more specific move), then Sweep, then POC.
+def okHS = if IsNaN(rawHS) then 0 else rawHS;
+def okHL = if IsNaN(rawHL) then 0 else rawHL;
+def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
+def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
+# Priority when several fire on one candle: HTF level, then Flip, then Sweep, then POC.
 # A Flip that also passes the Sweep rules shows ONE bubble marked "+ SWEEP".
-def flipShort = okFS and lastS == bn;
-def sweepShort = !okFS and okSS and lastS == bn;
-def reclaimShort = !okFS and !okSS and okRS and lastS == bn;
-def flipLong = okFL and lastL == bn;
-def sweepLong = !okFL and okSL and lastL == bn;
-def reclaimLong = !okFL and !okSL and okRL and lastL == bn;
+def htfShort = okHS and lastS == bn;
+def flipShort = !okHS and okFS and lastS == bn;
+def sweepShort = !okHS and !okFS and okSS and lastS == bn;
+def reclaimShort = !okHS and !okFS and !okSS and okRS and lastS == bn;
+def htfLong = okHL and lastL == bn;
+def flipLong = !okHL and okFL and lastL == bn;
+def sweepLong = !okHL and !okFL and okSL and lastL == bn;
+def reclaimLong = !okHL and !okFL and !okSL and okRL and lastL == bn;
+
+# Ghosts: a setup that qualified but was not shown because the same-side cooldown was running.
+# Shown as a small gray bubble with only T / S / RR, on the first candle of each run.
+def anyS = okHS or okFS or okSS or okRS;
+def anyL = okHL or okFL or okSL or okRL;
+def shownS = htfShort or flipShort or sweepShort or reclaimShort;
+def shownL = htfLong or flipLong or sweepLong or reclaimLong;
+def ghostS = anyS and !shownS and !anyS[1];
+def ghostL = anyL and !shownL and !anyL[1];
+def gTgtS = if okHS then close - hsTgtD else if okFS then close - fsTgtD else if okSS then close - sTgtD else close - rsTgtD;
+def gStpS = if okHS then hsStop else if okFS then fsStop else if okSS then sStop else rsStop;
+def gRRS = if okHS then hsRR else if okFS then fsRR else if okSS then sRR else rsRR;
+def gTgtL = if okHL then close + hlTgtD else if okFL then close + flTgtD else if okSL then close + lTgtD else close + rlTgtD;
+def gStpL = if okHL then hlStop else if okFL then flStop else if okSL then lStop else rlStop;
+def gRRL = if okHL then hlRR else if okFL then flRR else if okSL then lRR else rlRR;
 
 # Only show a signal once its candle has closed (a newer bar exists)
 def done = !IsNaN(close[-1]);
 
 # ===== Scorecard - one tracked trade at a time: enter at signal close, exit at target / stop / time-out
-def sigDirRaw = if sweepShort or flipShort or reclaimShort then -1 else if sweepLong or flipLong or reclaimLong then 1 else 0;
-def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else 0;
-def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else 0;
-def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else 0;
-def sigScore = if sweepShort or (flipShort and okSS) then sScore else if sweepLong or (flipLong and okSL) then lScore else 0;
+def sigDirRaw = if htfShort or sweepShort or flipShort or reclaimShort then -1 else if htfLong or sweepLong or flipLong or reclaimLong then 1 else 0;
+def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else if htfShort then 7 else if htfLong then 8 else 0;
+def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else if htfShort then close - hsTgtD else if htfLong then close + hlTgtD else 0;
+def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else if htfShort then hsStop else if htfLong then hlStop else 0;
+def sigScore = if htfShort then hsScore else if htfLong then hlScore else if sweepShort or (flipShort and okSS) then sScore else if sweepLong or (flipLong and okSL) then lScore else 0;
 # Only track a signal whose target and stop are real numbers
 def sigDir = if IsNaN(sigTgt) or IsNaN(sigStp) or IsNaN(sigScore) then 0 else sigDirRaw;
 
@@ -431,6 +530,10 @@ def w5 = TotalSum(isWin and rType == 5);
 def l5 = TotalSum(isLoss and rType == 5);
 def w6 = TotalSum(isWin and rType == 6);
 def l6 = TotalSum(isLoss and rType == 6);
+def w7 = TotalSum(isWin and rType == 7);
+def l7 = TotalSum(isLoss and rType == 7);
+def w8 = TotalSum(isWin and rType == 8);
+def l8 = TotalSum(isLoss and rType == 8);
 def wA = TotalSum(isWin and oScore[1] >= aPlusScore);
 def lA = TotalSum(isLoss and oScore[1] >= aPlusScore);
 def scr = TotalSum(isScratch);
@@ -467,6 +570,29 @@ ValFlipSig.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
 ValFlipSig.SetDefaultColor(Color.LIME);
 ValFlipSig.SetLineWeight(3);
 
+plot HtfRejSig = if htfShort and done then high + TickSize() * 4 else Double.NaN;
+HtfRejSig.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
+HtfRejSig.SetDefaultColor(Color.MAGENTA);
+HtfRejSig.SetLineWeight(5);
+
+plot HtfHoldSig = if htfLong and done then low - TickSize() * 4 else Double.NaN;
+HtfHoldSig.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
+HtfHoldSig.SetDefaultColor(Color.MAGENTA);
+HtfHoldSig.SetLineWeight(5);
+
+# HTF SMA lines on the intraday chart (completed HTF bars, the values the study trades off)
+plot H3Line = if showHtfLines then htf3 else Double.NaN;
+H3Line.SetDefaultColor(Color.CYAN);
+H3Line.SetStyle(Curve.LONG_DASH);
+H3Line.SetLineWeight(2);
+plot H2Line = if showHtfLines then htf2 else Double.NaN;
+H2Line.SetDefaultColor(Color.DARK_ORANGE);
+H2Line.SetStyle(Curve.LONG_DASH);
+H2Line.SetLineWeight(2);
+plot H1Line = if showHtfLines then htf1 else Double.NaN;
+H1Line.SetDefaultColor(Color.LIGHT_GRAY);
+H1Line.SetStyle(Curve.LONG_DASH);
+
 # Outcome dots: where each tracked signal hit its target (green) or stop (red)
 plot TargetHit = if showScorecard and isWin then oTgt[1] else Double.NaN;
 TargetHit.SetPaintingStrategy(PaintingStrategy.POINTS);
@@ -499,6 +625,21 @@ AddChartBubble(reclaimShort and done, high,
     "POC LOSS SHORT\nT " + AsPrice(close - rsTgtD) + "  S " + AsPrice(rsStop) + "  RR " + Round(rsRR, 2),
     Color.DARK_RED, yes);
 
+AddChartBubble(htfShort and done, high,
+    (if hSelS == 3 then "4H SMA200" else if hSelS == 2 then "4H SMA21" else "1H SMA50") + " REJECT (" + hsScore + ")" + (if hFirstS then "  FIRST TOUCH" else "") + "\n" +
+    "T1 " + AsPrice(close - hsTgtD) + (if hsT2D < 99999 then "  T2 " + AsPrice(close - hsT2D) else "") + "  S " + AsPrice(hsStop) + "  RR " + Round(hsRR, 2),
+    Color.MAGENTA, yes);
+
+AddChartBubble(htfLong and done, low,
+    (if hSelL == 3 then "4H SMA200" else if hSelL == 2 then "4H SMA21" else "1H SMA50") + " HOLD (" + hlScore + ")" + (if hFirstL then "  FIRST TOUCH" else "") + "\n" +
+    "T1 " + AsPrice(close + hlTgtD) + (if hlT2D < 99999 then "  T2 " + AsPrice(close + hlT2D) else "") + "  S " + AsPrice(hlStop) + "  RR " + Round(hlRR, 2),
+    Color.MAGENTA, no);
+
+AddChartBubble(showGhosts and ghostS and done, high,
+    "T " + AsPrice(gTgtS) + "  S " + AsPrice(gStpS) + "  RR " + Round(gRRS, 2), Color.GRAY, yes);
+AddChartBubble(showGhosts and ghostL and done, low,
+    "T " + AsPrice(gTgtL) + "  S " + AsPrice(gStpL) + "  RR " + Round(gRRL, 2), Color.GRAY, no);
+
 AddChartBubble(flipShort and done, high,
     "VAH FLIP SHORT" + (if okSS then " + SWEEP (" + sScore + ")" else "") + "  +" + Round(fsDepth, 2) + " above VAH\nT " + AsPrice(close - fsTgtD) + "  S " + AsPrice(fsStop) + "  RR " + Round(fsRR, 2),
     Color.ORANGE, yes);
@@ -518,6 +659,8 @@ Alert(reclaimShort[1], "Journal: POC LOSS SHORT - check Bookmap", Alert.BAR, Sou
 Alert(reclaimLong[1], "Journal: POC RECLAIM LONG - check Bookmap", Alert.BAR, Sound.Chimes);
 Alert(flipShort[1], "Journal: VAH FLIP SHORT - check Bookmap", Alert.BAR, Sound.Ring);
 Alert(flipLong[1], "Journal: VAL FLIP LONG - check Bookmap", Alert.BAR, Sound.Ring);
+Alert(htfShort[1], "Journal: HTF SMA REJECT SHORT - check Bookmap", Alert.BAR, Sound.Bell);
+Alert(htfLong[1], "Journal: HTF SMA HOLD LONG - check Bookmap", Alert.BAR, Sound.Bell);
 
 # ===== Levels
 plot PDHLine = if showKeyLevels then pdH else Double.NaN;
@@ -552,7 +695,21 @@ VWAPLine.SetDefaultColor(Color.CYAN);
 AddLabel(yes, "HTF " + (if htfBear then "BEAR" else if htfBull then "BULL" else "MIXED") + " | short " + sScore + " | long " + lScore,
     if htfBear then Color.LIGHT_RED else if htfBull then Color.LIGHT_GREEN else Color.GRAY);
 
-AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | POC S " + w2 + "/" + l2 + " | POC L " + w4 + "/" + l4 + " | VAH flip " + w5 + "/" + l5 + " | VAL flip " + w6 + "/" + l6 +
+# HTF zone heads-up: price within zoneTol of a 4h/1h SMA. Shows the study's value (completed HTF bars)
+# and the chart's value (includes the forming HTF bar), which side price is testing from,
+# and that fades are allowed at the level even when the bias label disagrees.
+def d3 = AbsValue(close - htf3);
+def d2 = AbsValue(close - htf2);
+def d1 = AbsValue(close - htf1);
+def zSel = if d3 <= zoneTol then 3 else if d2 <= zoneTol then 2 else if d1 <= zoneTol then 1 else 0;
+def zLvl = if zSel == 3 then htf3 else if zSel == 2 then htf2 else htf1;
+def zLive = if zSel == 3 then Average(close(period = htf3Agg), htf3Len) else if zSel == 2 then Average(close(period = htf2Agg), htf2Len) else Average(close(period = htf1Agg), htf1Len);
+AddLabel(zSel > 0, "HTF ZONE: " + (if zSel == 3 then "4h SMA200 " else if zSel == 2 then "4h SMA21 " else "1h SMA50 ") + AsPrice(zLvl) + " (chart " + AsPrice(zLive) + ") | " +
+    (if close < zLvl then "testing from BELOW" else "testing from ABOVE") +
+    (if close < zLvl and htfBull then " | HTF BULL -> at level: fades allowed" else if close > zLvl and htfBear then " | HTF BEAR -> at level: holds allowed" else ""),
+    Color.YELLOW);
+
+AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | POC S " + w2 + "/" + l2 + " | POC L " + w4 + "/" + l4 + " | VAH flip " + w5 + "/" + l5 + " | VAL flip " + w6 + "/" + l6 + " | HTF S " + w7 + "/" + l7 + " | HTF L " + w8 + "/" + l8 +
     " | " + aPlusScore + "+ " + wA + "/" + lA + " | net " + Round(netPts, 1) + " pts (W/L, history optimistic)",
     if netPts >= 0 then Color.GREEN else Color.RED);
 
