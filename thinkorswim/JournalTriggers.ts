@@ -149,21 +149,23 @@ script RT {
 # and this candle is the first close back below L.
 script FboS {
     input L = 0.0;
+    input Lprev = 0.0;
     input cancelPts = 2.0;
     input look = 24;
     def accHit = if IsNaN(L) then 0 else if close > L + cancelPts then 1 else 0;
     def accepted = GetValue(Sum(accHit, look), 1) >= 2;
-    def crossBack = if IsNaN(L) or IsNaN(L[1]) then 0 else if close < L and close[1] >= L[1] then 1 else 0;
+    def crossBack = if IsNaN(L) or IsNaN(Lprev) then 0 else if close < L and close[1] >= Lprev then 1 else 0;
     def raw = accepted and crossBack;
     plot r = if IsNaN(raw) then 0 else raw;
 }
 script FboL {
     input L = 0.0;
+    input Lprev = 0.0;
     input cancelPts = 2.0;
     input look = 24;
     def accHit = if IsNaN(L) then 0 else if close < L - cancelPts then 1 else 0;
     def accepted = GetValue(Sum(accHit, look), 1) >= 2;
-    def crossBack = if IsNaN(L) or IsNaN(L[1]) then 0 else if close > L and close[1] <= L[1] then 1 else 0;
+    def crossBack = if IsNaN(L) or IsNaN(Lprev) then 0 else if close > L and close[1] <= Lprev then 1 else 0;
     def raw = accepted and crossBack;
     plot r = if IsNaN(raw) then 0 else raw;
 }
@@ -461,9 +463,9 @@ def rawHL = useHtf and inWin and hSelL > 0 and close > open and (!longNeedEma or
 
 # ===== 6) Failed breakout of a 4h/1h SMA (trapped breakout traders). Allowed until fboEnd (ET).
 def fboWin = SecondsFromTime(winStart) >= 0 and SecondsTillTime(fboEnd) > 0;
-def fb3S = FboS(htf3, cancelPts, fboLook);
-def fb2S = FboS(htf2, cancelPts, fboLook);
-def fb1S = FboS(htf1, cancelPts, fboLook);
+def fb3S = FboS(htf3, htf3[1], cancelPts, fboLook);
+def fb2S = FboS(htf2, htf2[1], cancelPts, fboLook);
+def fb1S = FboS(htf1, htf1[1], cancelPts, fboLook);
 def fbSelS = if fb3S then 3 else if fb2S then 2 else if fb1S then 1 else 0;
 def fbsStop = Highest(high, sweepLook) + stopBuf;
 def fbsRisk = fbsStop - close;
@@ -472,9 +474,9 @@ def fbsTgtD = Min(Min(Dist(vah, yes, fbsNeed), Dist(poc, yes, fbsNeed)), Min(Min
 def fbsRR = if fbsTgtD < 99999 and fbsRisk > 0 then fbsTgtD / fbsRisk else 0;
 def rawBS = useFbo and fboWin and fbSelS > 0 and close < open and close < emaF and fbsRR >= minRR and fbsRisk <= maxStop;
 
-def fb3L = FboL(htf3, cancelPts, fboLook);
-def fb2L = FboL(htf2, cancelPts, fboLook);
-def fb1L = FboL(htf1, cancelPts, fboLook);
+def fb3L = FboL(htf3, htf3[1], cancelPts, fboLook);
+def fb2L = FboL(htf2, htf2[1], cancelPts, fboLook);
+def fb1L = FboL(htf1, htf1[1], cancelPts, fboLook);
 def fbSelL = if fb3L then 3 else if fb2L then 2 else if fb1L then 1 else 0;
 def fblStop = Lowest(low, sweepLook) - stopBuf;
 def fblRisk = close - fblStop;
