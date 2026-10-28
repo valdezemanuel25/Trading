@@ -52,6 +52,14 @@ ToS limitations:
 - On past days, ToS draws each day's *final* POC/VA on every bar. Historical arrows are optimistic as a result. Live signals use the profile as it develops.
 - The POC/VAH/VAL/VWAP lines are hidden by default, because you already chart them. Turn on `showProfileVwap` to compare them with your own studies.
 
+### Backtesting in ToS
+`thinkorswim/JournalTriggersStrategy.ts` is a ToS **Strategy** built from the study by `thinkorswim/build_strategy.py`. Re-run `python3 thinkorswim/build_strategy.py` after changing the study, and don't edit the strategy file by hand.
+1. In ToS, open **Studies → Edit studies → Strategies tab → Import**, pick the file, and add it to a /ES 5m chart with extended hours on. Load the most history the chart allows.
+2. Right-click the chart → **Strategies → Show Report** to see the trade list, win rate and P/L. The report can be exported to CSV.
+3. Each entry is named by setup (`Sweep L`, `VAL flip L`, `HTF S`, `Fail BO S`…), and each exit by outcome (`T1`, `Stop`, `Time`).
+4. `vaSource` defaults to **VWAP_STATIC** here so past trades only use information that existed at the time. Switching to PROFILE gives optimistic results.
+5. Fills are idealized: entry at the signal candle's close, and T1 and the stop fill exactly at their price, with no slippage or commissions.
+
 ### Tuning
 - `Signal window` defaults to 9:30–11:30 NY, when nearly all journal winners happened.
 - `Min score` defaults to 3. Raise it to 4 or 5 for fewer, A+ signals only.
