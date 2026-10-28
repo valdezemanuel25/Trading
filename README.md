@@ -43,6 +43,14 @@ The ToS version adds four things:
   - The run into the level has to start inside value: a VAH flip rally can't begin below VAL, and a VAL flip selloff can't begin above VAH. This rules out V-reversals.
   - A flip can't fire within `oppBlockBars` (12) of a signal the other way, unless that signal's stop was already hit.
   - Flips follow the HTF bias by default (`flipNeedBias = yes`), or need the sweep to be at an HTF level.
+- **One checklist for every setup.** No setup is exempt. Each signal must pass, in order:
+  1. **Regime:** trend filter, band walk and chop. Chop now holds for `chopHoldBars`, or until price closes `chopBreak` points outside the chop range.
+  2. **Location:** magnet check with level tiers. Tier 1 levels (4h SMA200, 4h SMA21, previous week high/low) use a wider zone, `magnetPadT1`.
+  3. **Trigger:** the setup's own pattern. With `useStrictTrigger`, BB FAIL also needs a close beyond the 9 EMA, or a lower high (higher low for longs).
+  4. **Risk and state:**
+     - `useFrontRun`: T1 is capped `frontPad` before the first opposing key level, R:R is re-measured to it, and a setup without `minRR` of room is skipped.
+     - `useOneDirection`: no new signal while a trade is live, or against a live T2 runner.
+     - `useCooldownReset`: a stop-out ends the cooldown.
 - **Fade filters** (each one an on/off setting, for comparing in the backtest). They apply to sweep, flip, HTF-level and POC setups. Failed breakouts and BB FAIL are exempt.
   - `useTrendFilter`: no fade longs while the 9 EMA has dropped more than `trendSlopePts` over `trendSlopeBars` and price is below VWAP. This lasts until a close back above the EMA. Shorts get the mirror.
   - `useBandWalk`: no fades while the Bollinger Bands are widening and `walkCount` of the last `walkLook` closes are at or outside the band. This lasts until a close back past the BB midline.

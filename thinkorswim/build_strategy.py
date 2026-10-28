@@ -57,7 +57,7 @@ AddOrder(OrderType.BUY_TO_CLOSE, isWin and oDir[1] < 0, oTgt[1], tradeSize, Colo
 AddOrder(OrderType.BUY_TO_CLOSE, isLoss and oDir[1] < 0, oStp[1], tradeSize, Color.RED, Color.RED, "Stop");
 AddOrder(OrderType.BUY_TO_CLOSE, isScratch and oDir[1] < 0, close, tradeSize, Color.GRAY, Color.GRAY, "Time");
 
-AddLabel(yes, "BACKTEST | levels: " + (if staticVA then "VWAP_STATIC (honest)" else "PROFILE (optimistic)") + " | trend " + (if useTrendFilter then "ON" else "off") + " | band walk " + (if useBandWalk then "ON" else "off") + " | magnet " + (if useMagnetCheck then "ON" else "off") + " | " + tradeSize + " contract(s)", Color.WHITE);
+AddLabel(yes, "BACKTEST | levels: " + (if staticVA then "VWAP_STATIC (honest)" else "PROFILE (optimistic)") + " | trend " + (if useTrendFilter then "ON" else "off") + " | band walk " + (if useBandWalk then "ON" else "off") + " | magnet " + (if useMagnetCheck then "ON" else "off") + " | front-run " + (if useFrontRun then "ON" else "off") + " | strict " + (if useStrictTrigger then "ON" else "off") + " | 1-dir " + (if useOneDirection then "ON" else "off") + " | " + tradeSize + " contract(s)", Color.WHITE);
 """
 
 out = header + "\n" + body.rstrip() + "\n" + orders
