@@ -85,6 +85,24 @@ input chopLook = 12;
 input chopCrosses = 5;
 input chopRange = 15.0;
 
+# ----- Trend filter: no fades against a sloped 9 EMA on the wrong side of VWAP
+input useTrendFilter = yes;
+input trendSlopeBars = 3;
+input trendSlopePts = 2.0;
+
+# ----- Band walk: no fades while price walks an expanding Bollinger Band
+input useBandWalk = yes;
+input walkLook = 5;
+input walkCount = 3;
+input walkTol = 1.0;
+
+# ----- Magnet check: no fade with an untested level just past the stop; instead wait for it to be
+#       tagged, then enter on a Bollinger Band failure (BB FAIL setup)
+input useMagnetCheck = yes;
+input magnetPad = 3.0;
+input magnetLook = 24;
+input bbFailLook = 6;
+
 # ----- Risk
 input minTgt = 6.0;
 input stopBuf = 1.0;
@@ -140,6 +158,34 @@ script Dist {
     input minD = 6.0;
     def d = if below then close - m else m - close;
     plot r = if IsNaN(m) then 99999 else if d >= minD then d else 99999;
+}
+# Magnet above (short side): returns L if it is an UNTESTED level (not touched in look bars) between
+# the close and zoneTop, else 99999. Long side returns L if untested between zoneBot and the close, else -99999.
+script MagS {
+    input L = 0.0;
+    input zoneTop = 0.0;
+    input look = 24;
+    input tol = 1.0;
+    def untested = Highest(high, look) < L - tol;
+    def r0 = if IsNaN(L) or IsNaN(zoneTop) then 99999 else if L > close and L <= zoneTop and untested then L else 99999;
+    plot r = if IsNaN(r0) then 99999 else r0;
+}
+script MagL {
+    input L = 0.0;
+    input zoneBot = 0.0;
+    input look = 24;
+    input tol = 1.0;
+    def untested = Lowest(low, look) > L + tol;
+    def r0 = if IsNaN(L) or IsNaN(zoneBot) then -99999 else if L < close and L >= zoneBot and untested then L else -99999;
+    plot r = if IsNaN(r0) then -99999 else r0;
+}
+# Level tagged recently: 1 if price touched L (+/- tol) within look bars
+script Tagged {
+    input L = 0.0;
+    input look = 6;
+    input tol = 1.0;
+    def t = if IsNaN(L) then 0 else if Highest(high, look) >= L - tol and Lowest(low, look) <= L + tol then 1 else 0;
+    plot r = if IsNaN(t) then 0 else t;
 }
 # Round a price to the instrument's tick (ES/MES = 0.25)
 script RT {
@@ -497,19 +543,75 @@ def chopN = Sum(emaCross, chopLook);
 def chopRng = Highest(high, chopLook) - Lowest(low, chopLook);
 def isChop = if IsNaN(chopN) or IsNaN(chopRng) then 0 else useChop and chopN >= chopCrosses and chopRng <= chopRange;
 
+# ===== Filters (each can be switched off for backtesting)
+# 1) Trend filter: 9 EMA sloping down (by > trendSlopePts over trendSlopeBars) AND price under VWAP = no fade longs,
+#    until a candle closes back above the EMA. Mirror for shorts.
+def emaSlope = emaF - GetValue(emaF, trendSlopeBars);
+def trendDn = if IsNaN(emaSlope) or IsNaN(vw) then 0 else emaSlope < -trendSlopePts and close < vw;
+def trendUp = if IsNaN(emaSlope) or IsNaN(vw) then 0 else emaSlope > trendSlopePts and close > vw;
+def trendBlockL = useTrendFilter and trendDn and close <= emaF;
+def trendBlockS = useTrendFilter and trendUp and close >= emaF;
+
+# 2) Band walk: bands widening and walkCount of the last walkLook closes at/outside the band = trending, not stretched.
+#    Fades that way stay blocked until a close back past the BB midline.
+def bbWidth = bbUp - bbLo;
+def bbExpand = if IsNaN(bbWidth[3]) then 0 else bbWidth > bbWidth[3];
+def walkUpN = Sum(if close >= bbUp - walkTol then 1 else 0, walkLook);
+def walkDnN = Sum(if close <= bbLo + walkTol then 1 else 0, walkLook);
+def walkBlockS = useBandWalk and bbExpand and walkUpN >= walkCount and close > bbMid;
+def walkBlockL = useBandWalk and bbExpand and walkDnN >= walkCount and close < bbMid;
+
+# 3) Magnet check: an untested key level inside the stop zone (+ magnetPad) pulls price through the stop.
+def zoneTopS = Highest(high, flipLook) + stopBuf + magnetPad;
+def zoneBotL = Lowest(low, flipLook) - stopBuf - magnetPad;
+def magS = Min(Min(Min(Min(MagS(htf3, zoneTopS, magnetLook, lvlTol), MagS(htf2, zoneTopS, magnetLook, lvlTol)), Min(MagS(htf1, zoneTopS, magnetLook, lvlTol), MagS(pdH, zoneTopS, magnetLook, lvlTol))),
+               Min(Min(MagS(pwH, zoneTopS, magnetLook, lvlTol), MagS(pmH, zoneTopS, magnetLook, lvlTol)), MagS(rUp, zoneTopS, magnetLook, lvlTol))), 99999);
+def magL = Max(Max(Max(Max(MagL(htf3, zoneBotL, magnetLook, lvlTol), MagL(htf2, zoneBotL, magnetLook, lvlTol)), Max(MagL(htf1, zoneBotL, magnetLook, lvlTol), MagL(pdL, zoneBotL, magnetLook, lvlTol))),
+               Max(Max(MagL(pwL, zoneBotL, magnetLook, lvlTol), MagL(pmL, zoneBotL, magnetLook, lvlTol)), MagL(rDn, zoneBotL, magnetLook, lvlTol))), -99999);
+def magBlockS = useMagnetCheck and magS < 99999;
+def magBlockL = useMagnetCheck and magL > -99999;
+
+def fadeBlockS = trendBlockS or walkBlockS or magBlockS;
+def fadeBlockL = trendBlockL or walkBlockL or magBlockL;
+
+# ===== 7) BB FAIL: a key level was tagged in the last bbFailLook bars, price tagged/closed outside the
+#    upper Bollinger Band, and this red candle closes back inside the band (failure to continue). Mirror for longs.
+def keyTaggedS = Tagged(htf3, bbFailLook, lvlTol) or Tagged(htf2, bbFailLook, lvlTol) or Tagged(htf1, bbFailLook, lvlTol) or Tagged(pdH, bbFailLook, lvlTol) or Tagged(pwH, bbFailLook, lvlTol) or Tagged(pmH, bbFailLook, lvlTol) or Tagged(rUp, bbFailLook, lvlTol) or Tagged(vah, bbFailLook, lvlTol);
+def keyTaggedL = Tagged(htf3, bbFailLook, lvlTol) or Tagged(htf2, bbFailLook, lvlTol) or Tagged(htf1, bbFailLook, lvlTol) or Tagged(pdL, bbFailLook, lvlTol) or Tagged(pwL, bbFailLook, lvlTol) or Tagged(pmL, bbFailLook, lvlTol) or Tagged(rDn, bbFailLook, lvlTol) or Tagged(val, bbFailLook, lvlTol);
+def bandTagUp = Highest(high - bbUp, 3) >= 0;
+def bandTagDn = Lowest(low - bbLo, 3) <= 0;
+def xsStop = Highest(high, sweepLook) + stopBuf;
+def xsRisk = xsStop - close;
+def xsNeed = Max(minTgt, minRR * xsRisk);
+def xsTgtD = Min(Min(Dist(bbMid, yes, xsNeed), Dist(vw, yes, xsNeed)), Min(Min(Dist(poc, yes, xsNeed), Dist(vah, yes, xsNeed)), Dist(val, yes, xsNeed)));
+def xsRR = if xsTgtD < 99999 and xsRisk > 0 then xsTgtD / xsRisk else 0;
+def rawXS = useMagnetCheck and inWin and keyTaggedS and bandTagUp and close < bbUp and close < open and xsRR >= minRR and xsRisk <= maxStop;
+def xlStop = Lowest(low, sweepLook) - stopBuf;
+def xlRisk = close - xlStop;
+def xlNeed = Max(minTgt, minRR * xlRisk);
+def xlTgtD = Min(Min(Dist(bbMid, no, xlNeed), Dist(vw, no, xlNeed)), Min(Min(Dist(poc, no, xlNeed), Dist(val, no, xlNeed)), Dist(vah, no, xlNeed)));
+def xlRR = if xlTgtD < 99999 and xlRisk > 0 then xlTgtD / xlRisk else 0;
+def rawXL = useMagnetCheck and inWin and keyTaggedL and bandTagDn and close > bbLo and close > open and xlRR >= minRR and xlRisk <= maxStop;
+
 # ===== Cooldown (same side)
 # A single N/A inside a running (recursive) value would stick forever and block every later signal,
 # so each condition is forced to 0/1 first and the cooldown recovers from N/A.
-def okSS = if IsNaN(rawSS) or isChop then 0 else rawSS;
-def okRS = if IsNaN(rawRS) or isChop then 0 else rawRS;
-def okSL = if IsNaN(rawSL) or isChop then 0 else rawSL;
-def okRL = if IsNaN(rawRL) or isChop then 0 else rawRL;
-def okFSpre = if IsNaN(rawFS) or isChop then 0 else rawFS;
-def okFLpre = if IsNaN(rawFL) or isChop then 0 else rawFL;
-def okHS = if IsNaN(rawHS) or isChop then 0 else rawHS;
-def okHL = if IsNaN(rawHL) or isChop then 0 else rawHL;
+def okSS = if IsNaN(rawSS) or isChop or fadeBlockS then 0 else rawSS;
+def okRS = if IsNaN(rawRS) or isChop or fadeBlockS then 0 else rawRS;
+def okSL = if IsNaN(rawSL) or isChop or fadeBlockL then 0 else rawSL;
+def okRL = if IsNaN(rawRL) or isChop or fadeBlockL then 0 else rawRL;
+def okFSpre = if IsNaN(rawFS) or isChop or fadeBlockS then 0 else rawFS;
+def okFLpre = if IsNaN(rawFL) or isChop or fadeBlockL then 0 else rawFL;
+def okHS = if IsNaN(rawHS) or isChop or fadeBlockS then 0 else rawHS;
+def okHL = if IsNaN(rawHL) or isChop or fadeBlockL then 0 else rawHL;
 def okBS = if IsNaN(rawBS) or isChop then 0 else rawBS;
 def okBL = if IsNaN(rawBL) or isChop then 0 else rawBL;
+def okXS = if IsNaN(rawXS) or isChop then 0 else rawXS;
+def okXL = if IsNaN(rawXL) or isChop then 0 else rawXL;
+
+# Fade setups that qualified but were held back only by an untested magnet
+def heldS = magBlockS and !trendBlockS and !walkBlockS and !isChop and ((!IsNaN(rawSS) and rawSS) or (!IsNaN(rawFS) and rawFS) or (!IsNaN(rawHS) and rawHS));
+def heldL = magBlockL and !trendBlockL and !walkBlockL and !isChop and ((!IsNaN(rawSL) and rawSL) or (!IsNaN(rawFL) and rawFL) or (!IsNaN(rawHL) and rawHL));
 
 # B) Opposite-signal block: a Flip may not fire within oppBlockBars of a signal the other way,
 #    unless price has already hit that signal's stop.
@@ -527,51 +629,53 @@ def blockFS = bn - lastLpre <= oppBlockBars and !lStopped;
 def blockFL = bn - lastSpre <= oppBlockBars and !sStopped;
 def okFS = okFSpre and !blockFS;
 def okFL = okFLpre and !blockFL;
-def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okBS or okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
-def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okBL or okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
+def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okBS or okXS or okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
+def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okBL or okXL or okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
 # Priority when several fire on one candle: HTF level, then Failed breakout, then Flip, then Sweep, then POC.
 # A Flip that also passes the Sweep rules shows ONE bubble marked "+ SWEEP".
 def htfShort = okHS and lastS == bn;
 def fboShort = !okHS and okBS and lastS == bn;
-def flipShort = !okHS and !okBS and okFS and lastS == bn;
-def sweepShort = !okHS and !okBS and !okFS and okSS and lastS == bn;
-def reclaimShort = !okHS and !okBS and !okFS and !okSS and okRS and lastS == bn;
+def bbfShort = !okHS and !okBS and okXS and lastS == bn;
+def flipShort = !okHS and !okBS and !okXS and okFS and lastS == bn;
+def sweepShort = !okHS and !okBS and !okXS and !okFS and okSS and lastS == bn;
+def reclaimShort = !okHS and !okBS and !okXS and !okFS and !okSS and okRS and lastS == bn;
 def htfLong = okHL and lastL == bn;
 def fboLong = !okHL and okBL and lastL == bn;
-def flipLong = !okHL and !okBL and okFL and lastL == bn;
-def sweepLong = !okHL and !okBL and !okFL and okSL and lastL == bn;
-def reclaimLong = !okHL and !okBL and !okFL and !okSL and okRL and lastL == bn;
+def bbfLong = !okHL and !okBL and okXL and lastL == bn;
+def flipLong = !okHL and !okBL and !okXL and okFL and lastL == bn;
+def sweepLong = !okHL and !okBL and !okXL and !okFL and okSL and lastL == bn;
+def reclaimLong = !okHL and !okBL and !okXL and !okFL and !okSL and okRL and lastL == bn;
 
 # Ghosts: a setup that qualified but was not shown because the same-side cooldown was running.
 # Shown as a small gray bubble with only T / S / RR, on the first candle of each run.
-def anyS = okHS or okBS or okFS or okSS or okRS;
-def anyL = okHL or okBL or okFL or okSL or okRL;
-def shownS = htfShort or fboShort or flipShort or sweepShort or reclaimShort;
-def shownL = htfLong or fboLong or flipLong or sweepLong or reclaimLong;
+def anyS = okHS or okBS or okXS or okFS or okSS or okRS;
+def anyL = okHL or okBL or okXL or okFL or okSL or okRL;
+def shownS = htfShort or fboShort or bbfShort or flipShort or sweepShort or reclaimShort;
+def shownL = htfLong or fboLong or bbfLong or flipLong or sweepLong or reclaimLong;
 def ghostS = anyS and !shownS and !anyS[1];
 def ghostL = anyL and !shownL and !anyL[1];
-def gTgtS = if okHS then close - hsTgtD else if okBS then close - fbsTgtD else if okFS then close - fsTgtD else if okSS then close - sTgtD else close - rsTgtD;
-def gStpS = if okHS then hsStop else if okBS then fbsStop else if okFS then fsStop else if okSS then sStop else rsStop;
-def gRRS = if okHS then hsRR else if okBS then fbsRR else if okFS then fsRR else if okSS then sRR else rsRR;
-def gTgtL = if okHL then close + hlTgtD else if okBL then close + fblTgtD else if okFL then close + flTgtD else if okSL then close + lTgtD else close + rlTgtD;
-def gStpL = if okHL then hlStop else if okBL then fblStop else if okFL then flStop else if okSL then lStop else rlStop;
-def gRRL = if okHL then hlRR else if okBL then fblRR else if okFL then flRR else if okSL then lRR else rlRR;
+def gTgtS = if okHS then close - hsTgtD else if okBS then close - fbsTgtD else if okXS then close - xsTgtD else if okFS then close - fsTgtD else if okSS then close - sTgtD else close - rsTgtD;
+def gStpS = if okHS then hsStop else if okBS then fbsStop else if okXS then xsStop else if okFS then fsStop else if okSS then sStop else rsStop;
+def gRRS = if okHS then hsRR else if okBS then fbsRR else if okXS then xsRR else if okFS then fsRR else if okSS then sRR else rsRR;
+def gTgtL = if okHL then close + hlTgtD else if okBL then close + fblTgtD else if okXL then close + xlTgtD else if okFL then close + flTgtD else if okSL then close + lTgtD else close + rlTgtD;
+def gStpL = if okHL then hlStop else if okBL then fblStop else if okXL then xlStop else if okFL then flStop else if okSL then lStop else rlStop;
+def gRRL = if okHL then hlRR else if okBL then fblRR else if okXL then xlRR else if okFL then flRR else if okSL then lRR else rlRR;
 
 # Only show a signal once its candle has closed (a newer bar exists)
 def done = !IsNaN(close[-1]);
 
 # ===== Scorecard - one tracked trade at a time: enter at signal close, exit at target / stop / time-out
-def sigDirRaw = if htfShort or fboShort or sweepShort or flipShort or reclaimShort then -1 else if htfLong or fboLong or sweepLong or flipLong or reclaimLong then 1 else 0;
-def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else if htfShort then 7 else if htfLong then 8 else if fboShort then 9 else if fboLong then 10 else 0;
-def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else if htfShort then close - hsTgtD else if htfLong then close + hlTgtD else if fboShort then close - fbsTgtD else if fboLong then close + fblTgtD else 0;
-def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else if htfShort then hsStop else if htfLong then hlStop else if fboShort then fbsStop else if fboLong then fblStop else 0;
+def sigDirRaw = if htfShort or fboShort or bbfShort or sweepShort or flipShort or reclaimShort then -1 else if htfLong or fboLong or bbfLong or sweepLong or flipLong or reclaimLong then 1 else 0;
+def sigType = if sweepShort then 1 else if reclaimShort then 2 else if sweepLong then 3 else if reclaimLong then 4 else if flipShort then 5 else if flipLong then 6 else if htfShort then 7 else if htfLong then 8 else if fboShort then 9 else if fboLong then 10 else if bbfShort then 11 else if bbfLong then 12 else 0;
+def sigTgt = if sweepShort then close - sTgtD else if reclaimShort then close - rsTgtD else if sweepLong then close + lTgtD else if reclaimLong then close + rlTgtD else if flipShort then close - fsTgtD else if flipLong then close + flTgtD else if htfShort then close - hsTgtD else if htfLong then close + hlTgtD else if fboShort then close - fbsTgtD else if fboLong then close + fblTgtD else if bbfShort then close - xsTgtD else if bbfLong then close + xlTgtD else 0;
+def sigStp = if sweepShort then sStop else if reclaimShort then rsStop else if sweepLong then lStop else if reclaimLong then rlStop else if flipShort then fsStop else if flipLong then flStop else if htfShort then hsStop else if htfLong then hlStop else if fboShort then fbsStop else if fboLong then fblStop else if bbfShort then xsStop else if bbfLong then xlStop else 0;
 def sigScore = if htfShort then hsScore else if htfLong then hlScore else if sweepShort or (flipShort and okSS) then sScore else if sweepLong or (flipLong and okSL) then lScore else 0;
 # Only track a signal whose target and stop are real numbers
 def sigDir = if IsNaN(sigTgt) or IsNaN(sigStp) or IsNaN(sigScore) then 0 else sigDirRaw;
 
 # T2 (runner): the next level beyond T1, at least minTgt further, for whichever signal fired this candle
-def t1DS = if htfShort then hsTgtD else if fboShort then fbsTgtD else if flipShort then fsTgtD else if sweepShort then sTgtD else rsTgtD;
-def t1DL = if htfLong then hlTgtD else if fboLong then fblTgtD else if flipLong then flTgtD else if sweepLong then lTgtD else rlTgtD;
+def t1DS = if htfShort then hsTgtD else if fboShort then fbsTgtD else if bbfShort then xsTgtD else if flipShort then fsTgtD else if sweepShort then sTgtD else rsTgtD;
+def t1DL = if htfLong then hlTgtD else if fboLong then fblTgtD else if bbfLong then xlTgtD else if flipLong then flTgtD else if sweepLong then lTgtD else rlTgtD;
 def t2DS = Min(Min(Min(Dist(poc, yes, t1DS + minTgt), Dist(vw, yes, t1DS + minTgt)), Min(Dist(val, yes, t1DS + minTgt), Dist(vah, yes, t1DS + minTgt))),
                Min(Min(Dist(bbMid, yes, t1DS + minTgt), Dist(pdL, yes, t1DS + minTgt)), Min(Dist(pmL, yes, t1DS + minTgt), Dist(pPOC, yes, t1DS + minTgt))));
 def t2DL = Min(Min(Min(Dist(poc, no, t1DL + minTgt), Dist(vw, no, t1DL + minTgt)), Min(Dist(val, no, t1DL + minTgt), Dist(vah, no, t1DL + minTgt))),
@@ -681,6 +785,10 @@ def w9 = TotalSum(isWin and rType == 9);
 def l9 = TotalSum(isLoss and rType == 9);
 def w10 = TotalSum(isWin and rType == 10);
 def l10 = TotalSum(isLoss and rType == 10);
+def w11 = TotalSum(isWin and rType == 11);
+def l11 = TotalSum(isLoss and rType == 11);
+def w12 = TotalSum(isWin and rType == 12);
+def l12 = TotalSum(isLoss and rType == 12);
 def wAl = TotalSum(isWin and oAlign[1]);
 def lAl = TotalSum(isLoss and oAlign[1]);
 def wAg = TotalSum(isWin and !oAlign[1]);
@@ -768,6 +876,16 @@ FboLongSig.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
 FboLongSig.SetDefaultColor(Color.VIOLET);
 FboLongSig.SetLineWeight(5);
 
+# BB FAIL arrows
+plot BbfShortSig = if bbfShort and done then high + TickSize() * 4 else Double.NaN;
+BbfShortSig.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
+BbfShortSig.SetDefaultColor(Color.PINK);
+BbfShortSig.SetLineWeight(4);
+plot BbfLongSig = if bbfLong and done then low - TickSize() * 4 else Double.NaN;
+BbfLongSig.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
+BbfLongSig.SetDefaultColor(Color.PINK);
+BbfLongSig.SetLineWeight(4);
+
 # Chop zone shading
 AddCloud(if isChop then Highest(high, chopLook) else Double.NaN, if isChop then Lowest(low, chopLook) else Double.NaN, Color.DARK_ORANGE, Color.DARK_ORANGE);
 
@@ -813,6 +931,22 @@ AddChartBubble(fboLong and done, low,
     "T1 " + AsPrice(RT(close + fblTgtD)) + (if t2DL < 99999 then "  T2 " + AsPrice(RT(close + t2DL)) else "") + "  S " + AsPrice(RT(fblStop)) + "  RR " + Round(fblRR, 2),
     Color.VIOLET, no);
 
+AddChartBubble(bbfShort and done, high,
+    "BB FAIL SHORT  level tagged, back inside upper band\n" +
+    "T1 " + AsPrice(RT(close - xsTgtD)) + (if t2DS < 99999 then "  T2 " + AsPrice(RT(close - t2DS)) else "") + "  S " + AsPrice(RT(xsStop)) + "  RR " + Round(xsRR, 2),
+    Color.PINK, yes);
+
+AddChartBubble(bbfLong and done, low,
+    "BB FAIL LONG  level tagged, back inside lower band\n" +
+    "T1 " + AsPrice(RT(close + xlTgtD)) + (if t2DL < 99999 then "  T2 " + AsPrice(RT(close + t2DL)) else "") + "  S " + AsPrice(RT(xlStop)) + "  RR " + Round(xlRR, 2),
+    Color.PINK, no);
+
+# Magnet hold-back notes (first candle of each run)
+AddChartBubble(showGhosts and heldS and !heldS[1] and done, high,
+    "wait: untested " + AsPrice(RT(magS)) + " above", Color.GRAY, yes);
+AddChartBubble(showGhosts and heldL and !heldL[1] and done, low,
+    "wait: untested " + AsPrice(RT(magL)) + " below", Color.GRAY, no);
+
 AddChartBubble(showGhosts and ghostS and done, high,
     "T " + AsPrice(RT(gTgtS)) + "  S " + AsPrice(RT(gStpS)) + "  RR " + Round(gRRS, 2), Color.GRAY, yes);
 AddChartBubble(showGhosts and ghostL and done, low,
@@ -838,6 +972,8 @@ Alert(reclaimLong[1], "Journal: POC RECLAIM LONG - check Bookmap", Alert.BAR, So
 Alert(flipShort[1], "Journal: VAH FLIP SHORT - check Bookmap", Alert.BAR, Sound.Ring);
 Alert(fboShort[1], "Journal: FAILED BREAKOUT SHORT - check Bookmap", Alert.BAR, Sound.Bell);
 Alert(fboLong[1], "Journal: FAILED BREAKDOWN LONG - check Bookmap", Alert.BAR, Sound.Bell);
+Alert(bbfShort[1], "Journal: BB FAIL SHORT - check Bookmap", Alert.BAR, Sound.Bell);
+Alert(bbfLong[1], "Journal: BB FAIL LONG - check Bookmap", Alert.BAR, Sound.Bell);
 Alert(flipLong[1], "Journal: VAL FLIP LONG - check Bookmap", Alert.BAR, Sound.Ring);
 Alert(htfShort[1], "Journal: HTF SMA REJECT SHORT - check Bookmap", Alert.BAR, Sound.Bell);
 Alert(htfLong[1], "Journal: HTF SMA HOLD LONG - check Bookmap", Alert.BAR, Sound.Bell);
@@ -892,7 +1028,7 @@ AddLabel(zSel > 0, "HTF ZONE: " + (if zSel == 3 then "4h SMA200 " else if zSel =
 
 # Scorecard (off by default - turn on showScorecard to review results, not while trading)
 AddLabel(showScorecard, "Sweep S " + w1 + "/" + l1 + " | Sweep L " + w3 + "/" + l3 + " | VAH flip " + w5 + "/" + l5 + " | VAL flip " + w6 + "/" + l6 + " | HTF S " + w7 + "/" + l7 + " | HTF L " + w8 + "/" + l8 +
-    " | Fail BO S " + w9 + "/" + l9 + " | Fail BO L " + w10 + "/" + l10 + " | net " + Round(netPts, 1) + " pts (W/L, history optimistic)",
+    " | Fail BO S " + w9 + "/" + l9 + " | Fail BO L " + w10 + "/" + l10 + " | BB fail S " + w11 + "/" + l11 + " | BB fail L " + w12 + "/" + l12 + " | net " + Round(netPts, 1) + " pts (W/L, history optimistic)",
     if netPts >= 0 then Color.GREEN else Color.RED);
 AddLabel(showScorecard, "With HTF bias " + wAl + "/" + lAl + " | Against HTF bias " + wAg + "/" + lAg + " | T2 reached " + t2Reached + " of " + t2Total + " runners",
     Color.LIGHT_GRAY);

@@ -41,11 +41,13 @@ AddOrder(OrderType.BUY_TO_OPEN, openedNow and sigType == 4, close, tradeSize, Co
 AddOrder(OrderType.BUY_TO_OPEN, openedNow and sigType == 6, close, tradeSize, Color.LIME, Color.LIME, "VAL flip L");
 AddOrder(OrderType.BUY_TO_OPEN, openedNow and sigType == 8, close, tradeSize, Color.MAGENTA, Color.MAGENTA, "HTF L");
 AddOrder(OrderType.BUY_TO_OPEN, openedNow and sigType == 10, close, tradeSize, Color.VIOLET, Color.VIOLET, "Fail BO L");
+AddOrder(OrderType.BUY_TO_OPEN, openedNow and sigType == 12, close, tradeSize, Color.PINK, Color.PINK, "BB fail L");
 AddOrder(OrderType.SELL_TO_OPEN, openedNow and sigType == 1, close, tradeSize, Color.RED, Color.RED, "Sweep S");
 AddOrder(OrderType.SELL_TO_OPEN, openedNow and sigType == 2, close, tradeSize, Color.DARK_RED, Color.DARK_RED, "POC S");
 AddOrder(OrderType.SELL_TO_OPEN, openedNow and sigType == 5, close, tradeSize, Color.ORANGE, Color.ORANGE, "VAH flip S");
 AddOrder(OrderType.SELL_TO_OPEN, openedNow and sigType == 7, close, tradeSize, Color.MAGENTA, Color.MAGENTA, "HTF S");
 AddOrder(OrderType.SELL_TO_OPEN, openedNow and sigType == 9, close, tradeSize, Color.VIOLET, Color.VIOLET, "Fail BO S");
+AddOrder(OrderType.SELL_TO_OPEN, openedNow and sigType == 11, close, tradeSize, Color.PINK, Color.PINK, "BB fail S");
 
 # Exits: the tracker resolves a trade on the candle AFTER entry or later, using last candle's target/stop
 AddOrder(OrderType.SELL_TO_CLOSE, isWin and oDir[1] > 0, oTgt[1], tradeSize, Color.GREEN, Color.GREEN, "T1");
@@ -55,7 +57,7 @@ AddOrder(OrderType.BUY_TO_CLOSE, isWin and oDir[1] < 0, oTgt[1], tradeSize, Colo
 AddOrder(OrderType.BUY_TO_CLOSE, isLoss and oDir[1] < 0, oStp[1], tradeSize, Color.RED, Color.RED, "Stop");
 AddOrder(OrderType.BUY_TO_CLOSE, isScratch and oDir[1] < 0, close, tradeSize, Color.GRAY, Color.GRAY, "Time");
 
-AddLabel(yes, "BACKTEST | levels: " + (if staticVA then "VWAP_STATIC (honest)" else "PROFILE (optimistic)") + " | " + tradeSize + " contract(s) | Strategies > Show Report", Color.WHITE);
+AddLabel(yes, "BACKTEST | levels: " + (if staticVA then "VWAP_STATIC (honest)" else "PROFILE (optimistic)") + " | trend " + (if useTrendFilter then "ON" else "off") + " | band walk " + (if useBandWalk then "ON" else "off") + " | magnet " + (if useMagnetCheck then "ON" else "off") + " | " + tradeSize + " contract(s)", Color.WHITE);
 """
 
 out = header + "\n" + body.rstrip() + "\n" + orders
