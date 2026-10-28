@@ -51,6 +51,8 @@ The ToS version adds four things:
      - `useFrontRun`: T1 is capped `frontPad` before the first opposing key level, R:R is re-measured to it, and a setup without `minRR` of room is skipped.
      - `useOneDirection`: no new signal while a trade is live, or against a live T2 runner.
      - `useCooldownReset`: a stop-out ends the cooldown.
+- **`obstacleSet`.** HTF_AND_DAY (the default) treats only the 4h/1h SMAs and previous day/week high/low as obstacles for front-running T1. ALL adds VAH/VAL, premarket, opening-range and round-number levels, which is much stricter.
+- **Gate funnel** (`showGateFunnel`, on in the strategy). It counts, over the loaded history, how many candidate candles survive each gate: chop, trend/band walk, magnet, room R:R, fired.
 - **Fade filters** (each one an on/off setting, for comparing in the backtest). They apply to sweep, flip, HTF-level and POC setups. Failed breakouts and BB FAIL are exempt.
   - `useTrendFilter`: no fade longs while the 9 EMA has dropped more than `trendSlopePts` over `trendSlopeBars` and price is below VWAP. This lasts until a close back above the EMA. Shorts get the mirror.
   - `useBandWalk`: no fades while the Bollinger Bands are widening and `walkCount` of the last `walkLook` closes are at or outside the band. This lasts until a close back past the BB midline.

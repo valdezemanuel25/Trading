@@ -108,6 +108,10 @@ input chopBreak = 2.0;
 input useFrontRun = yes;
 input frontPad = 1.0;
 input frontMin = 2.0;
+# Which levels count as obstacles for front-running T1: HTF_AND_DAY = 4h/1h SMAs + previous day/week high/low;
+# ALL also adds VAH/VAL, premarket high/low, opening-range high/low and round numbers (much stricter).
+input obstacleSet = {default HTF_AND_DAY, ALL};
+input showGateFunnel = yes;
 
 # ----- Risk
 input minTgt = 6.0;
@@ -612,14 +616,20 @@ def rawXL = useMagnetCheck and inWin and keyTaggedL and bandTagDn and close > bb
 
 # ===== Front-run targets: T1 stops frontPad points BEFORE the first opposing key level (at least frontMin away).
 # R:R is re-measured to that capped T1; a setup without minRR of room before the obstacle is skipped.
-def obsS = Min(Min(Min(Min(Dist(htf1, yes, frontMin), Dist(htf2, yes, frontMin)), Min(Dist(htf3, yes, frontMin), Dist(pdH, yes, frontMin))),
+def obsAllS = Min(Min(Min(Min(Dist(htf1, yes, frontMin), Dist(htf2, yes, frontMin)), Min(Dist(htf3, yes, frontMin), Dist(pdH, yes, frontMin))),
                Min(Min(Dist(pdL, yes, frontMin), Dist(pwH, yes, frontMin)), Min(Dist(pwL, yes, frontMin), Dist(pmH, yes, frontMin)))),
            Min(Min(Min(Dist(pmL, yes, frontMin), Dist(vah, yes, frontMin)), Min(Dist(val, yes, frontMin), Dist(or5H, yes, frontMin))),
                Min(Dist(or5L, yes, frontMin), Dist(rDn, yes, frontMin))));
-def obsL = Min(Min(Min(Min(Dist(htf1, no, frontMin), Dist(htf2, no, frontMin)), Min(Dist(htf3, no, frontMin), Dist(pdH, no, frontMin))),
+def obsAllL = Min(Min(Min(Min(Dist(htf1, no, frontMin), Dist(htf2, no, frontMin)), Min(Dist(htf3, no, frontMin), Dist(pdH, no, frontMin))),
                Min(Min(Dist(pdL, no, frontMin), Dist(pwH, no, frontMin)), Min(Dist(pwL, no, frontMin), Dist(pmH, no, frontMin)))),
            Min(Min(Min(Dist(pmL, no, frontMin), Dist(vah, no, frontMin)), Min(Dist(val, no, frontMin), Dist(or5H, no, frontMin))),
                Min(Dist(or5L, no, frontMin), Dist(rUp, no, frontMin))));
+def obsDayS = Min(Min(Min(Dist(htf1, yes, frontMin), Dist(htf2, yes, frontMin)), Min(Dist(htf3, yes, frontMin), Dist(pdH, yes, frontMin))),
+              Min(Min(Dist(pdL, yes, frontMin), Dist(pwH, yes, frontMin)), Dist(pwL, yes, frontMin)));
+def obsDayL = Min(Min(Min(Dist(htf1, no, frontMin), Dist(htf2, no, frontMin)), Min(Dist(htf3, no, frontMin), Dist(pdH, no, frontMin))),
+              Min(Min(Dist(pdL, no, frontMin), Dist(pwH, no, frontMin)), Dist(pwL, no, frontMin)));
+def obsS = if obstacleSet == obstacleSet.ALL then obsAllS else obsDayS;
+def obsL = if obstacleSet == obstacleSet.ALL then obsAllL else obsDayL;
 def roomS = if useFrontRun and obsS < 99999 then obsS - frontPad else 99999;
 def roomL = if useFrontRun and obsL < 99999 then obsL - frontPad else 99999;
 def sT1 = if sTgtD >= 99999 then 99999 else Min(sTgtD, roomS);
@@ -1108,6 +1118,18 @@ AddLabel(showDebug, "S funnel: window bars " + TotalSum(inWin) + " > swept " + T
     " > CVD " + TotalSum(fS4) + " > score " + TotalSum(fS5) + " > stop " + TotalSum(fS6) + " > RR " + TotalSum(fS7) + " > fired " + TotalSum(sweepShort), Color.LIGHT_GRAY);
 AddLabel(showDebug, "L funnel: swept " + TotalSum(fL1) + " > bias " + TotalSum(fL2) + " > candle/EMA " + TotalSum(fL3) +
     " > CVD " + TotalSum(fL4) + " > score " + TotalSum(fL5) + " > stop " + TotalSum(fL6) + " > RR " + TotalSum(fL7) + " > fired " + TotalSum(sweepLong), Color.LIGHT_GRAY);
+
+# ----- Gate funnel (showGateFunnel): how many candidate candles survive each gate over the loaded history.
+# The step where the count collapses is the gate that is blocking signals.
+def gRawS = (!IsNaN(rawSS) and rawSS) or (!IsNaN(rawRS) and rawRS) or (!IsNaN(rawHS) and rawHS) or (!IsNaN(rawFS) and rawFS) or (!IsNaN(rawBS) and rawBS) or (!IsNaN(rawXS) and rawXS);
+def gRawL = (!IsNaN(rawSL) and rawSL) or (!IsNaN(rawRL) and rawRL) or (!IsNaN(rawHL) and rawHL) or (!IsNaN(rawFL) and rawFL) or (!IsNaN(rawBL) and rawBL) or (!IsNaN(rawXL) and rawXL);
+def gChop = (gRawS or gRawL) and !isChop;
+def gRegime = gChop and ((gRawS and !trendBlockS and !walkBlockS) or (gRawL and !trendBlockL and !walkBlockL));
+def gLocation = gChop and ((gRawS and !fadeBlockS) or (gRawL and !fadeBlockL));
+def gRoom = okHS or okBS or okXS or okSS or okFSpre or okRS or okHL or okBL or okXL or okSL or okFLpre or okRL;
+def gFired = shownS or shownL;
+AddLabel(showGateFunnel, "GATES: candidates " + TotalSum(gRawS or gRawL) + " > chop " + TotalSum(gChop) + " > trend/band " + TotalSum(gRegime) +
+    " > magnet " + TotalSum(gLocation) + " > room R:R " + TotalSum(gRoom) + " > fired " + TotalSum(gFired), Color.LIGHT_GRAY);
 
 # ===== Strategy orders (backtest)
 input tradeSize = 1;

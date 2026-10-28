@@ -29,6 +29,8 @@ body = body.replace("input vaSource = {default PROFILE, VWAP_STATIC};",
                     "input vaSource = {PROFILE, default VWAP_STATIC};", 1)
 assert "default VWAP_STATIC" in body
 body = re.sub(r"^Alert\(.*\n", "", body, flags=re.M)
+body = body.replace("input showGateFunnel = no;", "input showGateFunnel = yes;", 1)
+assert "input showGateFunnel = yes;" in body
 body = body.replace("# Alerts fire on the first tick of the bar AFTER the signal candle closes\n", "")
 
 orders = """
