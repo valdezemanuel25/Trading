@@ -48,7 +48,7 @@ The ToS version adds four things:
   2. **Location:** magnet check with level tiers. Tier 1 levels (4h SMA200, 4h SMA21, previous week high/low) use a wider zone, `magnetPadT1`.
   3. **Trigger:** the setup's own pattern. With `useStrictTrigger`, BB FAIL also needs a close beyond the 9 EMA, or a lower high (higher low for longs).
   4. **Risk and state:**
-     - `useFrontRun`: T1 is capped `frontPad` before the first opposing key level, R:R is re-measured to it, and a setup without `minRR` of room is skipped.
+     - `useFrontRun`: T1 is capped `frontPad` before the first opposing key level. The setup still needs `minRR` to its normal target, and is skipped only if the capped R:R falls under `frontMinRR` (0.7), meaning a real wall right in front. With-trend trades (9 EMA sloping their way, price on that side of VWAP) aren't capped.
      - `useOneDirection`: no new signal while a trade is live, or against a live T2 runner.
      - `useCooldownReset`: a stop-out ends the cooldown.
 - **`obstacleSet`.** HTF_AND_DAY (the default) treats only the 4h/1h SMAs and previous day/week high/low as obstacles for front-running T1. ALL adds VAH/VAL, premarket, opening-range and round-number levels, which is much stricter.

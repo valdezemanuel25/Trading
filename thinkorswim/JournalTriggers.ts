@@ -113,6 +113,9 @@ input chopBreak = 2.0;
 input useFrontRun = yes;
 input frontPad = 1.0;
 input frontMin = 2.0;
+# Front-run caps T1 before the first obstacle; a trade is only skipped if that capped R:R falls under frontMinRR
+# (a real wall right in front of the entry). With-trend trades are not capped at all.
+input frontMinRR = 0.7;
 # Which levels count as obstacles for front-running T1: HTF_AND_DAY = 4h/1h SMAs + previous day/week high/low;
 # ALL also adds VAH/VAL, premarket high/low, opening-range high/low and round numbers (much stricter).
 input obstacleSet = {default HTF_AND_DAY, ALL};
@@ -635,8 +638,11 @@ def obsDayL = Min(Min(Min(Dist(htf1, no, frontMin), Dist(htf2, no, frontMin)), M
               Min(Min(Dist(pdL, no, frontMin), Dist(pwH, no, frontMin)), Dist(pwL, no, frontMin)));
 def obsS = if obstacleSet == obstacleSet.ALL then obsAllS else obsDayS;
 def obsL = if obstacleSet == obstacleSet.ALL then obsAllL else obsDayL;
-def roomS = if useFrontRun and obsS < 99999 then obsS - frontPad else 99999;
-def roomL = if useFrontRun and obsL < 99999 then obsL - frontPad else 99999;
+# With-trend trades (9 EMA sloping their way and price on that side of VWAP): the next level is the target, so no cap
+def withTrendS = if IsNaN(trendDn) then 0 else if trendDn then 1 else 0;
+def withTrendL = if IsNaN(trendUp) then 0 else if trendUp then 1 else 0;
+def roomS = if useFrontRun and obsS < 99999 and withTrendS == 0 then obsS - frontPad else 99999;
+def roomL = if useFrontRun and obsL < 99999 and withTrendL == 0 then obsL - frontPad else 99999;
 def sT1 = if sTgtD >= 99999 then 99999 else Min(sTgtD, roomS);
 def sRRc = if sT1 < 99999 and sRisk > 0 then sT1 / sRisk else 0;
 def rsT1 = if rsTgtD >= 99999 then 99999 else Min(rsTgtD, roomS);
@@ -696,18 +702,18 @@ def cXS = if IsNaN(rawXS) then 0 else if rawXS then 1 else 0;
 def rXS = if IsNaN(xsRRc) then 0 else xsRRc;
 def cXL = if IsNaN(rawXL) then 0 else if rawXL then 1 else 0;
 def rXL = if IsNaN(xlRRc) then 0 else xlRRc;
-def okSS = if cSS == 1 and cChop == 0 and cFadeS == 0 and rSS >= minRR then 1 else 0;
-def okRS = if cRS == 1 and cChop == 0 and cFadeS == 0 and rRS >= minRR then 1 else 0;
-def okSL = if cSL == 1 and cChop == 0 and cFadeL == 0 and rSL >= minRR then 1 else 0;
-def okRL = if cRL == 1 and cChop == 0 and cFadeL == 0 and rRL >= minRR then 1 else 0;
-def okFSpre = if cFS == 1 and cChop == 0 and cFadeS == 0 and rFS >= minRR then 1 else 0;
-def okFLpre = if cFL == 1 and cChop == 0 and cFadeL == 0 and rFL >= minRR then 1 else 0;
-def okHS = if cHS == 1 and cChop == 0 and cFadeS == 0 and rHS >= minRR then 1 else 0;
-def okHL = if cHL == 1 and cChop == 0 and cFadeL == 0 and rHL >= minRR then 1 else 0;
-def okBS = if cBS == 1 and cChop == 0 and cFadeS == 0 and rBS >= minRR then 1 else 0;
-def okBL = if cBL == 1 and cChop == 0 and cFadeL == 0 and rBL >= minRR then 1 else 0;
-def okXS = if cXS == 1 and cChop == 0 and cFadeS == 0 and rXS >= minRR then 1 else 0;
-def okXL = if cXL == 1 and cChop == 0 and cFadeL == 0 and rXL >= minRR then 1 else 0;
+def okSS = if cSS == 1 and cChop == 0 and cFadeS == 0 and rSS >= frontMinRR then 1 else 0;
+def okRS = if cRS == 1 and cChop == 0 and cFadeS == 0 and rRS >= frontMinRR then 1 else 0;
+def okSL = if cSL == 1 and cChop == 0 and cFadeL == 0 and rSL >= frontMinRR then 1 else 0;
+def okRL = if cRL == 1 and cChop == 0 and cFadeL == 0 and rRL >= frontMinRR then 1 else 0;
+def okFSpre = if cFS == 1 and cChop == 0 and cFadeS == 0 and rFS >= frontMinRR then 1 else 0;
+def okFLpre = if cFL == 1 and cChop == 0 and cFadeL == 0 and rFL >= frontMinRR then 1 else 0;
+def okHS = if cHS == 1 and cChop == 0 and cFadeS == 0 and rHS >= frontMinRR then 1 else 0;
+def okHL = if cHL == 1 and cChop == 0 and cFadeL == 0 and rHL >= frontMinRR then 1 else 0;
+def okBS = if cBS == 1 and cChop == 0 and cFadeS == 0 and rBS >= frontMinRR then 1 else 0;
+def okBL = if cBL == 1 and cChop == 0 and cFadeL == 0 and rBL >= frontMinRR then 1 else 0;
+def okXS = if cXS == 1 and cChop == 0 and cFadeS == 0 and rXS >= frontMinRR then 1 else 0;
+def okXL = if cXL == 1 and cChop == 0 and cFadeL == 0 and rXL >= frontMinRR then 1 else 0;
 
 # Fade setups that qualified but were held back only by an untested magnet
 def heldS = if IsNaN(magBlockS) then 0 else if magBlockS and cRegS == 0 and cChop == 0 and (cSS + cFS + cHS) > 0 then 1 else 0;
