@@ -39,6 +39,10 @@ The ToS version adds four things:
   - *Bubble:* shows T1 (nearest level giving 1:1), T2 (the next level beyond), the stop (above the level/sweep high) and the R:R.
   - *Scorecard:* tracked as `HTF S` / `HTF L`.
 - **HTF zone label + lines.** Within `zoneTol` of a 4h/1h SMA, a yellow label names the level and gives both the study's value (completed HTF bars) and the chart's value (which includes the forming bar). It also says which side price is testing from. The three HTF SMAs are drawn on the 5m chart (`showHtfLines`).
+- **Flip guards.**
+  - The run into the level has to start inside value: a VAH flip rally can't begin below VAL, and a VAL flip selloff can't begin above VAH. This rules out V-reversals.
+  - A flip can't fire within `oppBlockBars` (12) of a signal the other way, unless that signal's stop was already hit.
+  - Flips follow the HTF bias by default (`flipNeedBias = yes`), or need the sweep to be at an HTF level.
 - **Failed breakout / breakdown** (violet arrows, `useFbo`). After price is *accepted* beyond a 4h/1h SMA (2+ closes more than `cancelPts` past it within `fboLook` bars), the first close back through the level is a signal. A short also needs a red candle closing below the EMA; a long, the mirror. This setup alone runs until `fboEnd` (13:00 ET), because these traps usually show up after the morning window.
 - **Chop filter** (`useChop`). With at least `chopCrosses` EMA crosses in the last `chopLook` bars, and the whole range no wider than `chopRange` points, every signal is paused. An orange CHOP label and a shaded zone mark it.
 - **T1 / T2.** Reversal bubbles show T1 (nearest level giving 1:1) and T2 (the next level at least `minTgt` beyond it). While a tracked trade is live, T2 is drawn as a green short-dash line. All prices are rounded to the tick.

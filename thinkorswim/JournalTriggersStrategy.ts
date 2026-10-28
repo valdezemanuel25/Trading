@@ -58,7 +58,8 @@ input flushPts = 15.0;
 input flushLook = 12;
 input flipLook = 6;
 input flipMaxBeyond = 8.0;
-input flipNeedBias = no;
+input flipNeedBias = yes;
+input oppBlockBars = 12;
 
 # ----- HTF level test (4h SMA200 / 4h SMA21 / 1h SMA50)
 input useHtf = yes;
@@ -399,6 +400,8 @@ def rawRS = useReclaim and inWin and (biasMode == biasMode.OFF or !htfBull) and 
 # at a flush bottom it is still falling, as in the 06-25 and 10-15 journal longs.
 def flLow = Lowest(low, flipLook);
 def flushDn = Highest(high, flushLook) - flLow >= flushPts;
+# A) the selloff must START inside value: its high is not above VAH (else it is a reversal, not exhaustion)
+def flFromValue = if IsNaN(vah) then 0 else Highest(high, flushLook) <= vah + lvlTol;
 def flDepth = val - flLow;
 def flBelow = if IsNaN(flDepth) then 0 else flDepth > lvlTol and flDepth <= flipMaxBeyond;
 def flPrevNear = if IsNaN(val[1]) then 0 else Min(close[1] - val[1], close[2] - val[2]) <= lvlTol;
@@ -409,10 +412,12 @@ def flRisk = close - flStop;
 def flNeed = Max(minTgt, minRR * flRisk);
 def flTgtD = Min(Min(Dist(poc, no, flNeed), Dist(vw, no, flNeed)), Min(Min(Dist(pPOC, no, flNeed), Dist(bbMid, no, flNeed)), Dist(vah, no, flNeed)));
 def flRR = if flTgtD < 99999 and flRisk > 0 then flTgtD / flRisk else 0;
-def rawFL = useFlip and inWin and (!flipNeedBias or lBiasOK) and close > val and flPrevNear and flBelow and flushDn and flStretch and flStrong and barDelta > 0 and flRR >= minRR and flRisk <= maxStop;
+def rawFL = useFlip and inWin and (!flipNeedBias or lBiasOK) and close > val and flPrevNear and flBelow and flushDn and flFromValue and flStretch and flStrong and barDelta > 0 and flRR >= minRR and flRisk <= maxStop;
 
 def fsHigh = Highest(high, flipLook);
 def flushUp = fsHigh - Lowest(low, flushLook) >= flushPts;
+# A) the rally must START inside value: its low is not below VAL (today 10/27 the rally began under VAL = V-reversal)
+def fsFromValue = if IsNaN(val) then 0 else Lowest(low, flushLook) >= val - lvlTol;
 def fsDepth = fsHigh - vah;
 def fsAbove = if IsNaN(fsDepth) then 0 else fsDepth > lvlTol and fsDepth <= flipMaxBeyond;
 def fsPrevNear = if IsNaN(vah[1]) then 0 else Max(close[1] - vah[1], close[2] - vah[2]) >= -lvlTol;
@@ -423,7 +428,7 @@ def fsRisk = fsStop - close;
 def fsNeed = Max(minTgt, minRR * fsRisk);
 def fsTgtD = Min(Min(Dist(poc, yes, fsNeed), Dist(vw, yes, fsNeed)), Min(Min(Dist(pPOC, yes, fsNeed), Dist(bbMid, yes, fsNeed)), Dist(val, yes, fsNeed)));
 def fsRR = if fsTgtD < 99999 and fsRisk > 0 then fsTgtD / fsRisk else 0;
-def rawFS = useFlip and inWin and (!flipNeedBias or sBiasOK) and close < vah and fsPrevNear and fsAbove and flushUp and fsStretch and fsStrong and barDelta < 0 and fsRR >= minRR and fsRisk <= maxStop;
+def rawFS = useFlip and inWin and (!flipNeedBias or sBiasOK) and close < vah and fsPrevNear and fsAbove and flushUp and fsFromValue and fsStretch and fsStrong and barDelta < 0 and fsRR >= minRR and fsRisk <= maxStop;
 
 # ===== 5) HTF level test: rejection of a 4h/1h SMA (priority 4h SMA200, then 4h SMA21, then 1h SMA50)
 # Short = tested from below and rejected (your 06-23, 07-31, 09-22, 09-25 shorts). Long = tested from above and held.
@@ -494,12 +499,29 @@ def okSS = if IsNaN(rawSS) or isChop then 0 else rawSS;
 def okRS = if IsNaN(rawRS) or isChop then 0 else rawRS;
 def okSL = if IsNaN(rawSL) or isChop then 0 else rawSL;
 def okRL = if IsNaN(rawRL) or isChop then 0 else rawRL;
-def okFS = if IsNaN(rawFS) or isChop then 0 else rawFS;
-def okFL = if IsNaN(rawFL) or isChop then 0 else rawFL;
+def okFSpre = if IsNaN(rawFS) or isChop then 0 else rawFS;
+def okFLpre = if IsNaN(rawFL) or isChop then 0 else rawFL;
 def okHS = if IsNaN(rawHS) or isChop then 0 else rawHS;
 def okHL = if IsNaN(rawHL) or isChop then 0 else rawHL;
 def okBS = if IsNaN(rawBS) or isChop then 0 else rawBS;
 def okBL = if IsNaN(rawBL) or isChop then 0 else rawBL;
+
+# B) Opposite-signal block: a Flip may not fire within oppBlockBars of a signal the other way,
+#    unless price has already hit that signal's stop.
+def anyLpre = okHL or okBL or okFLpre or okSL or okRL;
+def anySpre = okHS or okBS or okFSpre or okSS or okRS;
+def lStopPre = if okHL then hlStop else if okBL then fblStop else if okFLpre then flStop else if okSL then lStop else rlStop;
+def sStopPre = if okHS then hsStop else if okBS then fbsStop else if okFSpre then fsStop else if okSS then sStop else rsStop;
+def lastLpre = CompoundValue(1, if anyLpre then bn else if IsNaN(lastLpre[1]) then -100000 else lastLpre[1], -100000);
+def lastSpre = CompoundValue(1, if anySpre then bn else if IsNaN(lastSpre[1]) then -100000 else lastSpre[1], -100000);
+def lStopVal = CompoundValue(1, if anyLpre then lStopPre else lStopVal[1], Double.NaN);
+def sStopVal = CompoundValue(1, if anySpre then sStopPre else sStopVal[1], Double.NaN);
+def lStopped = CompoundValue(1, if anyLpre then 0 else if IsNaN(lStopVal[1]) then 0 else if low <= lStopVal[1] then 1 else lStopped[1], 0);
+def sStopped = CompoundValue(1, if anySpre then 0 else if IsNaN(sStopVal[1]) then 0 else if high >= sStopVal[1] then 1 else sStopped[1], 0);
+def blockFS = bn - lastLpre <= oppBlockBars and !lStopped;
+def blockFL = bn - lastSpre <= oppBlockBars and !sStopped;
+def okFS = okFSpre and !blockFS;
+def okFL = okFLpre and !blockFL;
 def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okBS or okSS or okFS or okRS) and bn - lastS[1] > cooldown then bn else lastS[1], -100000);
 def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okBL or okSL or okFL or okRL) and bn - lastL[1] > cooldown then bn else lastL[1], -100000);
 # Priority when several fire on one candle: HTF level, then Failed breakout, then Flip, then Sweep, then POC.
