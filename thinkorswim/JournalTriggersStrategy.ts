@@ -660,22 +660,53 @@ def xlRRc = if xlT1 < 99999 and xlRisk > 0 then xlT1 / xlRisk else 0;
 # ===== Cooldown (same side)
 # A single N/A inside a running (recursive) value would stick forever and block every later signal,
 # so each condition is forced to 0/1 first and the cooldown recovers from N/A.
-def okSS = if IsNaN(rawSS) or isChop or fadeBlockS or sRRc < minRR then 0 else rawSS;
-def okRS = if IsNaN(rawRS) or isChop or fadeBlockS or rsRRc < minRR then 0 else rawRS;
-def okSL = if IsNaN(rawSL) or isChop or fadeBlockL or lRRc < minRR then 0 else rawSL;
-def okRL = if IsNaN(rawRL) or isChop or fadeBlockL or rlRRc < minRR then 0 else rawRL;
-def okFSpre = if IsNaN(rawFS) or isChop or fadeBlockS or fsRRc < minRR then 0 else rawFS;
-def okFLpre = if IsNaN(rawFL) or isChop or fadeBlockL or flRRc < minRR then 0 else rawFL;
-def okHS = if IsNaN(rawHS) or isChop or fadeBlockS or hsRRc < minRR then 0 else rawHS;
-def okHL = if IsNaN(rawHL) or isChop or fadeBlockL or hlRRc < minRR then 0 else rawHL;
-def okBS = if IsNaN(rawBS) or isChop or fadeBlockS or fbsRRc < minRR then 0 else rawBS;
-def okBL = if IsNaN(rawBL) or isChop or fadeBlockL or fblRRc < minRR then 0 else rawBL;
-def okXS = if IsNaN(rawXS) or isChop or fadeBlockS or xsRRc < minRR then 0 else rawXS;
-def okXL = if IsNaN(rawXL) or isChop or fadeBlockL or xlRRc < minRR then 0 else rawXL;
+# ----- Clean 0/1 values. thinkScript "and"/"or" do not skip an N/A operand, so every value that feeds the
+# gates is converted with if/then/else first; one N/A can then never spread into the signal logic.
+def cChop = if IsNaN(isChop) then 0 else if isChop then 1 else 0;
+def cFadeS = if IsNaN(fadeBlockS) then 0 else if fadeBlockS then 1 else 0;
+def cFadeL = if IsNaN(fadeBlockL) then 0 else if fadeBlockL then 1 else 0;
+def cRegS = if IsNaN(trendBlockS) or IsNaN(walkBlockS) then 0 else if trendBlockS or walkBlockS then 1 else 0;
+def cRegL = if IsNaN(trendBlockL) or IsNaN(walkBlockL) then 0 else if trendBlockL or walkBlockL then 1 else 0;
+def cSS = if IsNaN(rawSS) then 0 else if rawSS then 1 else 0;
+def rSS = if IsNaN(sRRc) then 0 else sRRc;
+def cRS = if IsNaN(rawRS) then 0 else if rawRS then 1 else 0;
+def rRS = if IsNaN(rsRRc) then 0 else rsRRc;
+def cSL = if IsNaN(rawSL) then 0 else if rawSL then 1 else 0;
+def rSL = if IsNaN(lRRc) then 0 else lRRc;
+def cRL = if IsNaN(rawRL) then 0 else if rawRL then 1 else 0;
+def rRL = if IsNaN(rlRRc) then 0 else rlRRc;
+def cFS = if IsNaN(rawFS) then 0 else if rawFS then 1 else 0;
+def rFS = if IsNaN(fsRRc) then 0 else fsRRc;
+def cFL = if IsNaN(rawFL) then 0 else if rawFL then 1 else 0;
+def rFL = if IsNaN(flRRc) then 0 else flRRc;
+def cHS = if IsNaN(rawHS) then 0 else if rawHS then 1 else 0;
+def rHS = if IsNaN(hsRRc) then 0 else hsRRc;
+def cHL = if IsNaN(rawHL) then 0 else if rawHL then 1 else 0;
+def rHL = if IsNaN(hlRRc) then 0 else hlRRc;
+def cBS = if IsNaN(rawBS) then 0 else if rawBS then 1 else 0;
+def rBS = if IsNaN(fbsRRc) then 0 else fbsRRc;
+def cBL = if IsNaN(rawBL) then 0 else if rawBL then 1 else 0;
+def rBL = if IsNaN(fblRRc) then 0 else fblRRc;
+def cXS = if IsNaN(rawXS) then 0 else if rawXS then 1 else 0;
+def rXS = if IsNaN(xsRRc) then 0 else xsRRc;
+def cXL = if IsNaN(rawXL) then 0 else if rawXL then 1 else 0;
+def rXL = if IsNaN(xlRRc) then 0 else xlRRc;
+def okSS = if cSS == 1 and cChop == 0 and cFadeS == 0 and rSS >= minRR then 1 else 0;
+def okRS = if cRS == 1 and cChop == 0 and cFadeS == 0 and rRS >= minRR then 1 else 0;
+def okSL = if cSL == 1 and cChop == 0 and cFadeL == 0 and rSL >= minRR then 1 else 0;
+def okRL = if cRL == 1 and cChop == 0 and cFadeL == 0 and rRL >= minRR then 1 else 0;
+def okFSpre = if cFS == 1 and cChop == 0 and cFadeS == 0 and rFS >= minRR then 1 else 0;
+def okFLpre = if cFL == 1 and cChop == 0 and cFadeL == 0 and rFL >= minRR then 1 else 0;
+def okHS = if cHS == 1 and cChop == 0 and cFadeS == 0 and rHS >= minRR then 1 else 0;
+def okHL = if cHL == 1 and cChop == 0 and cFadeL == 0 and rHL >= minRR then 1 else 0;
+def okBS = if cBS == 1 and cChop == 0 and cFadeS == 0 and rBS >= minRR then 1 else 0;
+def okBL = if cBL == 1 and cChop == 0 and cFadeL == 0 and rBL >= minRR then 1 else 0;
+def okXS = if cXS == 1 and cChop == 0 and cFadeS == 0 and rXS >= minRR then 1 else 0;
+def okXL = if cXL == 1 and cChop == 0 and cFadeL == 0 and rXL >= minRR then 1 else 0;
 
 # Fade setups that qualified but were held back only by an untested magnet
-def heldS = magBlockS and !trendBlockS and !walkBlockS and !isChop and ((!IsNaN(rawSS) and rawSS) or (!IsNaN(rawFS) and rawFS) or (!IsNaN(rawHS) and rawHS));
-def heldL = magBlockL and !trendBlockL and !walkBlockL and !isChop and ((!IsNaN(rawSL) and rawSL) or (!IsNaN(rawFL) and rawFL) or (!IsNaN(rawHL) and rawHL));
+def heldS = if IsNaN(magBlockS) then 0 else if magBlockS and cRegS == 0 and cChop == 0 and (cSS + cFS + cHS) > 0 then 1 else 0;
+def heldL = if IsNaN(magBlockL) then 0 else if magBlockL and cRegL == 0 and cChop == 0 and (cSL + cFL + cHL) > 0 then 1 else 0;
 
 # B) Opposite-signal block: a Flip may not fire within oppBlockBars of a signal the other way,
 #    unless price has already hit that signal's stop.
@@ -724,10 +755,12 @@ def runnerLiveL = t2Open and !t2Hit and !t2Fail and t2Dir[1] > 0;
 def blockNewS = useOneDirection and (tradeLive or runnerLiveL);
 def blockNewL = useOneDirection and (tradeLive or runnerLiveS);
 # Cooldown resets after a stop-out, so a failed signal doesn't hide a better one
-def lastLoss = CompoundValue(1, if isLoss then bn else if IsNaN(lastLoss[1]) then -100000 else lastLoss[1], -100000);
+def cBlockNewS = if IsNaN(blockNewS) then 0 else if blockNewS then 1 else 0;
+def cBlockNewL = if IsNaN(blockNewL) then 0 else if blockNewL then 1 else 0;
+def lastLoss = CompoundValue(1, if IsNaN(isLoss) then lastLoss[1] else if isLoss then bn else if IsNaN(lastLoss[1]) then -100000 else lastLoss[1], -100000);
 
-def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okBS or okXS or okSS or okFS or okRS) and !blockNewS and (bn - lastS[1] > cooldown or (useCooldownReset and lastLoss > lastS[1])) then bn else lastS[1], -100000);
-def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okBL or okXL or okSL or okFL or okRL) and !blockNewL and (bn - lastL[1] > cooldown or (useCooldownReset and lastLoss > lastL[1])) then bn else lastL[1], -100000);
+def lastS = CompoundValue(1, if IsNaN(lastS[1]) then -100000 else if (okHS or okBS or okXS or okSS or okFS or okRS) and cBlockNewS == 0 and (bn - lastS[1] > cooldown or (useCooldownReset and lastLoss > lastS[1])) then bn else lastS[1], -100000);
+def lastL = CompoundValue(1, if IsNaN(lastL[1]) then -100000 else if (okHL or okBL or okXL or okSL or okFL or okRL) and cBlockNewL == 0 and (bn - lastL[1] > cooldown or (useCooldownReset and lastLoss > lastL[1])) then bn else lastL[1], -100000);
 # Priority when several fire on one candle: HTF level, then Failed breakout, then Flip, then Sweep, then POC.
 # A Flip that also passes the Sweep rules shows ONE bubble marked "+ SWEEP".
 def htfShort = okHS and lastS == bn;
@@ -1121,14 +1154,14 @@ AddLabel(showDebug, "L funnel: swept " + TotalSum(fL1) + " > bias " + TotalSum(f
 
 # ----- Gate funnel (showGateFunnel): how many candidate candles survive each gate over the loaded history.
 # The step where the count collapses is the gate that is blocking signals.
-def gRawS = (!IsNaN(rawSS) and rawSS) or (!IsNaN(rawRS) and rawRS) or (!IsNaN(rawHS) and rawHS) or (!IsNaN(rawFS) and rawFS) or (!IsNaN(rawBS) and rawBS) or (!IsNaN(rawXS) and rawXS);
-def gRawL = (!IsNaN(rawSL) and rawSL) or (!IsNaN(rawRL) and rawRL) or (!IsNaN(rawHL) and rawHL) or (!IsNaN(rawFL) and rawFL) or (!IsNaN(rawBL) and rawBL) or (!IsNaN(rawXL) and rawXL);
-def gChop = (gRawS or gRawL) and !isChop;
-def gRegime = gChop and ((gRawS and !trendBlockS and !walkBlockS) or (gRawL and !trendBlockL and !walkBlockL));
-def gLocation = gChop and ((gRawS and !fadeBlockS) or (gRawL and !fadeBlockL));
-def gRoom = okHS or okBS or okXS or okSS or okFSpre or okRS or okHL or okBL or okXL or okSL or okFLpre or okRL;
-def gFired = shownS or shownL;
-AddLabel(showGateFunnel, "GATES: candidates " + TotalSum(gRawS or gRawL) + " > chop " + TotalSum(gChop) + " > trend/band " + TotalSum(gRegime) +
+def gRawS = if cSS + cRS + cHS + cFS + cBS + cXS > 0 then 1 else 0;
+def gRawL = if cSL + cRL + cHL + cFL + cBL + cXL > 0 then 1 else 0;
+def gChop = if gRawS + gRawL > 0 and cChop == 0 then 1 else 0;
+def gRegime = if gChop == 1 and ((gRawS == 1 and cRegS == 0) or (gRawL == 1 and cRegL == 0)) then 1 else 0;
+def gLocation = if gChop == 1 and ((gRawS == 1 and cFadeS == 0) or (gRawL == 1 and cFadeL == 0)) then 1 else 0;
+def gRoom = if okHS + okBS + okXS + okSS + okFSpre + okRS + okHL + okBL + okXL + okSL + okFLpre + okRL > 0 then 1 else 0;
+def gFired = if IsNaN(shownS) or IsNaN(shownL) then 0 else if shownS or shownL then 1 else 0;
+AddLabel(showGateFunnel, "GATES: candidates " + TotalSum(if gRawS + gRawL > 0 then 1 else 0) + " > chop " + TotalSum(gChop) + " > trend/band " + TotalSum(gRegime) +
     " > magnet " + TotalSum(gLocation) + " > room R:R " + TotalSum(gRoom) + " > fired " + TotalSum(gFired), Color.LIGHT_GRAY);
 
 # ===== Strategy orders (backtest)
