@@ -101,6 +101,19 @@ class Params:
     max_hold_bars: int = 12
     # backtest-only
     intrabar: bool = False
+    # CVD source: "clv5" = close location of the 5m candle (what ToS uses), "clv1" = close location of each
+    # 1-minute candle summed into the 5m bar, "bvc1" = bulk volume classification on 1-minute bars
+    # (buy share = Phi(price change / its stdev)), a standard approximation of aggressor flow without ticks.
+    delta_source: str = "clv5"
+    # CVD divergence gate for fades: price makes a new high (low) into the level over div_look bars,
+    # but CVD does not.
+    use_cvd_div: bool = False
+    div_look: int = 12
+    # exits: cap T1 at t1_cap points; move the stop to entry once price has gone be_trigger points in favour (0 = off)
+    t1_cap: float = INF
+    be_trigger: float = 0.0
+    # comma-separated setup codes to switch off, e.g. "1,3" = no sweeps (codes in SETUPS)
+    disabled: str = ""
 
 
 SETUPS = {1: "Sweep S", 3: "Sweep L", 5: "VAH flip S", 6: "VAL flip L", 7: "HTF S", 8: "HTF L",
@@ -239,7 +252,10 @@ def compute(m1, p: Params):
     pPOC = pd.Series(np.where(new_day, shift(poc), np.nan)).ffill().to_numpy()
 
     rng = h - l
-    barDelta = np.where(rng > 0, v * ((c - l) - (h - c)) / np.where(rng > 0, rng, 1), 0.0)
+    if p.delta_source == "clv5":
+        barDelta = np.where(rng > 0, v * ((c - l) - (h - c)) / np.where(rng > 0, rng, 1), 0.0)
+    else:
+        barDelta = minute_delta(m1, p.delta_source).reindex(idx).fillna(0).to_numpy()
     cvd = pd.Series(barDelta).groupby(day_id).cumsum().to_numpy()
     cvdUp = (barDelta > 0) & gt(cvd, shift(cvd, p.cvd_look))
     cvdDn = (barDelta < 0) & lt(cvd, shift(cvd, p.cvd_look))
@@ -458,6 +474,14 @@ def compute(m1, p: Params):
     roomS = np.where(p.use_front_run & (obsS < INF) & ~trendDn, obsS - p.front_pad, INF)
     roomL = np.where(p.use_front_run & (obsL < INF) & ~trendUp, obsL - p.front_pad, INF)
 
+    # CVD divergence at the level (fades only)
+    prevHi = shift(rmax(h, p.div_look - p.sweep_look), p.sweep_look)
+    prevLo = shift(rmin(l, p.div_look - p.sweep_look), p.sweep_look)
+    prevCvdHi = shift(rmax(cvd, p.div_look - p.sweep_look), p.sweep_look)
+    prevCvdLo = shift(rmin(cvd, p.div_look - p.sweep_look), p.sweep_look)
+    bearDiv = ge(hh3, prevHi) & lt(rmax(cvd, p.sweep_look), prevCvdHi)
+    bullDiv = le(ll3, prevLo) & gt(rmin(cvd, p.sweep_look), prevCvdLo)
+
     short_types = (1, 5, 7, 9, 11)
     ok, t1 = {}, {}
     for k in raw:
@@ -469,6 +493,8 @@ def compute(m1, p: Params):
             rrc = np.where((t1[k] < INF) & (risk > 0), t1[k] / np.where(risk > 0, risk, 1), 0)
         block = fadeBlockS if short else fadeBlockL
         ok[k] = np.nan_to_num(raw[k], nan=0).astype(bool) & ~block & (rrc >= p.front_min_rr)
+        if p.use_cvd_div and k not in (9, 10):
+            ok[k] &= bearDiv if short else bullDiv
         # chop is applied in the loop (it has a recursive hold)
 
     f.update(dict(index=idx, o=o, h=h, l=l, c=c, is_rth=is_rth, new_day=new_day, ok=ok, t1=t1, stops=stops,
@@ -476,6 +502,25 @@ def compute(m1, p: Params):
                   scoreS=sScore, scoreL=lScore, hsScore=hsScore, hlScore=hlScore,
                   t2magsS=[poc, vw, val, vah, bbMid, pdL, pmL, pPOC], t2magsL=[poc, vw, val, vah, bbMid, pdH, pmH, pPOC]))
     return f
+
+
+def minute_delta(m1, source):
+    """Signed volume per 5m bar built from 1-minute bars."""
+    h, l, c, v = (m1[k].to_numpy(float) for k in ("high", "low", "close", "volume"))
+    if source == "clv1":
+        rng = h - l
+        d = np.where(rng > 0, v * ((c - l) - (h - c)) / np.where(rng > 0, rng, 1), 0.0)
+    elif source == "bvc1":
+        import math
+        dp = np.diff(c, prepend=c[0])
+        sd = pd.Series(dp).rolling(390, min_periods=30).std().to_numpy()
+        z = np.where(sd > 0, dp / np.where(sd > 0, sd, 1), 0.0)
+        phi = 0.5 * (1 + np.vectorize(math.erf)(z / math.sqrt(2)))
+        d = v * (2 * phi - 1)
+    else:
+        raise ValueError(source)
+    ser = pd.Series(d, index=m1.index)
+    return ser.resample("5min", label="left", closed="left").sum()
 
 
 def rt(x):
@@ -491,6 +536,7 @@ def run(m1, p: Params = Params(), feats=None):
     m1_high = m1["high"] if p.intrabar else None
     m1_low = m1["low"] if p.intrabar else None
 
+    off = {int(x) for x in p.disabled.split(",") if x.strip()}
     S_ORDER = (7, 9, 11, 5, 1)    # HTF, failed breakout, BB fail, flip, sweep
     L_ORDER = (8, 10, 12, 6, 3)
     trades = []
@@ -522,8 +568,8 @@ def run(m1, p: Params = Params(), feats=None):
                 and chop_lo - p.chop_break <= c[i] <= chop_hi + p.chop_break)
         is_chop = bool(f["isChopRaw"][i]) or held
 
-        okS = {k: bool(ok[k][i]) and not is_chop for k in S_ORDER}
-        okL = {k: bool(ok[k][i]) and not is_chop for k in L_ORDER}
+        okS = {k: bool(ok[k][i]) and not is_chop and k not in off for k in S_ORDER}
+        okL = {k: bool(ok[k][i]) and not is_chop and k not in off for k in L_ORDER}
 
         # resolve the tracked trade (from the previous candle's levels)
         open_prev = o_dir != 0
@@ -536,6 +582,10 @@ def run(m1, p: Params = Params(), feats=None):
             if hitT and hitS and p.intrabar:
                 hitT, hitS = _intrabar_order(idx[i], o_dir, o_tgt, o_stp, m1_high, m1_low)
             tOut = not hitT and not hitS and (i - o_bar >= p.max_hold_bars or not is_rth[i])
+            if p.be_trigger > 0 and not (hitT or hitS or tOut):
+                fav = (o_ent - l[i]) if o_dir < 0 else (h[i] - o_ent)
+                if fav >= p.be_trigger:
+                    o_stp = min(o_stp, o_ent) if o_dir < 0 else max(o_stp, o_ent)
         resolved = hitT or hitS or tOut
         if resolved:
             if hitT and not hitS:
@@ -597,7 +647,7 @@ def run(m1, p: Params = Params(), feats=None):
         sig = fired_s or fired_l  # a short wins if both fire on one candle (as in ToS)
         if sig and (not open_prev or resolved):
             d = -1 if fired_s else 1
-            tg, st = rt(c[i] + d * t1[sig][i]), rt(stops[sig][i])
+            tg, st = rt(c[i] + d * min(t1[sig][i], p.t1_cap)), rt(stops[sig][i])
             if np.isnan(tg) or np.isnan(st):
                 continue
             o_dir, o_ent, o_tgt, o_stp, o_bar, o_type = d, c[i], tg, st, i, sig

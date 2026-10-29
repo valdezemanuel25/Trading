@@ -75,3 +75,33 @@ Averages: +0.11 points per trade gross; wins average +11.0 pts, stops -8.0 pts, 
 Trade counts are in parentheses.
 
 **Conclusion:** as automated rules, the strategy has no edge over 6.8 years. It breaks even before costs and loses after them. The 30-day ToS result was a favorable stretch. Only VAL flip L is positive in both halves, and on very few trades.
+
+## 2026-10-29: free improvement tests (same data, 1 ES, $30/trade)
+
+New backtest settings, all off by default, so the baseline is unchanged:
+- `delta_source` (clv5 / clv1 / bvc1)
+- `use_cvd_div`
+- `t1_cap`
+- `be_trigger`
+- `disabled`
+
+Each cell is trades, average gross points per trade, and net $.
+
+| Config | 2020-2023 | 2024-2026 |
+|---|---|---|
+| A baseline | 984, +0.05, -26,820 | 693, +0.18, -14,390 |
+| CVD from 1-minute close location (clv1) | 954, +0.06, -25,895 | 681, +0.26, -11,530 |
+| CVD from 1-minute bulk-volume classification (bvc1) | 1011, -0.05, -32,805 | 702, +0.03, -19,910 |
+| clv5 + CVD divergence gate | 280, -0.44, -14,500 | 176, -0.79, -12,205 |
+| clv1 + divergence | 266, -0.01, -8,092 | 184, -0.21, -7,470 |
+| B: 10:30-11:00 ET only | 385, +0.71, +2,175 | 281, +0.42, -2,505 |
+| C: T1 cap 10 + breakeven at +4 | 1077, +0.54, -3,172 | 773, +0.14, -17,728 |
+| D: no sweeps | 273, +0.38, -3,015 | 201, -0.63, -12,355 |
+| **E = B + C** | **396, +0.53, -1,418** | **295, +0.66, +862** |
+| F = B + C + D | 139, +0.89, +2,005 | 109, +0.24, -1,982 |
+| G = E with clv1 CVD | 377, +0.21, -7,398 | 288, +0.49, -1,590 |
+
+**Findings:**
+- **CVD estimated from candles doesn't help.** No variant adds edge, and the divergence gate built on estimated CVD makes the average trade worse. Real aggressor data (Databento Trades) would be needed to test the journal's CVD rules properly.
+- **Best combination (E):** trade only 10:30-11:00 ET, cap T1 at 10 points, and move the stop to breakeven at +4. That gives about +0.5-0.7 pts per trade gross in both periods, which is roughly breakeven after costs (0.6 pts).
+- **Caveat on E:** the 10:30-11:00 window was spotted in the full 2020-2026 time-of-day table, so it isn't a clean out-of-sample result.
