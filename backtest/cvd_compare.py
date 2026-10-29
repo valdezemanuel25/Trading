@@ -37,6 +37,11 @@ def cell(t, a, b):
                 win=round(100 * wins / max(wins + stops, 1), 1))
 
 
+def gated(t):
+    """Trades from setups the CVD gates apply to (failed breakouts skip them)."""
+    return t[~t["setup"].str.startswith("Fail BO")]
+
+
 def fmt(c):
     return f"{c['n']}, {c['pts']:+.2f}, {c['net']:+,.0f}"
 
@@ -44,7 +49,8 @@ def fmt(c):
 def evaluate(m1, base, **kw):
     p = with_params(**BASES[base], **kw)
     t = run(m1, p, compute(m1, p))
-    return cell(t, *TUNE), cell(t, *CHECK), t
+    g = gated(t)
+    return cell(t, *TUNE), cell(t, *CHECK), cell(g, *TUNE), cell(g, *CHECK)
 
 
 def main():
@@ -61,24 +67,25 @@ def main():
     }
     for base in BASES:
         for name, kw in configs.items():
-            tu, ch, _ = evaluate(m1, base, **kw)
-            rows.append(dict(base=base, config=name, tune=fmt(tu), check=fmt(ch), tune_pts=tu["pts"], check_pts=ch["pts"],
-                             tune_win=tu["win"], check_win=ch["win"]))
+            tu, ch, gtu, gch = evaluate(m1, base, **kw)
+            rows.append(dict(base=base, config=name, tune=fmt(tu), check=fmt(ch),
+                             gated_tune=fmt(gtu), gated_check=fmt(gch), tune_win=tu["win"], check_win=ch["win"]))
             print(rows[-1], flush=True)
-    print("\nFixed configs (cells: trades, avg gross pts, net $):")
+    print("\nFixed configs (cells: trades, avg gross pts, net $; gated_* = without failed breakouts):")
     print(pd.DataFrame(rows).to_string(index=False))
 
     # small grid on the tune period only
     grid = []
     for base in BASES:
         for fw in (1, 2, 3):
-            tu, ch, _ = evaluate(m1, base, delta_source="real", use_cvd_flip=True, flip_within=fw)
+            tu, ch, gtu, gch = evaluate(m1, base, delta_source="real", use_cvd_flip=True, flip_within=fw)
             grid.append(dict(base=base, rule=f"flip within {fw}", tune=fmt(tu), check=fmt(ch),
-                             tune_pts=tu["pts"], check_pts=ch["pts"], tune_n=tu["n"]))
-        for dm, rm in itertools.product((1.5, 2.0, 3.0), (0.75, 1.0, 1.5)):
-            tu, ch, _ = evaluate(m1, base, delta_source="real", use_absorption=True, abs_delta_mult=dm, abs_range_mult=rm)
+                             gated_tune=fmt(gtu), gated_check=fmt(gch)))
+        for dm, rm in itertools.product((1.0, 1.5, 2.0), (1.0, 1.5)):
+            tu, ch, gtu, gch = evaluate(m1, base, delta_source="real", use_absorption=True, abs_delta_mult=dm,
+                                        abs_range_mult=rm)
             grid.append(dict(base=base, rule=f"absorption d>={dm} r<={rm}", tune=fmt(tu), check=fmt(ch),
-                             tune_pts=tu["pts"], check_pts=ch["pts"], tune_n=tu["n"]))
+                             gated_tune=fmt(gtu), gated_check=fmt(gch)))
         print(f"grid {base} done", flush=True)
     g = pd.DataFrame(grid)
     print("\nGrid (real CVD; pick on tune, read check):")

@@ -117,11 +117,12 @@ class Params:
     flip_within: int = 1
     # Absorption at the level: within the last sweep_look candles, a candle near the extreme with large delta
     # INTO the level (buyers at a high for shorts, sellers at a low for longs) but a small range.
-    # large = |delta| >= abs_delta_mult x its rolling mean; small = range <= abs_range_mult x rolling median range.
+    # large = |delta| >= abs_delta_mult x its mean, small = range <= abs_range_mult x median range,
+    # both over the last abs_norm_look RTH candles.
     use_absorption: bool = False
     abs_delta_mult: float = 2.0
     abs_range_mult: float = 1.0
-    abs_norm_look: int = 48
+    abs_norm_look: int = 78  # RTH bars (one session)
     # comma-separated setup codes the CVD gates (div, flip, absorption) skip; default: failed breakouts
     gate_skip: str = "9,10"
     # exits: cap T1 at t1_cap points; move the stop to entry once price has gone be_trigger points in favour (0 = off)
@@ -506,8 +507,11 @@ def compute(m1, p: Params):
     flipUp = roll_ge0(np.where(flipUpNow, 0.0, -1.0), p.flip_within)
 
     # absorption: big delta into the extreme with a small range
-    absD = pd.Series(np.abs(barDelta)).rolling(p.abs_norm_look, min_periods=12).mean().to_numpy()
-    medR = pd.Series(rng).rolling(p.abs_norm_look, min_periods=12).median().to_numpy()
+    # normalised over RTH bars only: overnight bars are much quieter and would make every RTH bar look large
+    rth_i = np.flatnonzero(is_rth)
+    absD, medR = np.full(n, np.nan), np.full(n, np.nan)
+    absD[rth_i] = pd.Series(np.abs(barDelta[rth_i])).rolling(p.abs_norm_look, min_periods=12).mean().to_numpy()
+    medR[rth_i] = pd.Series(rng[rth_i]).rolling(p.abs_norm_look, min_periods=12).median().to_numpy()
     small = le(rng, p.abs_range_mult * medR)
     absBuy = small & ge(barDelta, p.abs_delta_mult * absD) & (barDelta > 0)
     absSell = small & le(barDelta, -p.abs_delta_mult * absD) & (barDelta < 0)
