@@ -6,6 +6,7 @@ Talks to Databento's HTTP API directly, so the `databento` package is not requir
 
   python3 backtest/fetch_trades.py --start 2026-04-01 --end 2026-10-29 --budget 100 --dry-run
   python3 backtest/fetch_trades.py --start 2026-04-01 --end 2026-10-29 --budget 100
+  python3 backtest/fetch_trades.py --start 2025-06-01 --end 2026-04-01 --window 1000-1105 --budget 20
 
 - Checks the cost with Databento BEFORE downloading and stops if it is over --budget (US$).
 - Downloads one UTC day at a time and keeps outright ES contracts only. Each finished day is cached in
@@ -13,7 +14,9 @@ Talks to Databento's HTTP API directly, so the `databento` package is not requir
   actually requested is checked against --budget before every day.
 - Aggressor side from Databento's `side`: "B" = buyer hit the ask (buy), "A" = seller hit the bid (sell),
   "N" = no aggressor (counted in `trades` only).
-- Writes data/trades_1m/es_trades_1m_YYYY-MM.csv.zst with columns:
+- --window downloads only that New York time slice of each weekday (about 1/5 the cost for 10:00-11:05).
+  Enough for the 10:30-11:00 variant: its CVD rules only look a few candles back, never at the day's total.
+- Writes data/trades_1m/es_trades_1m_YYYY-MM.csv.zst (es_trades_1m_winHHMM-HHMM_YYYY-MM with --window), columns:
     ts (UTC minute), symbol, buy_vol, sell_vol, trades
   That is all real CVD needs: delta = buy_vol - sell_vol. The raw ticks are not kept.
 """
@@ -34,6 +37,7 @@ OUT_DIR = os.path.join(ROOT, "data", "trades_1m")
 DAY_CACHE = os.path.join(ROOT, "backtest", ".cache", "trades_days")
 OUTRIGHT = re.compile(r"^ES[HMUZ]\d$")
 API = "https://hist.databento.com/v0/"
+TZ = "America/New_York"
 QUERY = dict(dataset="GLBX.MDP3", schema="trades", symbols="ES.FUT", stype_in="parent")
 
 
@@ -79,11 +83,29 @@ def fetch_day(session, start, end):
     return agg, n
 
 
+def day_ranges(start, end, window):
+    """(name, start, end) per day. Full UTC days, or with window="HHMM-HHMM" only that slice of each weekday,
+    in New York time (so it follows daylight saving)."""
+    out = []
+    for d in pd.date_range(start, pd.Timestamp(end) - pd.Timedelta(days=1), freq="D"):
+        if window is None:
+            if d.weekday() != 5:  # no Saturday session
+                out.append((d.strftime("%Y-%m-%d"), d.strftime("%Y-%m-%d"),
+                            (d + pd.Timedelta(days=1)).strftime("%Y-%m-%d")))
+        elif d.weekday() < 5:
+            a, b = window.split("-")
+            t0 = pd.Timestamp(f"{d:%Y-%m-%d} {a[:2]}:{a[2:]}", tz=TZ).tz_convert("UTC")
+            t1 = pd.Timestamp(f"{d:%Y-%m-%d} {b[:2]}:{b[2:]}", tz=TZ).tz_convert("UTC")
+            out.append((f"{d:%Y-%m-%d}_win{window}", t0.strftime("%Y-%m-%dT%H:%M"), t1.strftime("%Y-%m-%dT%H:%M")))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", required=True, help="exclusive")
     ap.add_argument("--budget", type=float, required=True, help="max US$ to spend")
+    ap.add_argument("--window", help="only this New York time slice of each weekday, e.g. 1000-1105")
     ap.add_argument("--dry-run", action="store_true", help="only print the cost")
     args = ap.parse_args()
 
@@ -94,37 +116,39 @@ def main():
     session.auth = (key, "")
 
     os.makedirs(DAY_CACHE, exist_ok=True)
-    days = pd.date_range(args.start, pd.Timestamp(args.end) - pd.Timedelta(days=1), freq="D")
-    todo = [d for d in days if d.weekday() != 5  # no Saturday session
-            and not os.path.exists(os.path.join(DAY_CACHE, d.strftime("%Y-%m-%d") + ".csv"))]
+    days = day_ranges(args.start, args.end, args.window)
+    cached = lambda name: os.path.join(DAY_CACHE, name + ".csv")  # noqa: E731
+    todo = [r for r in days if not os.path.exists(cached(r[0]))]
 
-    cost = get_cost(session, args.start, args.end)
-    print(f"Databento cost for {args.start} -> {args.end}: ${cost:.2f} (budget ${args.budget:.2f}); "
-          f"{len(todo)} days still to download")
+    if args.window is None:
+        cost = get_cost(session, args.start, args.end)
+    else:  # a time-of-day slice can't be priced in one call
+        cost = sum(get_cost(session, s, e) for _, s, e in todo)
+    print(f"Databento cost for {args.start} -> {args.end}{' ' + args.window + ' ET' if args.window else ''}: "
+          f"${cost:.2f} (budget ${args.budget:.2f}); {len(todo)} days still to download")
     if cost > args.budget:
         sys.exit("Over budget - nothing downloaded. Shorten the range or raise --budget.")
     if args.dry_run:
         return
 
     spent = 0.0
-    for d in todo:
-        s, e = d.strftime("%Y-%m-%d"), (d + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    for name, s, e in todo:
         day_cost = get_cost(session, s, e)
         if spent + day_cost > args.budget:
-            sys.exit(f"Stopping before {s}: ${spent:.2f} spent, next day ${day_cost:.2f} would pass the budget")
+            sys.exit(f"Stopping before {name}: ${spent:.2f} spent, next day ${day_cost:.2f} would pass the budget")
         agg, n = fetch_day(session, s, e)
         spent += day_cost
-        agg.to_csv(os.path.join(DAY_CACHE, s + ".csv"), index=False)
-        print(f"{s}  {n:,} trades -> {len(agg):,} minute rows  (${day_cost:.2f}, total ${spent:.2f})", flush=True)
+        agg.to_csv(cached(name), index=False)
+        print(f"{name}  {n:,} trades -> {len(agg):,} minute rows  (${day_cost:.2f}, total ${spent:.2f})", flush=True)
 
     # assemble monthly files from every cached day in range
     os.makedirs(OUT_DIR, exist_ok=True)
-    parts = [pd.read_csv(os.path.join(DAY_CACHE, d.strftime("%Y-%m-%d") + ".csv")) for d in days
-             if os.path.exists(os.path.join(DAY_CACHE, d.strftime("%Y-%m-%d") + ".csv"))]
+    parts = [pd.read_csv(cached(name)) for name, _, _ in days if os.path.exists(cached(name))]
     allm = pd.concat(parts, ignore_index=True)
     allm["ts"] = pd.to_datetime(allm["ts"], utc=True)
+    tag = f"win{args.window}_" if args.window else ""
     for m, g in allm.groupby(allm["ts"].dt.strftime("%Y-%m")):
-        path = os.path.join(OUT_DIR, f"es_trades_1m_{m}.csv.zst")
+        path = os.path.join(OUT_DIR, f"es_trades_1m_{tag}{m}.csv.zst")
         g = g.sort_values(["ts", "symbol"])
         g = g.assign(ts=g["ts"].dt.strftime("%Y-%m-%dT%H:%M:%SZ"))
         write_zst(path, g.to_csv(index=False).encode())
