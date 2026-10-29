@@ -22,6 +22,7 @@ import io
 import os
 import re
 import sys
+import time
 
 import pandas as pd
 import requests
@@ -37,7 +38,15 @@ QUERY = dict(dataset="GLBX.MDP3", schema="trades", symbols="ES.FUT", stype_in="p
 
 
 def api(session, endpoint, **params):
-    r = session.post(API + endpoint, data={**QUERY, **params}, timeout=600)
+    for attempt in range(4):  # retry dropped connections (proxy resets); HTTP errors are not retried
+        try:
+            r = session.post(API + endpoint, data={**QUERY, **params}, timeout=600)
+            break
+        except requests.exceptions.ConnectionError as e:
+            if attempt == 3:
+                raise
+            print(f"  connection error ({e.__class__.__name__}), retrying in {2 ** (attempt + 1)}s", flush=True)
+            time.sleep(2 ** (attempt + 1))
     if r.status_code != 200:
         sys.exit(f"Databento {endpoint} failed ({r.status_code}): {r.text[:300]}")
     return r
