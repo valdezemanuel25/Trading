@@ -1,6 +1,6 @@
 # Plan: test real CVD (Databento trades) on the Journal Triggers strategy
 
-**Status (2026-10-29): done.** Results are in `docs/backtest-log.md`, section "real CVD from Databento trades". The trades data is in `data/trades_1m/`.
+**Status (2026-10-29): done.** Results are in `docs/backtest-log.md`, sections "real CVD from Databento trades" and "out-of-sample check of real CVD on E" (real CVD did not hold up). The trades data is in `data/trades_1m/`.
 
 **Context for a new session:** read `docs/backtest-log.md` first. The Python backtester in `backtest/` copies the ToS strategy rule for rule and is validated on ES 1-minute data from 2020-2026 (`data/`). As automated rules, the strategy is about breakeven before costs. The best variant (10:30-11:00 ET, T1 capped at 10, breakeven at +4) is about breakeven after costs. CVD **estimated from candles** added nothing.
 

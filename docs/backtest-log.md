@@ -145,3 +145,24 @@ The flip window was tuned on the tune period: `flip_within` 1 is best there on b
 - **Bookmap checklist (E window, 10:30-11:00 ET):** take a sweep or fade only when the trigger candle's **real** delta is in the trade's direction and the 3-candle CVD is moving with it (the strategy's `need_cvd` rule, read from Bookmap's real CVD instead of the ToS candle estimate). ToS can't compute this, so it stays a manual check.
 - Keep logging the **CVD flip** (3-candle CVD turning on the trigger candle) in the Notion journal as an observation, not a rule.
 - No ToS alert filter change.
+
+## 2026-10-29: out-of-sample check of real CVD on E (2025-08-08 to 2026-03-31)
+
+Data: Databento trades for **10:00-11:05 ET only** on each weekday (`fetch_trades.py --window 1000-1105`, $19.71), in `data/trades_1m/es_trades_1m_win1000-1105_*`. That slice is enough for E. Its CVD rules look at most 4 candles back, never at the day's total, and failed breakouts (which can fire until 13:00) don't use CVD. Check: on 2026-04 to 2026-10, cutting real delta down to 10:00-11:05 gives the same 73 E trades as the full-day data.
+
+Nothing was re-tuned: these are E and the rules from the previous section. Script: `python3 backtest/cvd_oos.py`.
+
+| E with | Trades | Avg gross pts (se) | Net $ | Gated (no failed breakouts) |
+|---|---|---|---|---|
+| clv5 (current) | 57 | +1.08 (0.91) | +1,378 | 43, +0.71, +235 |
+| real | 57 | +0.59 (0.97) | -35 | 43, +0.05, -1,178 |
+| real + flip | 28 | +0.72 (1.56) | +172 | 14, -0.79, -970 |
+
+The two sources share 46 trades. The 11 trades only clv5 takes average +2.50 pts, and the 11 only real takes average -0.07. In-sample it was the reverse (-3.85 vs -0.07).
+
+**Conclusion: real CVD does not hold up out of sample.**
+- In sample (2026-04 to 10), real beat clv5 on E by about 0.7 pts/trade. Out of sample it lost by about 0.5.
+- Pooled over both periods (about 130 trades each), clv5 averages about +0.59 pts and real about +0.75. That difference is far inside the noise (se about 0.6-0.7).
+- **Withdrawn:** the Bookmap checklist rule from the previous section. Reading the trigger candle's delta from real CVD instead of the candle estimate isn't shown to help E.
+- **Not supported:** CVD flip. On E it is worse than plain clv5 again.
+- For reference, E itself (clv5) made +1.08 pts/trade gross out of sample, about +$1,380 net over 8 months on 57 trades. That is consistent with "roughly breakeven to slightly positive after costs", not a proven edge.
