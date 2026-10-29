@@ -47,7 +47,7 @@ def api(session, endpoint, **params):
         try:
             r = session.post(API + endpoint, data={**QUERY, **params}, timeout=600)
             break
-        except requests.exceptions.ConnectionError as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as e:
             if attempt == 3:
                 raise
             print(f"  connection error ({e.__class__.__name__}), retrying in {2 ** (attempt + 1)}s", flush=True)
