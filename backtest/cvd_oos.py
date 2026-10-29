@@ -4,7 +4,7 @@
   python3 backtest/cvd_oos.py
 
 Uses the 10:00-11:05 ET trades slices (data/trades_1m/es_trades_1m_win1000-1105_*), fetched with
-  python3 backtest/fetch_trades.py --start 2025-08-01 --end 2026-04-01 --window 1000-1105 --budget 20
+  python3 backtest/fetch_trades.py --start 2025-08-08 --end 2026-04-01 --window 1000-1105 --budget 20
 No settings are re-tuned: these are the rules found on 2026-04 to 2026-10 (docs/backtest-log.md).
 
 First it checks that cutting real delta down to 10:00-11:05 leaves E unchanged on 2026-04 to 2026-10, where the
@@ -25,7 +25,7 @@ from strategy import compute, run, with_params  # noqa: E402
 TZ = "America/New_York"
 COST, POINT = 30.0, 50.0
 E = dict(win_start=1030, win_end=1100, t1_cap=10, be_trigger=4)
-OOS = ("2025-08-01", "2026-04-01")
+OOS = ("2025-08-08", "2026-04-01")
 IS = ("2026-04-02", "2026-10-29")
 CONFIGS = {"clv5 (current)": dict(delta_source="clv5"), "real": dict(delta_source="real"),
            "real + flip": dict(delta_source="real", use_cvd_flip=True)}

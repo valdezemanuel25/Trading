@@ -120,16 +120,19 @@ def main():
     cached = lambda name: os.path.join(DAY_CACHE, name + ".csv")  # noqa: E731
     todo = [r for r in days if not os.path.exists(cached(r[0]))]
 
-    if args.window is None:
-        cost = get_cost(session, args.start, args.end)
-    else:  # a time-of-day slice can't be priced in one call
-        cost = sum(get_cost(session, s, e) for _, s, e in todo)
-    print(f"Databento cost for {args.start} -> {args.end}{' ' + args.window + ' ET' if args.window else ''}: "
-          f"${cost:.2f} (budget ${args.budget:.2f}); {len(todo)} days still to download")
-    if cost > args.budget:
-        sys.exit("Over budget - nothing downloaded. Shorten the range or raise --budget.")
-    if args.dry_run:
-        return
+    # A time-of-day slice can't be priced in one call and each price check takes ~10 s, so with --window the
+    # total is only summed for --dry-run; the per-day check below still stops the run at the budget.
+    if args.window is None or args.dry_run:
+        if args.window is None:
+            cost = get_cost(session, args.start, args.end)
+        else:
+            cost = sum(get_cost(session, s, e) for _, s, e in todo)
+        print(f"Databento cost for {args.start} -> {args.end}{' ' + args.window + ' ET' if args.window else ''}: "
+              f"${cost:.2f} (budget ${args.budget:.2f}); {len(todo)} days still to download")
+        if cost > args.budget:
+            sys.exit("Over budget - nothing downloaded. Shorten the range or raise --budget.")
+        if args.dry_run:
+            return
 
     spent = 0.0
     for name, s, e in todo:
