@@ -38,15 +38,19 @@ QUERY = dict(dataset="GLBX.MDP3", schema="trades", symbols="ES.FUT", stype_in="p
 
 
 def api(session, endpoint, **params):
-    for attempt in range(4):  # retry dropped connections (proxy resets); HTTP errors are not retried
+    # retry dropped connections (proxy resets) and partial responses (206); other HTTP errors stop the run
+    for attempt in range(4):
         try:
             r = session.post(API + endpoint, data={**QUERY, **params}, timeout=600)
-            break
+            if r.status_code != 206:
+                break
+            why = "partial response (206)"
         except requests.exceptions.ConnectionError as e:
-            if attempt == 3:
-                raise
-            print(f"  connection error ({e.__class__.__name__}), retrying in {2 ** (attempt + 1)}s", flush=True)
-            time.sleep(2 ** (attempt + 1))
+            why = f"connection error ({e.__class__.__name__})"
+        if attempt == 3:
+            sys.exit(f"Databento {endpoint} failed 4 times: {why}")
+        print(f"  {why}, retrying in {2 ** (attempt + 1)}s", flush=True)
+        time.sleep(2 ** (attempt + 1))
     if r.status_code != 200:
         sys.exit(f"Databento {endpoint} failed ({r.status_code}): {r.text[:300]}")
     return r
