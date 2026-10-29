@@ -36,6 +36,8 @@ def parse_sets(items):
             out[k] = v.lower() in ("1", "true", "yes", "on")
         elif t in (int, "int"):
             out[k] = int(v)
+        elif t in (str, "str"):
+            out[k] = v
         else:
             out[k] = float(v)
     return out

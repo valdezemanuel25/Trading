@@ -14,7 +14,8 @@ import re
 
 import numpy as np
 import pandas as pd
-import zstandard
+
+from zstd_io import read_zst
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -25,9 +26,7 @@ MONTH_CODE = {"H": 3, "M": 6, "U": 9, "Z": 12}
 
 
 def _read_month(path):
-    with open(path, "rb") as fh:
-        raw = zstandard.ZstdDecompressor().stream_reader(fh).read()
-    df = pd.read_csv(io.BytesIO(raw), usecols=["ts_event", "open", "high", "low", "close", "volume", "symbol"])
+    df = pd.read_csv(io.BytesIO(read_zst(path)), usecols=["ts_event", "open", "high", "low", "close", "volume", "symbol"])
     return df[df["symbol"].str.match(OUTRIGHT)]
 
 

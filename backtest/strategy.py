@@ -104,11 +104,26 @@ class Params:
     # CVD source: "clv5" = close location of the 5m candle (what ToS uses), "clv1" = close location of each
     # 1-minute candle summed into the 5m bar, "bvc1" = bulk volume classification on 1-minute bars
     # (buy share = Phi(price change / its stdev)), a standard approximation of aggressor flow without ticks.
+    # "real" = aggressor buy - sell volume from Databento trades (data/trades_1m/, front-month contract only);
+    # bars outside the dates those files cover get delta 0.
     delta_source: str = "clv5"
     # CVD divergence gate for fades: price makes a new high (low) into the level over div_look bars,
     # but CVD does not.
     use_cvd_div: bool = False
     div_look: int = 12
+    # CVD flip: the CVD change over the last cvd_look bars turns against the prior move (down for shorts,
+    # up for longs) on the signal candle or up to flip_within - 1 candles before it.
+    use_cvd_flip: bool = False
+    flip_within: int = 1
+    # Absorption at the level: within the last sweep_look candles, a candle near the extreme with large delta
+    # INTO the level (buyers at a high for shorts, sellers at a low for longs) but a small range.
+    # large = |delta| >= abs_delta_mult x its rolling mean; small = range <= abs_range_mult x rolling median range.
+    use_absorption: bool = False
+    abs_delta_mult: float = 2.0
+    abs_range_mult: float = 1.0
+    abs_norm_look: int = 48
+    # comma-separated setup codes the CVD gates (div, flip, absorption) skip; default: failed breakouts
+    gate_skip: str = "9,10"
     # exits: cap T1 at t1_cap points; move the stop to entry once price has gone be_trigger points in favour (0 = off)
     t1_cap: float = INF
     be_trigger: float = 0.0
@@ -255,7 +270,8 @@ def compute(m1, p: Params):
     if p.delta_source == "clv5":
         barDelta = np.where(rng > 0, v * ((c - l) - (h - c)) / np.where(rng > 0, rng, 1), 0.0)
     else:
-        barDelta = minute_delta(m1, p.delta_source).reindex(idx).fillna(0).to_numpy()
+        src = real_delta(m1) if p.delta_source == "real" else minute_delta(m1, p.delta_source)
+        barDelta = src.reindex(idx).fillna(0).to_numpy()
     cvd = pd.Series(barDelta).groupby(day_id).cumsum().to_numpy()
     cvdUp = (barDelta > 0) & gt(cvd, shift(cvd, p.cvd_look))
     cvdDn = (barDelta < 0) & lt(cvd, shift(cvd, p.cvd_look))
@@ -482,6 +498,23 @@ def compute(m1, p: Params):
     bearDiv = ge(hh3, prevHi) & lt(rmax(cvd, p.sweep_look), prevCvdHi)
     bullDiv = le(ll3, prevLo) & gt(rmin(cvd, p.sweep_look), prevCvdLo)
 
+    # CVD flip: 3-bar CVD change turns negative (short) / positive (long) on this candle
+    d3 = cvd - shift(cvd, p.cvd_look)
+    flipDnNow = lt(d3, 0) & ge(shift(d3), 0)
+    flipUpNow = gt(d3, 0) & le(shift(d3), 0)
+    flipDn = roll_ge0(np.where(flipDnNow, 0.0, -1.0), p.flip_within)
+    flipUp = roll_ge0(np.where(flipUpNow, 0.0, -1.0), p.flip_within)
+
+    # absorption: big delta into the extreme with a small range
+    absD = pd.Series(np.abs(barDelta)).rolling(p.abs_norm_look, min_periods=12).mean().to_numpy()
+    medR = pd.Series(rng).rolling(p.abs_norm_look, min_periods=12).median().to_numpy()
+    small = le(rng, p.abs_range_mult * medR)
+    absBuy = small & ge(barDelta, p.abs_delta_mult * absD) & (barDelta > 0)
+    absSell = small & le(barDelta, -p.abs_delta_mult * absD) & (barDelta < 0)
+    absS = roll_ge0(np.where(absBuy & ge(h, hh3 - p.lvl_tol), 0.0, -1.0), p.sweep_look)
+    absL = roll_ge0(np.where(absSell & le(l, ll3 + p.lvl_tol), 0.0, -1.0), p.sweep_look)
+
+    skip = {int(x) for x in p.gate_skip.split(",") if x.strip()}
     short_types = (1, 5, 7, 9, 11)
     ok, t1 = {}, {}
     for k in raw:
@@ -493,8 +526,13 @@ def compute(m1, p: Params):
             rrc = np.where((t1[k] < INF) & (risk > 0), t1[k] / np.where(risk > 0, risk, 1), 0)
         block = fadeBlockS if short else fadeBlockL
         ok[k] = np.nan_to_num(raw[k], nan=0).astype(bool) & ~block & (rrc >= p.front_min_rr)
-        if p.use_cvd_div and k not in (9, 10):
-            ok[k] &= bearDiv if short else bullDiv
+        if k not in skip:
+            if p.use_cvd_div:
+                ok[k] &= bearDiv if short else bullDiv
+            if p.use_cvd_flip:
+                ok[k] &= flipDn if short else flipUp
+            if p.use_absorption:
+                ok[k] &= absS if short else absL
         # chop is applied in the loop (it has a recursive hold)
 
     f.update(dict(index=idx, o=o, h=h, l=l, c=c, is_rth=is_rth, new_day=new_day, ok=ok, t1=t1, stops=stops,
@@ -521,6 +559,28 @@ def minute_delta(m1, source):
         raise ValueError(source)
     ser = pd.Series(d, index=m1.index)
     return ser.resample("5min", label="left", closed="left").sum()
+
+
+def real_delta(m1):
+    """Aggressor buy - sell volume per 5m bar from data/trades_1m/, for the contract load_1m() uses that minute.
+    NaN where the trades files have no data."""
+    import glob
+    import io
+    import os
+    from data import DATA_DIR, TZ
+    from zstd_io import read_zst
+
+    files = sorted(glob.glob(os.path.join(DATA_DIR, "trades_1m", "es_trades_1m_*.csv.zst")))
+    if not files:
+        raise SystemExit("No data/trades_1m files: run backtest/fetch_trades.py first")
+    tr = pd.concat([pd.read_csv(io.BytesIO(read_zst(f))) for f in files], ignore_index=True)
+    tr["ts"] = pd.to_datetime(tr["ts"], utc=True).dt.tz_convert(TZ)
+    tr["delta"] = tr["buy_vol"] - tr["sell_vol"]
+    front = pd.DataFrame({"ts": m1.index, "symbol": m1["symbol"].to_numpy()})
+    tr = tr.merge(front, on=["ts", "symbol"], how="inner")
+    d = tr.set_index("ts")["delta"].sort_index()
+    out = d.resample("5min", label="left", closed="left").sum(min_count=1)
+    return out
 
 
 def rt(x):
