@@ -130,6 +130,17 @@ class Params:
     be_trigger: float = 0.0
     # comma-separated setup codes to switch off, e.g. "1,3" = no sweeps (codes in SETUPS)
     disabled: str = ""
+    # value area: "vwap_static" = POC = VWAP, VAH/VAL = VWAP +/- 1 stdev (ToS VWAP_STATIC);
+    # "profile" = developing session volume profile from 1-minute bars (ToS PROFILE, ETH reset), see vprofile.py
+    va_source: str = "vwap_static"
+    va_pct: float = 0.70
+    # which inputs the strategy may use:
+    #   "all"         = everything above
+    #   "core"        = 9 EMA, VWAP (+ its bands) and the value area only. No SMA50, Bollinger Bands, 1h/4h SMAs,
+    #                   round numbers or previous day/week/premarket/opening-range levels, so no BB-fail, HTF-test or
+    #                   failed-breakout setups, no HTF bias filter, no magnet check and no front-run cap
+    #   "core_levels" = core + previous day/week high/low, premarket high/low and the 5-minute opening range
+    indicators: str = "all"
 
 
 SETUPS = {1: "Sweep S", 3: "Sweep L", 5: "VAH flip S", 6: "VAL flip L", 7: "HTF S", 8: "HTF L",
@@ -264,7 +275,18 @@ def compute(m1, p: Params):
     rUp = np.ceil(c / p.round_step) * p.round_step
     rDn = np.floor(c / p.round_step) * p.round_step
 
-    poc, vah, val = vw, vw + vwSd, vw - vwSd
+    if p.va_source == "profile":
+        from vprofile import developing_profile
+        vp = developing_profile(m1, p.va_pct).reindex(idx)
+        poc, vah, val = (vp[k].to_numpy() for k in ("poc", "vah", "val"))
+    else:
+        poc, vah, val = vw, vw + vwSd, vw - vwSd
+    if p.indicators != "all":
+        none = np.full(n, np.nan)
+        smaC = bbUp = bbLo = bbMid = htf1 = htf2 = htf3 = rUp = rDn = none
+        htfBear = htfBull = np.ones(n, dtype=bool)  # no HTF trend source: bias filter off
+        if p.indicators == "core":
+            pdH = pdL = pwH = pwL = pmH = pmL = or5H = or5L = none
     pPOC = pd.Series(np.where(new_day, shift(poc), np.nan)).ffill().to_numpy()
 
     rng = h - l
