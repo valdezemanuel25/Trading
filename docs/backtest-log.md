@@ -166,3 +166,51 @@ The two sources share 46 trades. The 11 trades only clv5 takes average +2.50 pts
 - **Withdrawn:** the Bookmap checklist rule from the previous section. Reading the trigger candle's delta from real CVD instead of the candle estimate isn't shown to help E.
 - **Not supported:** CVD flip. On E it is worse than plain clv5 again.
 - For reference, E itself (clv5) made +1.08 pts/trade gross out of sample, about +$1,380 net over 8 months on 57 trades. That is consistent with "roughly breakeven to slightly positive after costs", not a proven edge.
+
+## 2026-10-30: fewer indicators (9 EMA + VWAP + volume profile only), 2020-01 to 2026-10
+
+Question: would the strategy do as well, or better, using only the 9 EMA, VWAP and volume profile?
+
+New backtest settings (defaults unchanged):
+- `indicators=core`: only the 9 EMA, VWAP (with its 1-stdev bands) and the value area (POC/VAH/VAL, previous POC). This removes:
+  - the SMA50, Bollinger Bands, 1h/4h SMAs and round numbers;
+  - the previous day/week/premarket/opening-range levels;
+  - so also the BB-fail, HTF-test and failed-breakout setups, the HTF bias filter, the magnet check and the front-run cap.
+- `indicators=core_levels`: core plus the previous day/week high/low, premarket high/low and 5-minute opening range (plain price lines, not indicators).
+- `va_source=profile`: a real developing session volume profile (`backtest/vprofile.py`), like the ToS study's live default (`vaSource = PROFILE`, ETH reset). It uses 1-minute volume spread over each bar's range, read at each 5m close with no look-ahead, and a 70% value area. Until now the backtest used the VWAP +/- 1 stdev stand-in (`VWAP_STATIC`), because ToS history shows each day's final profile.
+
+Script: `python3 backtest/minimal_compare.py`. Each cell is trades, average gross points per trade, and net $ (1 ES, $30/trade).
+
+| Base | Value area | Indicators | 2020-23 | 2024-26 |
+|---|---|---|---|---|
+| A | vwap_static | **all (current)** | 984, +0.05, -26,820 | 693, +0.18, -14,390 |
+| A | vwap_static | core | 821, -0.16, -31,105 | 533, -0.20, -21,265 |
+| A | vwap_static | core_levels | 1326, -0.15, -49,555 | 901, -0.16, -34,318 |
+| A | profile | all | 1021, -0.02, -31,868 | 715, +0.20, -14,438 |
+| A | profile | core | 988, -0.05, -32,165 | 643, +0.22, -12,378 |
+| A | profile | core_levels | 1417, -0.30, -63,448 | 965, +0.20, -19,075 |
+| E | vwap_static | **all (current)** | **396, +0.53, -1,418** | **295, +0.66, +862** |
+| E | vwap_static | core | 282, -0.20, -11,322 | 162, -0.11, -5,748 |
+| E | vwap_static | core_levels | 485, +0.25, -8,562 | 352, +0.02, -10,185 |
+| E | profile | all | 407, +0.39, -4,285 | 299, +0.71, +1,718 |
+| E | profile | core | 334, +0.13, -7,782 | 205, +0.06, -5,500 |
+| E | profile | core_levels | 509, +0.16, -11,320 | 369, +0.16, -8,132 |
+| E | vwap_static | core, no CVD | 374, -0.18, -14,670 | 227, +0.46, -1,635 |
+| E | profile | core, no CVD | 456, +0.24, -8,255 | 295, +0.23, -5,462 |
+
+**Findings:**
+- **Fewer indicators is worse, not better.** On E every reduced set loses $5k-$12k more per period than the full version. The higher-timeframe pieces (1h/4h SMAs, previous day/week levels) aren't decoration; they do the filtering:
+  - the HTF bias filter;
+  - the magnet check, which skips fades with an untested HTF level just beyond the stop;
+  - the front-run cap on T1.
+  Without them the strategy takes more trades of lower quality.
+- **Adding plain price levels back without those filters (core_levels) makes it worse still.** It adds sweep trades at more levels with nothing filtering them.
+- **Real volume profile vs VWAP +/- 1 sd: about the same.** E with the full set is -$4,285 / +$1,718 with the real profile vs -$1,418 / +$862 with the stand-in. That's within noise, and earlier results still hold for the live ToS default (PROFILE).
+- **Dropping the CVD condition doesn't help either.**
+- **Where E's result comes from (full set, net $ 2020-23 / 2024-26):**
+  - Fail BO L +1,230 / +2,098 (54 / 43 trades): positive in both halves.
+  - Fail BO S -1,540 / -2,530: negative in both.
+  - Sweeps: -2,095 / +545 (L) and -1,288 / +2,072 (S).
+  - Failed breakouts need the 1h/4h SMAs, so the core sets drop them. "Long-only failed breakouts" is a lead to test out of sample, not a rule.
+
+**Conclusion:** keep the current indicator set. Removing indicators to declutter the chart is fine for **display** (the Lite study), but the logic should keep the HTF SMAs and previous day/week levels.
