@@ -46,4 +46,18 @@ Goal (2026-10-30): find a rule-based ES strategy with a real edge after costs, f
 By year: 2020 +21,168 | 2021 +20,380 | 2022 +18,650 | 2023 +25,468 | 2024 +25,440 | 2025 -3,152.
 
 ## Holdout 2026
-(Not run yet at the time of this commit.)
+Run once on 2026-10-30, after the rules above were committed (503fa76). Nothing was changed afterwards.
+
+| Period | Trades | Net $ | Sharpe | Max DD | Gross pts/trade |
+|---|---|---|---|---|---|
+| **Holdout 2026-01 to 10-28** | 222 | **-16,348** | **-1.36** | -19,004 | -1.30 |
+
+By month: Jan -3,827 | Feb +2,734 | Mar +148 | Apr -1,818 | May -4,293 | Jun +5,038 | Jul -8,497 | Aug -1,340 | Sep -5,640 | Oct +1,147.
+
+**Verdict: failed.**
+- The edge was strong in 2020-2024 and flat to negative from 2025 on (2025 -3,152, 2026 -16,348).
+- That fits an effect that decayed after it was published (early 2024) and became crowded, or a regime change.
+- It is not a strategy to trade. The holdout has now been used, so re-tuning on 2026 would only fit noise.
+
+## Conclusion
+None of the documented intraday ES effects tested here has a durable edge after costs in 2025-2026. Neither does the Journal Triggers strategy (see `docs/backtest-log.md`). The one that did work for four years stopped working.
