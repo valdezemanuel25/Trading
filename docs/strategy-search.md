@@ -89,3 +89,18 @@ Each cell is trades, win% (target vs stop), average gross pts per trade, and net
 - A 1:1 trade is won about 49% of the time, and the average gross result is about 0 pts (-0.12 over all 4,130 trades). The $30 cost (0.6 pt) then makes every session and period lose.
 - Trading the opposite direction would also be about 0 pts gross, so it would lose too.
 - The best cell, New York 15m in 2020-23, is +0.49 pts gross: still below costs, and negative after 2023.
+
+## 2026-10-31: are session open prices support/resistance? `research/level_test.py`
+At the first retest during NY hours (from 30 min after the open), does price bounce `x` pts back before breaking `x` pts through? Compared with control levels (the same open shifted +/-2.25, 3.75, 6.25 pts).
+
+| Level | 5-pt bounce: open vs control | 10-pt bounce: open vs control |
+|---|---|---|
+| Asia open | 52.0% vs 52.5% (z -0.3) | 50.9% vs 51.2% |
+| London open | **54.8% vs 51.4% (z 2.1)** | 50.8% vs 50.2% |
+| New York open | 53.4% vs 51.0% (z 1.5) | 50.6% vs 49.4% |
+
+The effect holds in every period (5-pt test, all sessions): 2020-23 53.4% vs 51.0%; 2024-25 53.9% vs 52.9%; 2026 52.2% vs 51.7%.
+
+**Verdict: a small, short-range effect for the London and New York opens, none for Asia.**
+- It is a 2-3 point bump in bounce rate over 5 pts and disappears over 10 pts.
+- A 5-pt 1:1 trade needs about 56% wins to cover $30 costs, so it is too small to trade alone. At most it is confluence.
