@@ -172,3 +172,19 @@ The effect holds in every period (5-pt test, all sessions): 2020-23 53.4% vs 51.
 
 - Shorts helped only in 2020-23, because of the 2022 bear market.
 - The ToS files have the short side behind `enableShorts`, **off by default**.
+
+## 2026-10-31: more trades per week? (`research/frequency.py`, long only above the 200d SMA, 1 ES)
+| Variant | Trades/wk | 2020-23 | 2024-25 |
+|---|---|---|---|
+| RSI(2) < 10 (A) | 0.1-0.2 | +$28,500, PF 2.37 | +$56,800, PF 13.2 |
+| RSI(2) < 30 | 0.4-0.5 | +$31,142, PF 1.62, DD -18,690 | +$58,222, PF 2.63 |
+| RSI(2) < 50 | 0.5-0.6 | +$38,860, PF 1.65 | +$26,090, PF 1.41 |
+| IBS < 0.2, sell next close | 0.7 | +$385, PF 1.00 | +$34,260, PF 1.71 |
+| Down day, sell next close | 1.5-1.9 | +$6,015, PF 1.03 | +$14,700, PF 1.08 |
+| Every day, sell next close | 3.4-4.4 | +$16,850, PF 1.04, DD -59,198 | +$60,422, PF 1.17 |
+| 1h RSI(2) < 10 | 1.3-1.4 | -$8,228, PF 0.92 | +$20,408, PF 1.27 |
+
+- Edge per trade falls fast as frequency rises.
+- At 1-3 trades a week, what is left is mostly the market's upward drift: PF about 1.0-1.2, large drawdowns.
+- RSI(2) < 30 keeps a real edge at about 2 trades a month.
+- More trades without a weaker signal = the same rule on more markets (NQ, RTY, YM daily data: about $0.23 in total on Databento).
