@@ -217,3 +217,19 @@ Full contracts, net $ (ES $30, others $15 per round trip):
   - The edge per trade is thinner than RSI(2)<10 (PF 1.3 vs 1.5-1.9).
   - Individual markets have losing periods, but the portfolio did not.
   - In ToS: run `RSI2PullbackAlert.ts` on /MES, /MNQ, /M2K and /MYM daily charts, with `rsiLongEntry` = 30 for more trades or 10 for stronger ones.
+
+## 2026-10-31: live timing check, decide at 15:50 ET instead of the 16:00 close (`research/close_timing.py`, ES)
+Every entry and exit decision uses the 15:50 price as today's close (RSI(2), 200d and 5d SMA). Net $, 1 ES:
+
+| Variant | Same entry days as backtest | 2020-23 | 2024-25 | 2026 |
+|---|---|---|---|---|
+| RSI(2)<10 backtest (decide + fill 16:00) | - | +28,500 | +56,800 | +21,202 |
+| RSI(2)<10 decide 15:50, fill 16:00 | 54 of 62 | +30,312 | +45,488 | +30,215 |
+| RSI(2)<10 decide + fill 15:50 | 54 of 62 | +30,962 | +42,062 | +32,102 |
+| RSI(2)<30 backtest | - | +31,142 | +58,222 | +6,950 |
+| RSI(2)<30 decide 15:50, fill 16:00 | 103 of 127 | +29,802 | +35,175 | +20,330 |
+| RSI(2)<30 decide + fill 15:50 | 103 of 127 | +36,390 | +41,612 | +31,230 |
+
+- About 80-87% of signals are the same at 15:50.
+- The results move up or down by period, but the edge is still positive in every period.
+- RSI(2)'s "lag" is not the issue: it uses only the last 2 closes. Deciding just before the close is fine.
