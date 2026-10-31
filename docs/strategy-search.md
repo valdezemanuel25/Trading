@@ -104,3 +104,33 @@ The effect holds in every period (5-pt test, all sessions): 2020-23 53.4% vs 51.
 **Verdict: a small, short-range effect for the London and New York opens, none for Asia.**
 - It is a 2-3 point bump in bounce rate over 5 pts and disappears over 10 pts.
 - A 5-pt 1:1 trade needs about 56% wins to cover $30 costs, so it is too small to trade alone. At most it is confluence.
+
+## 2026-10-31: long only with higher-timeframe filters
+1. **Intraday trend pullback** (`research/long_htf.py`):
+   - Buy a green 5m candle that dips to VWAP (or the previous day high / 1h SMA50) and closes back above it, while the 1h close > 1h SMA50 and the 4h close > 4h SMA21. Stop under the candle, target 1-2R.
+   - **All 18 variants lose**, already before costs (-0.1 to -0.9 pts/trade).
+2. **Day hold filtered by the 1h/4h trend** (09:30 -> 16:00 long):
+   - On days the 1h+4h trend is **up**: -$10,875 (2020-23) / -$31,020 (2024-25).
+   - On days it is **down**: +$26,615 / +$31,755.
+   - So in ES, short-term weakness inside a rising market is what pays. That points to the classic pullback strategy.
+3. **RSI(2) pullback (Connors), daily** (`research/rsi2.py`):
+   - Indicators use roll-adjusted closes; each trade is priced in its entry contract.
+   - The family was chosen after point 2 (2020-25 data). The settings are the literature's standard ones, fixed before the 2026 holdout was run once.
+
+| Variant | 2020-23 | 2024-25 | **2026 holdout** |
+|---|---|---|---|
+| **A: close > 200d SMA, RSI(2) < 10, exit close > 5d SMA** | 25 tr, 72% win, +23.4 pts, **+$28,500**, PF 2.4 | 25 tr, 92%, +46.0 pts, **+$56,800**, PF 13.2 | 12 tr, 67%, +35.9 pts, **+$21,202**, PF 3.8 |
+| B: A without the 200d filter | 44 tr, 73%, +23.7, +$50,855 | 30 tr, 93%, +50.5, +$74,812 | 14 tr, 71%, +48.0, +$33,192 |
+| C: A with RSI(2) < 5 | 16 tr, 81%, +31.1, +$24,408 | 14 tr, 93%, +62.5, +$43,305 | 5 tr, 100%, +107.7, +$26,775 |
+
+- **Against a random 3-day long** (same periods): +4.3 vs +23.4 pts (t 1.5) in 2020-23, and +9.9 vs +46.0 pts (t 4.0) in 2024-25.
+- **Caveats:**
+  - only 62 trades in total;
+  - no stop: the worst trade was -148 pts, about -$7,400 on 1 ES;
+  - overnight and weekend gap risk;
+  - 2020-26 was mostly a rising market;
+  - the 200d filter did **not** help in this sample (B >= A), but it is the standard protection against long bear markets, which this data barely contains (2022).
+- ToS versions:
+  - `thinkorswim/RSI2PullbackStrategy.ts`: Show Report backtest on the /ES daily chart.
+  - `thinkorswim/RSI2PullbackAlert.ts`: live setup label and alert. Check at about 15:50 ET, then act at the close.
+- **Verdict: the first strategy in this search that passed train, validation and an untouched holdout.** It still needs a forward test before real money, at MES size.
