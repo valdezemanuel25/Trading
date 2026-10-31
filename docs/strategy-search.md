@@ -159,3 +159,16 @@ The effect holds in every period (5-pt test, all sessions): 2020-23 53.4% vs 51.
 **Verdict: no short strategy with an edge in 2020-2026.**
 - The index's upward drift works against every short, and a short-side edge here would need bear markets, which this data barely contains.
 - Practical rule: in a downtrend (close < 200d SMA), stand aside: the long RSI(2) strategy already does that.
+
+## 2026-10-31: combined long + short (200-day regime switch)
+- Above the 200d SMA: RSI(2) < 10 -> long; exit when close > 5d SMA.
+- Below it: RSI(2) > 90 -> short; cover when close < 5d SMA.
+
+| Net $, 1 ES | 2020-23 | 2024-25 | 2026 |
+|---|---|---|---|
+| Long only (A) | +28,500 (DD -11,960) | +56,800 (DD -3,342) | +21,202 (DD -5,622) |
+| A + S-A (short below 200d) | +48,790 (DD -11,740) | +53,972 (DD -6,390) | -1,202 (DD -28,028) |
+| A + S-B (short any RSI(2) > 90) | +39,100 (DD -17,538) | +35,262 (DD -9,102) | +2,885 (DD -37,238) |
+
+- Shorts helped only in 2020-23, because of the 2022 bear market.
+- The ToS files have the short side behind `enableShorts`, **off by default**.
