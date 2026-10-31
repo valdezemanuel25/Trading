@@ -134,3 +134,28 @@ The effect holds in every period (5-pt test, all sessions): 2020-23 53.4% vs 51.
   - `thinkorswim/RSI2PullbackStrategy.ts`: Show Report backtest on the /ES daily chart.
   - `thinkorswim/RSI2PullbackAlert.ts`: live setup label and alert. Check at about 15:50 ET, then act at the close.
 - **Verdict: the first strategy in this search that passed train, validation and an untouched holdout.** It still needs a forward test before real money, at MES size.
+
+## 2026-10-31: short strategy search
+1. **RSI(2) mirror, daily** (`research/rsi2.py --short`): short at the close when RSI(2) > 90 (and close < 200d SMA); cover at the close when close < 5d SMA.
+
+| Variant | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| S-A: below 200d, RSI(2) > 90 | 12 tr, 67%, +34.4 pts, +$20,290 | 3 tr, -18.2 pts, -$2,828 | 1 tr, **-447.5 pts, -$22,405** (2026-04-06 -> 04-21) |
+| S-B: no trend filter | 50 tr, 66%, +4.8 pts, +$10,600, PF 1.2 | 30 tr, 57%, -13.8 pts, **-$21,538** | 11 tr, -32.7 pts, **-$18,318** |
+| S-C: below 200d, RSI(2) > 95 | 8 tr, +$19,398 | 2 tr, -$1,910 | 0 trades |
+
+- ES was below its 200d SMA on only 217 days in 2022, 40 in 2023, 53 in 2025 and 17 in 2026. The filtered short made its money in the 2022 bear market and has almost no trades since.
+- Without the filter, shorting sharp rallies loses in a rising market.
+- With no stop, a single squeeze (April 2026, +447 pts against the short) wipes out years of gains.
+
+2. **Noise-boundary momentum, short side only**:
+   - 2020-23 +$20,230 (Sharpe 0.44); 2024-25 +$5,772 (0.20); 2026 -$13,140 (-1.21).
+   - The 2026 result for both sides together had already been seen, so this is not a clean holdout.
+
+3. Earlier intraday shorts:
+   - Failed breakout shorts lost in 6 of 7 years.
+   - Sweep shorts and VAH flips are inconsistent (`docs/backtest-log.md`).
+
+**Verdict: no short strategy with an edge in 2020-2026.**
+- The index's upward drift works against every short, and a short-side edge here would need bear markets, which this data barely contains.
+- Practical rule: in a downtrend (close < 200d SMA), stand aside: the long RSI(2) strategy already does that.

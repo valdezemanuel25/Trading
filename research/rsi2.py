@@ -10,6 +10,7 @@ Variants: B = no 200-day filter, C = RSI(2) < 5.
 
   python3 research/rsi2.py            # 2020-23 and 2024-25
   python3 research/rsi2.py --holdout  # also 2026
+  python3 research/rsi2.py --short    # short mirror: close < 200d SMA, RSI(2) > 90, cover on close < 5d SMA
 """
 import sys
 
@@ -44,18 +45,22 @@ def rsi(x, n=2):
     return 100 - 100 / (1 + up / dn.replace(0, np.nan))
 
 
-def backtest(dd, rsi_max=10, use_trend=True):
+def backtest(dd, rsi_max=10, use_trend=True, side=1, rsi_min=90):
     front, closes = dd["front"], dd["closes"]
     a = adjusted(front, closes)
     r, sma5, sma200 = rsi(a), a.rolling(5).mean(), a.rolling(200).mean()
     days = a.index
     trades, i = [], 200
     while i < len(days):
-        if r.iloc[i] < rsi_max and (not use_trend or a.iloc[i] > sma200.iloc[i]):
+        if side > 0:
+            sig = r.iloc[i] < rsi_max and (not use_trend or a.iloc[i] > sma200.iloc[i])
+        else:   # short mirror: RSI(2) above rsi_min, below the 200-day SMA
+            sig = r.iloc[i] > rsi_min and (not use_trend or a.iloc[i] < sma200.iloc[i])
+        if sig:
             sym, entry_d = front["symbol"].iloc[i], days[i]
             entry = closes[(entry_d, sym)]
             j = i + 1
-            while j < len(days) and not a.iloc[j] > sma5.iloc[j]:
+            while j < len(days) and not (a.iloc[j] > sma5.iloc[j] if side > 0 else a.iloc[j] < sma5.iloc[j]):
                 j += 1
             j = min(j, len(days) - 1)
             # value in the entry contract; if it stopped trading, use its last close
@@ -64,7 +69,7 @@ def backtest(dd, rsi_max=10, use_trend=True):
                 k -= 1
             ex = closes[(days[k], sym)]
             trades.append(dict(entry_date=entry_d, exit_date=days[k], symbol=sym, entry=entry, exit=ex,
-                               days=k - i, pts=ex - entry))
+                               days=k - i, pts=(ex - entry) * side))
             i = j + 1
         else:
             i += 1
@@ -84,11 +89,16 @@ def stats(t, per):
             f"maxDD ${(eq - eq.cummax()).min():,.0f}, avg hold {x.days.mean():.1f}d")
 
 
+LONG = {"A  RSI2<10, above 200d (classic)": dict(), "B  RSI2<10, no trend filter": dict(use_trend=False),
+        "C  RSI2<5, above 200d": dict(rsi_max=5)}
+SHORT = {"S-A  RSI2>90, below 200d (mirror)": dict(side=-1), "S-B  RSI2>90, no trend filter": dict(side=-1, use_trend=False),
+         "S-C  RSI2>95, below 200d": dict(side=-1, rsi_min=95)}
+
+
 def main():
     dd = load_daily()
     pers = list(PERIODS) if "--holdout" in sys.argv else list(PERIODS)[:2]
-    for name, kw in {"A  RSI2<10, above 200d (classic)": dict(), "B  RSI2<10, no trend filter": dict(use_trend=False),
-                     "C  RSI2<5, above 200d": dict(rsi_max=5)}.items():
+    for name, kw in (SHORT if "--short" in sys.argv else LONG).items():
         t = backtest(dd, **kw)
         print(name)
         for per in pers:
