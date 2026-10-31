@@ -61,3 +61,31 @@ By month: Jan -3,827 | Feb +2,734 | Mar +148 | Apr -1,818 | May -4,293 | Jun +5,
 
 ## Conclusion
 None of the documented intraday ES effects tested here has a durable edge after costs in 2025-2026. Neither does the Journal Triggers strategy (see `docs/backtest-log.md`). The one that did work for four years stopped working.
+
+## 2026-10-31: session-open failed-close (user's rules), `research/session_open.py`
+Rules (confirmed with the user before running; nothing tuned):
+- Asia (Tokyo 09:00), London (08:00) and New York (09:30) opens, each in local time, so daylight saving is handled.
+- First 15-minute (or 5-minute) candle: long if it wicks below the open and closes above it; short if it wicks above and closes below; no wick = no trade.
+- Entry at the candle's close.
+- 1:1 stop/target = distance to the daily VWAP (from 17:00 CT), kept between 5 and 10 pts; 7 pts if VWAP is behind the trade.
+- 1h filter: longs only if the last 1h close is above the previous day's low, shorts only if it is below the previous day's high.
+- Closed at the session end (Asia at the London open, London at the New York open, New York at 16:00 ET).
+- 1 ES, $30/trade. Same minute stop + target = stop.
+
+Each cell is trades, win% (target vs stop), average gross pts per trade, and net $.
+
+| Candle | Session | 2020-23 | 2024-25 | 2026 |
+|---|---|---|---|---|
+| 15m | All | 2391, 51%, +0.06, -65,042 | 1222, 49%, -0.16, -46,248 | 517, 44%, -0.84, -37,335 |
+| 15m | Asia | 799, 50%, -0.07, -26,882 | 395, 53%, +0.30, -5,850 | 169, 46%, -0.51, -9,408 |
+| 15m | London | 781, 48%, -0.26, -33,618 | 402, 46%, -0.52, -22,548 | 172, 38%, -1.55, -18,510 |
+| 15m | New York | 811, 53%, +0.49, -4,542 | 425, 49%, -0.24, -17,850 | 176, 47%, -0.47, -9,418 |
+| 5m | All | 2256, 49%, -0.15, -84,068 | 1135, 49%, -0.12, -40,650 | 498, 45%, -0.64, -30,865 |
+| 5m | New York | 811, 51%, +0.08, -21,030 | 415, 49%, -0.16, -15,825 | 176, 49%, -0.16, -6,668 |
+
+- Stop and target sizes average 6.7 pts. VWAP is behind the trade about 70-77% of the time, so most trades use 7 pts.
+
+**Verdict: no edge.**
+- A 1:1 trade is won about 49% of the time, and the average gross result is about 0 pts (-0.12 over all 4,130 trades). The $30 cost (0.6 pt) then makes every session and period lose.
+- Trading the opposite direction would also be about 0 pts gross, so it would lose too.
+- The best cell, New York 15m in 2020-23, is +0.49 pts gross: still below costs, and negative after 2023.

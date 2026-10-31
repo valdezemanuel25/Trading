@@ -1,2 +1,3 @@
 backtest/.cache/
 __pycache__/
+research/*_trades.csv
