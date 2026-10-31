@@ -1,4 +1,9 @@
-# RSI(2) Pullback - regime strategy for a /ES DAILY chart (thinkorswim Strategy, for Show Report backtests)
+# RSI(2) Pullback - regime strategy for DAILY charts (thinkorswim Strategy, for Show Report backtests)
+#
+# Run it on four daily charts: /MES, /MNQ, /M2K, /MYM (1 micro each). research/multi.py, net, 1 micro each:
+#   rsiLongEntry = 10 (default):  2020-23 +$5,460   2024-25 +$9,474   2026 +$12,021   about 1 trade/week in total
+#   rsiLongEntry = 30:            2020-23 +$6,260   2024-25 +$7,955   2026 +$9,974    about 2 trades/week in total
+# Live: decide at about 15:50 ET on the forming daily bar (research/close_timing.py: edge holds).
 #
 # The 200-day average decides the side:
 #   ABOVE the 200-day: LONG  when RSI(2) < 10 at the close; exit at the close once close > 5-day average.
