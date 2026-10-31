@@ -188,3 +188,32 @@ The effect holds in every period (5-pt test, all sessions): 2020-23 53.4% vs 51.
 - At 1-3 trades a week, what is left is mostly the market's upward drift: PF about 1.0-1.2, large drawdowns.
 - RSI(2) < 30 keeps a real edge at about 2 trades a month.
 - More trades without a weaker signal = the same rule on more markets (NQ, RTY, YM daily data: about $0.23 in total on Databento).
+
+## 2026-10-31: RSI(2) pullback on four index futures (`research/multi.py`)
+- Data: Databento ohlcv-1d for NQ/RTY/YM (`data/daily/`, $0.23); ES rebuilt from 1-minute bars.
+- Timing: all four use the 00:00 UTC daily close, so the basis is the same. On ES this timing gives somewhat different numbers from the 16:00 ET close (RSI(2)<30: +$22k / +$43k / +$14k vs +$31k / +$58k / +$7k).
+- Rules: long only, close > 200d SMA. Buy at the close when RSI(2) < 10 (or < 30); sell at the close once close > 5d SMA.
+
+Full contracts, net $ (ES $30, others $15 per round trip):
+
+| Market | RSI(2)<10: 2020-23 / 2024-25 / 2026 | RSI(2)<30: 2020-23 / 2024-25 / 2026 |
+|---|---|---|
+| ES | +18,075 / +46,438 / +39,840 | +22,915 / +36,158 / +20,390 |
+| NQ | +9,425 / +43,905 / +57,570 | +43,380 / +39,590 / +28,445 |
+| RTY | +10,665 / +4,840 / +12,330 | **-10,850** / +13,790 / +20,915 |
+| YM | +17,440 / +440 / +10,890 | +9,395 / **-8,150** / +30,890 |
+
+**Portfolio, 1 micro of each (MES, MNQ, M2K, MYM):**
+
+| Variant | 2020-23 | 2024-25 | 2026 |
+|---|---|---|---|
+| RSI(2)<10 | 0.6/wk, 70% win, +$5,460, PF 1.51, DD -$2,902 | 0.8/wk, 74%, +$9,474, PF 1.85, DD -$6,221 | 1.0/wk, 83%, +$12,021, PF 8.4, DD -$789 |
+| **RSI(2)<30** | **1.3/wk**, 67%, +$6,260, PF 1.26, DD -$7,094 | **1.8/wk**, 69%, +$7,955, PF 1.33, DD -$10,623 | **2.1/wk**, 76%, +$9,974, PF 2.10, DD -$2,158 |
+
+- Markets signal together often: 34-41% of signal days have 2+ markets, and up to 4 positions are open at once.
+- Worst single micro trade: -$4,990 (MNQ, entered 2025-02-20, held through the spring 2025 selloff; no stop).
+- **Verdict:**
+  - RSI(2)<30 across four micros gives the requested 1-3 trades a week, and it is positive in every period.
+  - The edge per trade is thinner than RSI(2)<10 (PF 1.3 vs 1.5-1.9).
+  - Individual markets have losing periods, but the portfolio did not.
+  - In ToS: run `RSI2PullbackAlert.ts` on /MES, /MNQ, /M2K and /MYM daily charts, with `rsiLongEntry` = 30 for more trades or 10 for stronger ones.
