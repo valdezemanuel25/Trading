@@ -1012,19 +1012,21 @@ AddCloud(if isChop then Highest(high, chopLook) else Double.NaN, if isChop then 
 
 
 
-# Alerts fire on the first tick of the bar AFTER the signal candle closes
-Alert(sweepShort[1], "Journal: SWEEP SHORT - check Bookmap", Alert.BAR, Sound.Ring);
-Alert(sweepLong[1], "Journal: SWEEP LONG - check Bookmap", Alert.BAR, Sound.Ring);
-Alert(reclaimShort[1], "Journal: POC LOSS SHORT - check Bookmap", Alert.BAR, Sound.Chimes);
-Alert(reclaimLong[1], "Journal: POC RECLAIM LONG - check Bookmap", Alert.BAR, Sound.Chimes);
-Alert(flipShort[1], "Journal: VAH FLIP SHORT - check Bookmap", Alert.BAR, Sound.Ring);
-Alert(fboShort[1], "Journal: FAILED BREAKOUT SHORT - check Bookmap", Alert.BAR, Sound.Bell);
-Alert(fboLong[1], "Journal: FAILED BREAKDOWN LONG - check Bookmap", Alert.BAR, Sound.Bell);
-Alert(bbfShort[1], "Journal: BB FAIL SHORT - check Bookmap", Alert.BAR, Sound.Bell);
-Alert(bbfLong[1], "Journal: BB FAIL LONG - check Bookmap", Alert.BAR, Sound.Bell);
-Alert(flipLong[1], "Journal: VAL FLIP LONG - check Bookmap", Alert.BAR, Sound.Ring);
-Alert(htfShort[1], "Journal: HTF SMA REJECT SHORT - check Bookmap", Alert.BAR, Sound.Bell);
-Alert(htfLong[1], "Journal: HTF SMA HOLD LONG - check Bookmap", Alert.BAR, Sound.Bell);
+# Alerts fire on the first tick of the bar AFTER the signal candle closes.
+# Fixed format "JT | <setup> | <Long/Short> | check Bookmap" so email alerts can be parsed into the Notion log
+# (setup names match the Notion E Signals options). thinkScript alert text can't include prices.
+Alert(sweepShort[1], "JT | Sweep S | Short | check Bookmap", Alert.BAR, Sound.Ring);
+Alert(sweepLong[1], "JT | Sweep L | Long | check Bookmap", Alert.BAR, Sound.Ring);
+Alert(reclaimShort[1], "JT | POC loss S | Short | check Bookmap", Alert.BAR, Sound.Chimes);
+Alert(reclaimLong[1], "JT | POC reclaim L | Long | check Bookmap", Alert.BAR, Sound.Chimes);
+Alert(flipShort[1], "JT | VAH flip S | Short | check Bookmap", Alert.BAR, Sound.Ring);
+Alert(fboShort[1], "JT | Fail BO S | Short | check Bookmap", Alert.BAR, Sound.Bell);
+Alert(fboLong[1], "JT | Fail BO L | Long | check Bookmap", Alert.BAR, Sound.Bell);
+Alert(bbfShort[1], "JT | BB fail S | Short | check Bookmap", Alert.BAR, Sound.Bell);
+Alert(bbfLong[1], "JT | BB fail L | Long | check Bookmap", Alert.BAR, Sound.Bell);
+Alert(flipLong[1], "JT | VAL flip L | Long | check Bookmap", Alert.BAR, Sound.Ring);
+Alert(htfShort[1], "JT | HTF S | Short | check Bookmap", Alert.BAR, Sound.Bell);
+Alert(htfLong[1], "JT | HTF L | Long | check Bookmap", Alert.BAR, Sound.Bell);
 
 # ===== Levels
 plot PDHLine = if showKeyLevels then pdH else Double.NaN;
