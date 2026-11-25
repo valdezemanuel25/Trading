@@ -225,15 +225,65 @@ Script: `python3 research/rsi2_variants.py`. It uses the same data and rules as 
 
 **Correction:** the "-$4,990 worst trade (MNQ)" in `docs/live-setup.md` comes from the RSI(2) < 30 run. Under the live rule (RSI(2) < 10) the worst trade is **-$3,988** (MNQ, 2025-02-21 to 03-14, held 15 days). It is the same Feb-Mar 2025 slide; ES lost $2,009 on the same dates.
 
-### 1. More markets with the same rules: waiting on a data source
+### 1. More markets with the same rules
 
-Liquid lists (`search_markets`, 2026-11-25):
-- **Single stocks:** `xyz:AAPL`, `xyz:NVDA`, `xyz:MSFT`, `xyz:TSLA`, `xyz:AMZN`, `xyz:GOOGL`, `xyz:META`, and others (NFLX, MU, IBM, ...).
-- **Commodities:** `xyz:GOLD`, `xyz:SILVER`, `xyz:CL` (WTI), `xyz:BRENTOIL`.
-- **Crypto:** `BTC`, `ETH`, `SOL`, `HYPE`.
-- **Other indices:** `xyz:JP225`, `xyz:KR200`, `xyz:NIFTY`.
+**Data.** Databento `ohlcv-1d` (00:00 UTC days), 2019-01 to 2026-10-28, cost $7.85. Fetched with `backtest/fetch_daily.py` (it checks the cost first) into `data/daily/`:
+- Futures: GC (gold), SI (silver), CL (WTI), BZ (NYMEX Brent), BTC and ETH (CME), outright contracts only.
+- Nasdaq stocks: AAPL, NVDA, MSFT, TSLA, AMZN, GOOGL, META (`XNAS.ITCH`).
 
-The repo has daily history only for ES, NQ, RTY and YM, and `show_chart` stops at 200 daily candles (`xyz:SP500` itself has about 250 days of history on Liquid). These markets need daily data from 2019 on. Nothing has been added yet. The options are in the recommendation below.
+**Method.** Script: `python3 research/rsi2_markets.py`.
+- Futures use the front contract by volume, rolling forward; indicators on roll-adjusted closes; each trade priced in its entry contract.
+- Stocks are split-adjusted at detected split days (AAPL 4:1 2020, NVDA 4:1 2021 and 10:1 2024, TSLA 4:1 2020 and 3:1 2022, AMZN 20:1 2022, GOOGL 20:1 2022). Dividends are ignored.
+- Same rules as live, weekday closes only.
+- P&L in Liquid terms: **$5,000 notional per trade, 0.10% round-trip cost. Perp funding is not included.**
+- Liquid symbols: `xyz:GOLD`, `xyz:SILVER`, `xyz:CL`, `xyz:BRENTOIL`, `BTC`, `ETH`, `xyz:<ticker>`.
+
+| Market | Trades/yr | Win | Net 2020-23 | Net 2024-25 | Net 2026 holdout | Net all | Avg/trade | Worst trade | Max DD |
+|---|---|---|---|---|---|---|---|---|---|
+| ES (live) | 10.2 | 82% | $+344 | $+676 | $+495 (12 tr) | $+1,515 | $+24 | -$338 | -$338 |
+| NQ (live) | 9.3 | 71% | $+17 | $+406 | $+452 (10 tr) | $+875 | $+16 | -$465 | -$465 |
+| **NVDA** | 8.1 | 80% | $+1,531 | $+3,059 | $+743 (9 tr) | $+5,333 | $+97 | -$866 | -$1,203 |
+| **GOOGL** | 7.9 | 72% | $+1,303 | $+531 | $+258 (10 tr) | $+2,091 | $+39 | -$351 | -$440 |
+| **CL (WTI)** | 5.1 | 77% | $+2,323 | $+182 | $+342 (5 tr) | $+2,847 | $+81 | -$394 | -$586 |
+| BTC | 6.2 | 67% | $+895 | $+351 | $+180 (2 tr) | $+1,425 | $+34 | -$1,140 | -$1,644 |
+| BZ (Brent) | 5.4 | 73% | $+2,659 | $+18 | $-240 (5 tr) | $+2,437 | $+66 | -$369 | -$705 |
+| ETH | 5.9 | 66% | $+1,272 | $+648 | $-84 (2 tr) | $+1,836 | $+63 | -$420 | -$1,243 |
+| MSFT | 6.6 | 73% | $+2,056 | $+161 | 0 trades | $+2,218 | $+49 | -$257 | -$274 |
+| META | 7.9 | 76% | $+1,788 | $+351 | $-12 (2 tr) | $+2,127 | $+65 | -$457 | -$737 |
+| AAPL | 9.1 | 66% | $+1,594 | $+407 | $-189 (9 tr) | $+1,811 | $+29 | -$202 | -$222 |
+| AMZN | 7.2 | 61% | $+661 | $-230 | $-30 (5 tr) | $+401 | $+8 | -$590 | -$754 |
+| GC (gold) | 6.3 | 60% | $-192 | $+875 | $-675 (3 tr) | $+9 | $+0 | -$536 | -$894 |
+| SI (silver) | 5.6 | 50% | $-973 | $+82 | $-1,185 (5 tr) | $-2,076 | $-55 | -$567 | -$2,190 |
+| TSLA | 6.3 | 58% | $-650 | $-1,499 | $+127 (4 tr) | $-2,022 | $-47 | -$1,668 | -$3,136 |
+
+**Selecting markets without peeking at the holdout.** Picking only on 2020-23 (net > 0) keeps 10 markets: CL, BZ, BTC, ETH, AAPL, NVDA, MSFT, AMZN, GOOGL, META.
+
+| | 2024-25 | 2026 holdout |
+|---|---|---|
+| The 10 picked on 2020-23 | 152 tr, 65% win, $+5,476, **$+36/trade**, 9 of 10 positive | 49 tr, 63% win, $+967, **$+20/trade**, 4 of 10 positive |
+| ES + NQ (live) | 48 tr, 83% win, $+1,082, $+23/trade | 22 tr, 95% win, $+947, $+43/trade |
+
+The rule carries over to other markets: the 2020-23 picks stay positive as a group in both later periods. But the edge per trade on the holdout is about half of ES/NQ's, and only 4 of the 10 were positive there. **The rule travels; which markets it works best on is noisy.**
+
+**Capital.** The $10,000 paper account at 1x holds only two $5,000 positions. With ES+NQ that never binds. Adding markets means some signals arrive with no slot free; they are skipped, first come first served, same-day ties by market name.
+
+| Portfolio | Sizing | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|---|
+| ES+NQ (live) | 2 x $5,000 | 15 tr/yr, $+361, maxDD -$530 | 24/yr, $+1,082, DD -$802 | 27/yr, $+947, DD -$6 |
+| **+ NVDA, GOOGL, CL** | **2 x $5,000** | **29/yr, $+4,862, DD -$1,077** (29 skipped) | **34/yr, $+2,411, DD -$754** (26 skipped) | **43/yr, $+1,925, DD -$394** (11 skipped) |
+| + NVDA, GOOGL, CL | 4 x $2,500 | 38/yr, $+2,759, DD -$701 | 47/yr, $+2,170, DD -$864 | 56/yr, $+1,145, DD -$197 |
+| + NVDA, GOOGL, CL, BTC | 2 x $5,000 | 34/yr, $+5,244, DD -$1,248 | 40/yr, $+2,624, DD -$787 | 44/yr, $+2,094, DD -$394 |
+
+**Findings:**
+- **Adding NVDA, GOOGL and CL roughly doubles the trade count** (holdout 27 to 43 per year) and raises net in every period. The holdout goes from $+947 to $+1,925, at the cost of a larger drawdown (-$394 vs -$6 on the holdout, -$1,077 vs -$530 in 2020-23).
+- These three are the only new markets positive in all three periods with at least 5 holdout trades.
+- **BTC is also positive in all three, but:**
+  - it had only 2 holdout trades;
+  - its worst trade is the largest of the candidates (-$1,140);
+  - CME futures skip weekends while Liquid's BTC trades 24/7;
+  - funding on a crypto long is not modelled.
+- **Drop:** SI, GC and TSLA (negative overall or in 2 of 3 periods) and AMZN (positive only in 2020-23).
+- **Watch:** BZ, ETH, AAPL, MSFT and META (positive in 2020-23 and 2024-25, flat or negative on a thin holdout).
 
 ### 2a. Entry threshold: RSI(2) < 10 vs < 30 (portfolio, 1 micro each)
 
@@ -332,5 +382,5 @@ The section stays empty until a paper trade closes. Close timing is worth watchi
 | ATR sizing | **Drop.** Smaller worst trade, but lower net and net/DD in both test periods. Keep $5,000 flat. |
 | 200-day filter: Liquid's 200-calendar-candle sma200 | **Fix (pending your approval).** It differs from the tested 200-weekday SMA on ~5% of days and would have skipped 5 holdout trades worth $2,257 net. Keep a Liquid daily-close history and use `sma200_weekday` once it has 200 weekdays; until then, show both on the dashboard. |
 | Live-vs-backtest section | **Adopted** (measurement only, no rule change). |
-| More markets | **Pending data.** Needs your OK on a data source. |
+| More markets | **Adopt NVDA, GOOGL and CL (WTI)** on Liquid (`xyz:NVDA`, `xyz:GOOGL`, `xyz:CL`), $5,000 each, at most 2 open positions, first signal first. Watch BTC, BZ, ETH, AAPL, MSFT and META. Drop SI, GC, TSLA and AMZN. Caveat: the selection used all periods; picked on 2020-23 alone the new markets made about half of ES/NQ's per-trade edge on the holdout. |
 | Docs | Correct the worst trade in `docs/live-setup.md` to -$3,988 (MNQ, RSI(2) < 10) once you approve live-doc edits. |
