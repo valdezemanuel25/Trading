@@ -1,55 +1,49 @@
-# What runs live (forward test on sim), as of 2026-11-02
+# Live setup and handoff (as of 2026-11-25)
 
-Two strategies run live. Both are **forward tests on sim / micros**, not proven for real size. Everything else in
-`docs/strategy-search.md` and `docs/backtest-log.md` was tested and is **not** run live.
+Read this first in a new session. Research history: `docs/strategy-search.md` and `docs/backtest-log.md`.
 
-## 1. Journal Triggers, variant E (intraday)
+## What runs
+Two forward tests. Neither is proven for real size.
+
+### 1. Journal Triggers, variant E (intraday, ToS sim)
 | Item | Setting |
 |---|---|
-| ToS study | `thinkorswim/JournalTriggers.ts` (or `JournalTriggersLite.ts`) |
-| Chart | /ES (or /MES) **5-minute**, extended hours on |
-| Inputs | `winStart = 1030`, `winEnd = 1100` (failed breakouts still fire until `fboEnd` 13:00) |
-| Manual rules | T1 capped at 10 pts; stop to breakeven at +4 pts; close after 12 candles (1 h) if neither hit |
-| Alert text | `JT \| <setup> \| <Long/Short> \| check Bookmap` |
-| Zapier | Email Parser mailbox #1 -> Notion **E Signals** (page "Forward Test: Journal Triggers E") |
-| Parser fields | `setup`, `direction` |
-| Backtest | Roughly breakeven to slightly positive after costs (2025-08 to 2026-03: about +1 pt/trade, about 1.7 trades/week) |
+| ToS study | `thinkorswim/JournalTriggers.ts` (the user's chart names it "JournalStrat") |
+| Chart | /ES or /MES **5-minute**, extended hours on |
+| Inputs | `winStart = 1030`, `winEnd = 1100` (failed breakouts fire until `fboEnd` 13:00) |
+| Manual exits | T1 capped at 10 pts; stop to breakeven at +4 pts; close after 12 candles (1 h) |
+| Alerts | In-platform only: sound, pop-up and Message Center. Text: `JT \| <setup> \| <Long/Short> \| check Bookmap` |
+| Log | Notion **E Signals** on the page "Forward Test: Journal Triggers E" (private). Every signal by hand, losers and skips included |
+| Backtest | Roughly breakeven to slightly positive after costs |
 
-## 2. RSI(2) pullback (daily, long only)
+### 2. RSI(2) pullback (daily, long only), paper traded on Liquid
 | Item | Setting |
 |---|---|
-| ToS study (live) | `thinkorswim/RSI2PullbackAlert.ts` on **four daily charts**: /MES, /MNQ, /M2K, /MYM |
-| Inputs | Set `market` to match each chart; `rsiLongEntry = 10` (about 1 trade/week in total) or 30 (about 2/week); `enableShorts = no` |
-| ToS strategy (optional) | `thinkorswim/RSI2PullbackStrategy.ts` on the same charts, for Show Report only |
-| Routine | At about 15:50 ET (14:50 CT): LONG SETUP label -> buy at the close; EXIT label while long -> sell at the close |
-| Alert text | `RSI2 \| <LONG SETUP/EXIT> \| <market> \| Long \| ...` |
-| Zapier | Email Parser mailbox #2 -> Notion **RSI2 Signals** (page "Forward Test: RSI(2) Pullback") |
-| Parser fields | `action` (e.g. LONG SETUP), `market` (e.g. MNQ) |
-| Backtest, 1 micro each, net | 2020-23 +$5,460, 2024-25 +$9,474, 2026 +$12,021 (RSI(2)<10); no stop, worst trade -$4,990 (MNQ) |
+| Rules | Close > 200-day SMA and RSI(2) < 10 -> buy at the close; sell at the close once close > 5-day SMA. No shorts, no stop |
+| Signal source | ToS `thinkorswim/RSI2PullbackAlert.ts` on **/MES** and **/MNQ daily** charts (`market` input set per chart, `rsiLongEntry = 10`). Check at about 15:50 ET / 14:50 CT |
+| Execution | **Liquid paper trading**: `xyz:SP500` (for /MES) and `xyz:XYZ100` (for /MNQ). Liquid has no Russell or Dow |
+| Size | $5,000 notional per market at 1x leverage; both can be open at once ($10k paper account) |
+| Order flow | The user says e.g. "RSI2 long S&P" or "RSI2 exit Nasdaq". Claude prepares the paper order, the user approves the exact order, then Claude executes it |
+| Log | Notion **RSI2 Signals** on the page "Forward Test: RSI(2) Pullback" (private). Claude adds a row per trade: entry, exit, points, days held |
+| Backtest (4 micros, 1 each, net) | 2020-23 +$5,460, 2024-25 +$9,474, 2026 holdout +$12,021. Worst single trade -$4,990 (MNQ) |
 
-**Note:**
-- Daily bars form during the day, so an RSI2 alert can fire early and then disappear.
-- The Zapier rows are a record of alerts. Tick **Confirmed at 15:50** only for the setups still showing at the check.
+**Liquid account state:**
+- Paper mode is ON in the user's mobile app **and** on Claude's Liquid connection (enabled 2026-11-25).
+- Paper account: $10,000, no positions.
+- Each platform keeps its own mode. Before any order, check `paper_trading_status`, and keep Liquid's own order-approval rules.
+- Liquid's indicator tool gives the SMA200 but not RSI(2) or the 5-day SMA: signals come from ToS.
 
-## Zapier (free plan, two 2-step Zaps)
-1. **Two Email Parser mailboxes**, one per format: a parser mailbox learns one template.
-   - Send each a sample:
-     - `JT | Sweep S | Short | check Bookmap`
-     - `RSI2 | LONG SETUP | MNQ | Long | buy at the close`
-   - Highlight the fields listed above.
-2. **Zap A:** parser #1 -> Notion "Create Data Source Item" in **E Signals**.
-   - Signal and Setup = `setup`; Direction = `direction`; Date = email date; Alert text = body.
-3. **Zap B:** parser #2 -> Notion in **RSI2 Signals**.
-   - Signal = `action` + `market`; Action = `action`; Market = `market`; Date = email date; Alert text = body.
-4. **ToS email:**
-   - Setup -> Application Settings -> Notifications: email for study alerts.
-   - Send everything to Gmail, with two filters:
-     - emails containing `JT |` -> forward to parser #1;
-     - emails containing `RSI2 |` -> forward to parser #2.
-   - Or point ToS at one parser and forward the other.
-5. ToS must be open with all five charts loaded, because study alerts run on your computer.
+**Market state on 2026-11-25:**
+- Both indices are below their 200-day SMA (S&P500 7,181 vs 7,564; NASDAQ100 26,127 vs 29,292).
+- The strategy is standing aside; no trades until a close back above the 200-day.
 
-## Not live (tested, no durable edge)
+## Not used (tested 2026-11)
+- **ToS study alerts can't be emailed.** `Alert()` in a chart study fired in the platform only; no email reached Gmail with "Alert is triggered -> Send e-mail" on. So the email -> Zapier -> Notion plan was dropped.
+- **Zapier's connection can't build Zaps.** It runs single actions only.
+- **Logging is by hand,** about 2-3 rows a week in total.
+- **No scheduled tasks:** the user doesn't want them run from Claude sessions.
+
+## Tested, no durable edge (don't revisit without new data)
 - Journal Triggers on default settings.
 - Real-CVD filters, CVD divergence, flip and absorption.
 - Fewer-indicator versions.
@@ -57,3 +51,7 @@ Two strategies run live. Both are **forward tests on sim / micros**, not proven 
 - Session-open failed close.
 - RSI(2) shorts.
 - ORB, gap fade, VWAP trend, turn of month.
+
+## Open questions for the next session
+- **Notion journal:** its 60 logged trades average +8 pts, but Jun-Oct shows 96% wins (losers probably not logged). The Oct 22 fully-logged day was breakeven. A complete log for 4-6 weeks decides whether the discretionary version has an edge.
+- **Code location:** everything (code, data, docs) is on branch `claude/real-cvd-plan-bgj7d7`. The ToS files were also copied to `claude/trading-chart-trigger-winners-8ne4fd`. `main` has only the raw data upload.
