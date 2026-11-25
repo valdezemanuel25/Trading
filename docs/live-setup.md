@@ -61,4 +61,4 @@ Decision 2026-11-25: Liquid only for this strategy. **No ToS and no Zapier.**
 
 ## Open questions for the next session
 - **Notion journal:** its 60 logged trades average +8 pts, but Jun-Oct shows 96% wins (losers probably not logged). The Oct 22 fully-logged day was breakeven. A complete log for 4-6 weeks decides whether the discretionary version has an edge.
-- **Code location:** everything (code, data, docs) is on branch `claude/real-cvd-plan-bgj7d7`. The ToS files were also copied to `claude/trading-chart-trigger-winners-8ne4fd`. `main` has only the raw data upload.
+- **Code location:** everything (code, data, docs) is on `main` (merged 2026-11-25 from `claude/real-cvd-plan-bgj7d7`).
