@@ -665,3 +665,57 @@ Once fills are realistic, none of the intraday variants beats the close-based ru
 **Recommendation: keep the close-based workflow and don't build the order agent.** `liquid/order_agent.md` stays as a design for later, e.g. if a future rule needs intraday orders.
 
 The earlier entry "Adopt in principle" for the TR buy-stop (section "intraday entries") is superseded by this test.
+
+## 2026-11-25: journal reversal setups for an intraday agent (step 3, research only)
+
+Rules: `docs/intraday-rules.md`. Journal summary: `docs/journal-setups.md`. Scripts: `python3 research/journal_intraday.py` (setups A and B) and
+`python3 research/journal_fbo.py` (long-only failed breakouts, for comparison). Data: ES 1-minute, 2020-01 to 2026-10-28, already in the repo; nothing bought.
+1,622 trading days after skipping roll days and gaps over 1%.
+
+**Method.**
+- **Setups.** A: a 5m high trades 0.25 pt above the overnight, previous-day or previous-week high, coming from
+  below, and that candle or the next closes back below it. B is the mirror image at the lows. Entries 9:35-11:00 ET.
+- **Stop.** 1 pt beyond the sweep, 6-12 pts.
+- **Target.** 1.25 x the stop, or VWAP if it's at least 1 x the stop away.
+- **Exits.** Stop or target on 1m bars (a minute touching both counts as the stop), else the 12:45 ET close.
+- **Daily limits.** 2 trades, -$100.
+- **Sizing.** P&L in R: risk $50 per trade.
+- **Costs.** CME ES 0.6 pts round trip, or Liquid 0.10% of price (about 7 pts at 7,000: the cost assumed in the
+  RSI(2) research, not measured).
+- **Fill models.** I = ideal, at the confirming close. H = hourly agent: wakes at 9:45 and 10:45, fill 5 minutes
+  later, only if the setup is still live. R = resting limits at the nearest level, placed at 9:29, fixed 8 pt stop
+  and 10 pt target.
+- **Picking.** Level set, VWAP filter and target type were picked on 2020-23 (model I, Liquid cost).
+
+**Grid, model I, Liquid cost.** All 20 settings lose in all three periods. The best in 2020-23 is -0.43R per trade.
+
+**Picked settings (all levels, VWAP target).** Cells are trades, win rate, average R (se), and $ at $50 risk.
+
+| Model | Cost | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|---|
+| I ideal | CME | 175, 43%, +0.11R (0.11), $+980 | 95, 27%, -0.35R (0.13), $-1,656 | 55, 24%, **-0.41R** (0.17), $-1,129 |
+| I ideal | Liquid | 175, 43%, -0.43R, $-3,795 | 95, 27%, -1.18R, $-5,582 | 55, 24%, -1.44R, $-3,966 |
+| I, A short only | CME | 80, 49%, +0.21R (0.16) | 43, 35%, -0.05R (0.23) | 26, 31%, -0.20R (0.30) |
+| I, B long only | CME | 95, 39%, +0.03R (0.15) | 52, 21%, -0.59R (0.14) | 29, 17%, -0.60R (0.19) |
+| H hourly | CME | 25, 44%, -0.07R (0.25) | 17, 24%, -0.39R (0.41) | 7, 0%, -1.11R |
+| H hourly | Liquid | 25, -0.68R | 17, -1.86R | 7, -2.40R |
+| R resting limit | CME | 656, 44%, -0.09R (0.04), $-3,099 | 349, 43%, -0.13R (0.06), $-2,263 | 159, 38%, -0.21R (0.09), $-1,642 |
+| R resting limit | Liquid | 656, -0.52R, $-17,171 | 349, -0.79R, $-13,838 | 159, -1.05R, $-8,327 |
+| Fail BO L, I | CME | 50, 50%, +0.05R (0.14) | 17, 47%, +0.06R (0.26) | 18, 56%, -0.04R (0.22) |
+| Fail BO L, I | Liquid | 50, -0.47R | 17, -0.60R | 18, -1.13R |
+| Fail BO L, H | CME | 18, 61%, +0.24R (0.20) | 9, +0.14R (0.30) | 3 trades |
+
+**Findings.**
+- **No version passes.** Every model loses on the 2026 holdout, even at CME costs. The only positive 2020-23 cells
+  (I +0.11R; A short +0.21R; Fail BO L at about 0) are within 1-1.5 standard errors of zero and don't hold up
+  afterwards. This doesn't beat noise.
+- **Liquid's cost alone sinks a scalp.** 0.10% round trip is about 7 ES points: almost the whole 6-10 pt stop, or
+  -0.85R per trade before any signal. A strategy with 8 pt stops needs futures-level costs (about 0.6 pt) to have
+  a chance.
+- **The hourly agent makes it worse.** Most setups are stopped out, or already at target, by the next wake.
+  H keeps only 7-25 trades per period, and they're worse than the ideal fill.
+- **The rules don't reproduce the journal.** On the journal's 39 A/B trade days in 2026, the rules traded on only 7.
+  Most journal entries key on POC, VAH, 1h/4h SMAs or Bookmap levels, not overnight or previous-day extremes. The
+  wider rule set in `backtest/` (which has those levels) already failed over 2020-2026 (2026-10-29 entry above).
+  The journal's results come from discretion that these rules don't capture.
+- **Verdict: no intraday agent.** Step 4 (agent design) isn't proposed.
