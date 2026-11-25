@@ -816,3 +816,49 @@ Other settings, 2020-23, Liquid:
   - Only one trade per market per day.
   - The opening range and VWAP use CME volume, not Liquid's.
 - **Verdict: no intraday agent.** Step 3 (agent design) isn't proposed. `liquid/order_agent.md` stays parked.
+
+## 2026-11-25: intraday rule search round 2, research plan (committed before any test)
+
+**Already failed, not retested.**
+- ES intraday survey (`docs/strategy-search.md`):
+  - overnight long and day-session long;
+  - last-30-minute momentum;
+  - ORB 5/15/30;
+  - gap fade;
+  - turn of month;
+  - VWAP trend;
+  - 5-minute opening candle;
+  - noise-boundary momentum (failed the 2026 holdout).
+- Session-open failed close, and session open levels.
+- Journal Triggers and its variants, real-CVD filters.
+- Journal reversal setups A/B and failed breakouts (all fill models).
+- Hourly-wake round 1 on ES/NQ/CL (step 2 above): VWAP trend hold, hourly Bollinger snap-back, first-hour breakout,
+  band walk.
+- 1h RSI(2) (held overnight).
+
+**Honesty notes.**
+- The ES 2026 holdout has already been looked at many times in earlier work, so for ES it isn't clean.
+- NVDA and GOOGL intraday data, and CL on the event idea below, haven't been used for any intraday rule yet.
+
+**The search.** Four ideas, 2 settings each, so **8 settings in all**. Each is picked on 2020-23 only. Correction for
+8 tries: the 2020-23 average trade must be at least **2.7 standard errors** above zero (one-sided 5% Bonferroni over 8).
+Only an idea that clears that and is positive in 2024-25 goes to the 2026 holdout, once.
+
+| # | Idea | Why it might work | Rule (30-minute wakes, fill 5 min after the decision) | Settings |
+|---|---|---|---|---|
+| A | Stock gap-and-go (NVDA, GOOGL) | Large single-stock gaps carry news. Stocks drift in the gap's direction intraday (post-news momentum), and NVDA/GOOGL move 2-4% a day, so 0.10% is a small share | 10:00 wake: gap = 9:30 open vs previous 16:00 close, \|gap\| >= g, and the 9:30-10:00 candle closed in the gap's direction -> enter that way at 10:05. Resting stop at the far side of the 9:30-10:00 range. Exit 15:50 | g = 1% or 2% |
+| B | Strong opening drive, all five markets | Big first-half-hour moves come from order imbalance and news, and institutions keep working those orders through the day (Gao et al. find first-half-hour momentum in index ETFs) | 10:00 wake: r30 = 9:30-10:00 return, \|r30\| >= k x its 20-day mean \|r30\| -> enter that way at 10:05. Resting stop at the far side of the 9:30-10:00 range. Exit 15:50 | k = 1.5 or 2 |
+| C | Midday flush in an uptrend (long, all five) | Same reasoning as the RSI(2) edge, on an intraday clock: in an uptrend, a large intraday selloff is often liquidity-driven and partly reverses into the close | 13:00 wake: daily close > 200-day SMA and price <= open x (1 - k x daily ATR%) -> buy at 13:05. Resting stop 1 daily ATR below entry. Exit 15:50 | k = 0.75 or 1.0 |
+| D | CL after the EIA report (Wednesdays) | The 10:30 ET inventory report is an information shock; continuation after such shocks is documented in commodity futures | 11:00 wake, Wednesdays: r = 10:30-11:00 return, \|r\| >= x -> enter that way at 11:05. Resting stop at the 10:30 price. Exit 15:50 | x = 0.2% or 0.4% |
+
+**Common to all four.**
+- Size: $50 to the stop, notional capped at $20,000 (2x).
+- Daily limits for each idea's portfolio: at most 2 trades, no new entry after -$100.
+- Never overnight, so no funding.
+- Costs: Liquid 0.10% of notional. For comparison, futures (ES 0.6 pt, NQ 0.75 pt, CL 0.025) and stocks 0.02%.
+- Holiday-shifted EIA days aren't modelled; D trades Wednesdays only.
+- Pass, as set by you:
+  - positive in 2020-23, 2024-25 and the holdout at Liquid cost;
+  - holdout average trade above 1 standard error, with at least 30 holdout trades;
+  - removing the best market or the best month still leaves a positive total;
+  - plus the 2.7 standard-error bar above.
