@@ -39,8 +39,8 @@ Updated again 2026-11-25 (approved after "new strategies beside the live RSI(2) 
 | Saved closes | Dashboard store `data/rsi2/history/<KEY>` (`{market, symbol, candles: [{t, c}], liquid_sma200: [{t, v}]}`), copied to `liquid/history/<KEY>.json` on this branch. The daily check adds each day's completed candles and Liquid's reported sma200 (TR needs yesterday's SMA too) |
 | Signal code | `liquid/rsi2_daily.py` (both rules, all markets, history merge, slots, open-position records). Completed **weekday** candles only, 00:00 UTC closes |
 | Positioning log | Data only, no rule uses it. Each check saves Liquid `analyze_market` per market (`liquid/positioning.py`): funding, open interest, volume, smart money vs losing crowd long %, bias by position size. Store `data/rsi2/positioning/<DATE>_<KEY>` (full log) and `data/rsi2/positioning_latest/<KEY>` (dashboard). Test as a filter after 6-12 months |
-| Daily check | Scheduled task **"RSI2 daily check"**, cron `20 0 * * 2-6` UTC = 00:20 UTC Tue-Sat (7:20 PM ET winter / 8:20 PM summer), 20 min after each weekday candle closes. It fires into the Claude session that holds the Liquid connection (a fresh session would have no Liquid tools). It saves the closes and positioning, runs the check and reports RSI(2) and TR entries and exits per market. It never places orders. The user can also send **"RSI2 check"** by hand |
-| Orders | On a BUY (RSI(2) or TR) with a free slot, or a SELL while holding: Claude prepares the paper order ($5,000 notional, 1x), the user approves the exact order, Claude executes it. Liquid requires this approval for every order |
+| Daily check | Scheduled task **"RSI2 daily check"**, cron `20 0 * * 2-6` UTC = 00:20 UTC Tue-Sat (7:20 PM ET winter / 8:20 PM summer), 20 min after each weekday candle closes. It fires into the Claude session that holds the Liquid connection (a fresh session would have no Liquid tools). It saves the closes and positioning, runs the check and reports RSI(2) and TR entries and exits per market. It places orders only after the user approves them (see Orders). The user can also send **"RSI2 check"** by hand |
+| Orders | **One approval per day** (since 2026-11-25). The check prepares every order first: sells as a `close_positions_batch` preview with an explicit list of the symbols to close (or `close_position` for one); buys as a `suggest_trades_batch` preview (or `suggest_trade` for one), each $5,000 notional, 1x, market, long. It shows one numbered list and asks once: "Reply approve to place all N orders, or name any to skip." On approve it executes exactly the previewed orders, sells first, then buys (one idempotency key per batch). A skip, a preview older than 15 minutes, or a changed portfolio means a fresh preview and a new approval. It reports each outcome (filled, rejected or pending) and updates `data/rsi2/open/<KEY>` and `liquid/open/<KEY>.json`. No order is placed without that approval |
 | Log | Liquid's own history (`get_position_history`, `get_portfolio`). The dashboard (https://claude.ai/artifact/22FJo7qvavG7uHKQSckF7L) shows signals for all five markets, the account, the trades, and live vs backtest per trade. Reference closes (CME settlement or Nasdaq close) are entered on the page for the close-timing gap |
 | Backtest, both rules, 2 slots, one position per market | 2020-23 $+7,974, 2024-25 $+3,088, 2026 holdout $+3,495 (RSI(2) alone $+5,082 / $+2,198 / $+1,766; `research/strategies2.py` engine). TR alone on its four markets: $+3,301 / $+13 / $+2,482, about 30% winners, worst trade -$377 |
 | Backtest, RSI(2), $5,000 per trade, 0.10% cost | Avg/trade (all periods): S&P +$24, Nasdaq +$16, NVDA +$97, GOOGL +$39, WTI +$81. 2 slots x $5,000 with all five: 2020-23 $+4,862, 2024-25 $+2,411, 2026 holdout $+1,925 (vs $+361 / $+1,082 / $+947 for S&P + Nasdaq alone). Worst single trade -$866 (NVDA) at $5,000 |
@@ -48,7 +48,7 @@ Updated again 2026-11-25 (approved after "new strategies beside the live RSI(2) 
 
 **Why a scheduled check plus manual approval:**
 - Liquid has no alerts or scheduler. Its "automated trading" tool only saves a spending limit.
-- The user asked for a scheduled task on 2026-11-25. It only reports and saves closes and positioning; it never places orders.
+- The user asked for a scheduled task on 2026-11-25. It reports, saves closes and positioning, and places the day's orders only after one explicit approval of the exact previewed list.
 - Every Liquid order needs the user's explicit approval anyway.
 
 **Liquid account state:**
@@ -70,7 +70,7 @@ Updated again 2026-11-25 (approved after "new strategies beside the live RSI(2) 
 - **ToS study alerts can't be emailed.** `Alert()` in a chart study fired in the platform only; no email reached Gmail with "Alert is triggered -> Send e-mail" on. So the email -> Zapier -> Notion plan was dropped.
 - **Zapier's connection can't build Zaps.** It runs single actions only.
 - **Logging:** Journal Triggers E by hand in Notion; RSI(2) uses Liquid's own history.
-- **Scheduled tasks:** only the "RSI2 daily check" (see above), added at the user's request on 2026-11-25. It reports signals and saves daily closes and positioning; it never places orders.
+- **Scheduled tasks:** only the "RSI2 daily check" (see above), added at the user's request on 2026-11-25. It reports signals, saves daily closes and positioning, and places orders only after the user's one daily approval of the previewed list.
 
 ## Tested, no durable edge (don't revisit without new data)
 - Journal Triggers on default settings.
