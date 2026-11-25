@@ -862,3 +862,47 @@ Only an idea that clears that and is positive in 2024-25 goes to the 2026 holdou
   - holdout average trade above 1 standard error, with at least 30 holdout trades;
   - removing the best market or the best month still leaves a positive total;
   - plus the 2.7 standard-error bar above.
+
+## 2026-11-25: intraday rule search round 2, results (research only)
+
+Script: `python3 research/intraday_ideas.py` (about 25 s; the 2026 rows print only with `--holdout <ideas>`).
+Data: ES, NQ, CL, NVDA and GOOGL 1-minute, 2020-01 to 2026-10, already in the repo.
+- **8 settings tried, as planned**: 4 ideas x 2 settings.
+- **Holdout looks: 0.** No idea reached the holdout, so the 2026 results were never computed.
+
+Cells: trades, win %, average $ per trade (standard error), t-stat, total $. $50 risk per trade, Liquid 0.10% cost.
+Each idea's setting is picked on 2020-23.
+
+| Idea (picked setting) | 2020-23 | t >= 2.7? | 2024-25 | 2024-25 positive? | Result |
+|---|---|---|---|---|---|
+| A stock gap-and-go, NVDA+GOOGL (gap >= 2%) | 114, 49%, +8.5 (6.3), t +1.3, $+966 | no | 63, 38%, -9.0 (8.2), $-569 | no | fail |
+| B strong opening drive, 5 markets (k = 1.5) | 933, 44%, -2.9 (1.9), t -1.5, $-2,698 | no | 473, 39%, -10.2 (2.3), $-4,806 | no | fail |
+| C midday flush in an uptrend, long (k = 1.0) | 52, 44%, -2.1 (2.5), t -0.9, $-110 | no | 38, 53%, -1.8 (3.4), $-68 | no | fail |
+| D CL after EIA, Wednesdays (\|r\| >= 0.4%) | 116, 42%, +5.0 (7.7), t +0.7, $+584 | no | 38, 32%, -15.3 (8.9), $-580 | no | fail |
+
+The other setting of each idea, 2020-23:
+- A, gap >= 1%: $+857, t +0.6;
+- B, k = 2: $-2,810;
+- C, k = 0.75: $-495;
+- D, 0.2%: $-108.
+
+At the comparison costs (futures ticks plus commission; 0.02% for stocks):
+- A: $+1,286 in 2020-23, $-347 in 2024-25;
+- B: $+1,756, then $-1,780;
+- C: about $0, then $+26;
+- D: $+1,065, then $-368.
+
+So none of these is a real edge that Liquid's cost alone kills. They are noise at any cost.
+
+**Findings**
+- **No idea passes. None even clears the 2020-23 bar.** The best t-stat is +1.3 (A), well short of 2.7, and of a plain 2.0.
+  All four lose in 2024-25 at Liquid cost.
+- **The moves are now large enough** (median 0.5-1.3% per trade, the target range), so cost is no longer the main
+  problem. The signals simply don't predict the rest of the day.
+- **Concentration.** Even A's small 2020-23 profit drops to $+292 without NVDA. D's goes to about $0 without its
+  best market (it has only CL).
+- **Running total across the whole intraday search** (this file and `docs/strategy-search.md`):
+  - about 15 rule families and well over 100 settings;
+  - not one intraday rule has passed a clean out-of-sample test at Liquid's cost.
+- **Verdict: no edge. No intraday agent is proposed**, and nothing is set up. The after-close RSI(2) + trend-reclaim
+  setup is unchanged.
