@@ -32,8 +32,13 @@ RSI_ENTRY = 10
 def _candles(data):
     out = {}
     for c in data["candles"]:
-        ts = int(c.get("timestamp", c.get("ts")))
-        out[ts] = float(c["close"])
+        if isinstance(c, list):                       # [ts, close]
+            ts, close = c
+        elif "t" in c:                                # liquid/history format {t, c}
+            ts, close = c["t"], c["c"]
+        else:                                         # show_chart format
+            ts, close = c.get("timestamp", c.get("ts")), c["close"]
+        out[int(ts)] = float(close)
     return out
 
 

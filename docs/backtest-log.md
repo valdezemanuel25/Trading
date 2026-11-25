@@ -217,7 +217,7 @@ Script: `python3 backtest/minimal_compare.py`. Each cell is trades, average gros
 
 ## 2026-11-25: RSI(2) round 2: more markets, rule variants, the 200-day filter, live measurement
 
-Research only. The live rules, the scheduled check and Liquid orders are unchanged.
+Research only when written. The user then approved three changes, which are now live (see `docs/live-setup.md`): NVDA, GOOGL and CL added; the 200-trading-day filter from saved closes; the worst-trade correction.
 
 Script: `python3 research/rsi2_variants.py`. It uses the same data and rules as `research/multi.py`: ES, NQ, RTY and YM futures, 00:00 UTC daily closes, roll-adjusted indicators, each trade priced in its entry contract. Long only: close above the 200-day SMA and RSI(2) below 10; sell on the first close above the 5-day SMA. Unless noted, $ is 1 micro each, net of costs, and the baseline reproduces the existing results exactly ($+5,460 / $+9,474 / $+12,021).
 
