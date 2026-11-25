@@ -3,3 +3,4 @@ __pycache__/
 research/*_trades.csv
 research/multi_trades.csv
 data/intraday/*.part
+data/intraday/parts/

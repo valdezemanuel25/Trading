@@ -2,7 +2,7 @@
 """Download Databento 1-minute bars (ohlcv-1m) for the intraday-entry research (approved 2026-11-25, ~$19).
 
 Needs DATABENTO_API_KEY in the environment and network access to hist.databento.com. Checks the total cost first
-and stops if it is over --budget (US$). Front month only for futures (continuous by volume, `.v.0`), Nasdaq prints
+and stops if it is over --budget (US$). Downloads one calendar year per request and merges. Front month only for futures (continuous by volume, `.v.0`), Nasdaq prints
 for stocks. Writes data/intraday/<NAME>_1m.csv.zst (raw Databento CSV: ts_event in ns, prices x 1e9, symbol).
 
   python3 backtest/fetch_1m.py --dry-run
@@ -40,7 +40,19 @@ def post(s, endpoint, stream=False, **data):
     return r
 
 
+YEARS = [(f"{y}-01-01", f"{y + 1}-01-01") for y in range(2020, 2026)] + [("2026-01-01", END)]
+
+
+def parts_dir(n):
+    d = os.path.join(OUT, "parts", n)
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
 def main():
+    """Downloads one calendar year per request (a dropped stream only costs that year), then merges per market."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from zstd_io import compress, decompress
     ap = argparse.ArgumentParser()
     ap.add_argument("--budget", type=float, default=20.0)
     ap.add_argument("--dry-run", action="store_true")
@@ -48,25 +60,44 @@ def main():
     s = requests.Session()
     s.auth = (os.environ["DATABENTO_API_KEY"], "")
     os.makedirs(OUT, exist_ok=True)
-    todo = [n for n in REQ if not os.path.exists(os.path.join(OUT, f"{n}_1m.csv.zst"))]
-    cost = {n: float(post(s, "metadata.get_cost", schema="ohlcv-1m", start=START, end=END, **REQ[n]).text) for n in todo}
-    for n, c in cost.items():
-        print(f"{n:6s} ${c:.2f}")
+    todo = [(n, y0, y1) for n in REQ if not os.path.exists(os.path.join(OUT, f"{n}_1m.csv.zst"))
+            for y0, y1 in YEARS if not os.path.exists(os.path.join(parts_dir(n), f"{y0[:4]}.csv"))]
+    cost = {(n, y0): float(post(s, "metadata.get_cost", schema="ohlcv-1m", start=y0, end=y1, **REQ[n]).text)
+            for n, y0, y1 in todo}
+    for (n, y0), c in cost.items():
+        print(f"{n:6s} {y0[:4]} ${c:.2f}")
     total = sum(cost.values())
     print(f"TOTAL ${total:.2f} (budget ${a.budget:.2f})", flush=True)
     if a.dry_run:
         return
     if total > a.budget:
         sys.exit("over budget, nothing downloaded")
-    for n in todo:
-        r = post(s, "timeseries.get_range", stream=True, schema="ohlcv-1m", start=START, end=END, encoding="csv",
-                 compression="zstd", map_symbols="true", pretty_px="false", pretty_ts="false", **REQ[n])
+    for n, y0, y1 in todo:
+        for attempt in range(3):
+            try:
+                r = post(s, "timeseries.get_range", schema="ohlcv-1m", start=y0, end=y1, encoding="csv",
+                         compression="zstd", map_symbols="true", pretty_px="false", pretty_ts="false", **REQ[n])
+                text = decompress(r.content)
+                break
+            except Exception as e:
+                if attempt == 2:
+                    raise
+                print(f"  {n} {y0[:4]}: {e.__class__.__name__}, retrying", flush=True)
+        open(os.path.join(parts_dir(n), f"{y0[:4]}.csv"), "wb").write(text)
+        print(f"{n} {y0[:4]}: {text.count(b'\\n') - 1} rows", flush=True)
+    for n in REQ:
         path = os.path.join(OUT, f"{n}_1m.csv.zst")
-        with open(path + ".part", "wb") as f:
-            for chunk in r.iter_content(1 << 20):
-                f.write(chunk)
-        os.replace(path + ".part", path)
-        print(f"{n}: {os.path.getsize(path) / 1e6:.1f} MB -> {os.path.relpath(path, ROOT)}", flush=True)
+        if os.path.exists(path):
+            continue
+        files = [os.path.join(parts_dir(n), f"{y0[:4]}.csv") for y0, _ in YEARS]
+        if not all(os.path.exists(f) for f in files):
+            continue
+        out = []
+        for k, f in enumerate(files):
+            lines = open(f, "rb").read().rstrip(b"\n").split(b"\n")
+            out.extend(lines if k == 0 else lines[1:])
+        open(path, "wb").write(compress(b"\n".join(out) + b"\n"))
+        print(f"{n}: merged {len(out) - 1} rows -> {os.path.relpath(path, ROOT)}", flush=True)
 
 
 if __name__ == "__main__":
