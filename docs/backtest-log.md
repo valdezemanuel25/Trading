@@ -719,3 +719,25 @@ Rules: `docs/intraday-rules.md`. Journal summary: `docs/journal-setups.md`. Scri
   wider rule set in `backtest/` (which has those levels) already failed over 2020-2026 (2026-10-29 entry above).
   The journal's results come from discretion that these rules don't capture.
 - **Verdict: no intraday agent.** Step 4 (agent design) isn't proposed.
+
+## 2026-11-25: intraday agent on Liquid, step 1: Liquid's real cost (read only)
+
+Checked 2026-11-25 (read only, nothing placed):
+- `paper_trading_status`: ENABLED. `get_portfolio`: $10,000 equity, no positions. `view_open_orders`: none.
+- `get_transaction_history` (trades) and `get_position_history` (all): **0 fills**. Dashboard store
+  `data/rsi2/orders` and `data/rsi2/open` are empty; `liquid/orders/` doesn't exist and `liquid/open/` holds only its README.
+- So the RSI(2) paper account has **no fills to measure fees or slippage from**.
+
+Order-book snapshot (one moment, US hours, for context only):
+
+| Market | Bid / ask | Spread | Half-spread per side |
+|---|---|---|---|
+| `xyz:SP500` | 7,145.9 / 7,146.0 | 0.1 pt | 0.0007% |
+| `xyz:XYZ100` | 25,873 / 25,874 | 1 pt | 0.002% |
+| `xyz:CL` | 80.621 / 80.622 | 0.001 | 0.0006% |
+
+- Top-of-book depth covers a $5,000 order in all three, so the spread costs about 0.001-0.004% per round trip at this size.
+- The fee schedule isn't exposed by the Liquid tools, so the fee per fill is unknown. A paper fill would show it.
+- **Decision: keep 0.10% per round trip as the Liquid cost** (fees plus slippage, unmeasured). The spread alone is far below it,
+  so 0.10% is probably conservative, unless Liquid's fees are higher than the usual ~0.045% per side taker rate on Hyperliquid
+  (not verified). Re-measure from the first 10+ paper round trips.
