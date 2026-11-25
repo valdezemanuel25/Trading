@@ -516,3 +516,75 @@ At about 40-60 signals a year across the live rules, a first look needs 6-12 mon
 | Catastrophe stop 2x / 3x ATR | Drop | Costs $1,150-1,730 in 2020-23 to trim the worst trade by $0-200. |
 | Brent/WTI and GOOGL/Nasdaq spreads | Drop | Negative in 2020-23; each trade takes both slots and needs a short leg. |
 | Positioning log | **Adopted 2026-11-25** | Data collection only; test as a filter after 6-12 months. |
+
+## 2026-11-25: intraday entries for the live rules, and what Liquid's orders allow (research only)
+
+No live rule, scheduled task or Liquid order changed. Script: `python3 research/intraday_entries.py`. Same engine and costs as `research/strategies2.py`. Portfolio: 2 slots x $5,000, one position per market, RSI(2) first on ties.
+
+### What Liquid's order tools allow for entries (from the connector's tool schemas, 2026-11-25)
+
+| Need | Possible? | How / why not |
+|---|---|---|
+| Market entry | Yes | Sent as an immediate-or-cancel limit at mid +/- `maxSlippageBps` (1-500). |
+| Resting limit buy | Yes | `type: limit` with `timeInForce` `gtc` (rests until filled or cancelled), `ioc` or `alo` (post-only). |
+| Order expiry (good-till-date) | **No** | `gtc` has no expiry. The agent must cancel stale orders itself. |
+| Buy-stop / stop-limit / trigger entry | **No** | Only `market` and `limit`. Liquid's own tool text: "A plain limit is not a breakout trigger." A buy limit above the market just fills at once. |
+| TP / SL attached at entry | Yes | `tp` and `sl` trigger prices on the order. They are not placed if the order only partly fills; then add them later with `modify_position`. |
+| Resting exit orders | Yes | Reduce-only limit sells, native trailing stops (`set_trailing_stop`), and TP/SL triggers on a position. |
+| Change an order in place | **No** | No modify-order tool: moving an order means cancel and place a new one. |
+| Baskets | Yes | Up to 8 orders confirmed together. |
+| Approvals | Every order | Every new order (and TP/SL change) needs an explicit chat confirmation of the exact previewed terms in the session that places it. A cancel needs only the user's request. The saved "automated trading" policy authorizes nothing. |
+| Paper mode | Unknown for resting orders | The paper simulator handles orders, but whether a paper `gtc` limit really rests and fills on a touch is untested; it needs one small approved test order. |
+
+### a. Trend reclaim: buy-stop at the 200-day SMA vs the close-based entry
+
+The buy-stop entry rests at yesterday's 200-day SMA while the last close is at or below it. It fills if the day's high reaches the level, at the level (or the open if it gaps above). The entry day's own close can already exit it.
+
+| CL, GOOGL, NQ, NVDA | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| Close entry (live) | 37 tr, 30% win, $+3,301, DD -$1,950 | 41 tr, $+13 | 12 tr, $+2,482 |
+| Buy-stop entry | 80 tr, 19% win, $+3,425, DD -$2,420 | 68 tr, $+814 | 22 tr, $+3,020 |
+| **Portfolio, live** | $+7,974, DD -$1,232 | $+3,088 | $+3,495 |
+| **Portfolio, RSI(2) close + TR buy-stop** | **$+8,312**, DD -$1,021 | **$+3,874** | **$+4,094** |
+
+- **False breakouts are common:** 83 of 176 fills (47%) closed back below the SMA the same day, losing $5,162 in total (2020-23 -$3,070, holdout -$374). The earlier entry on the real breakouts more than pays for them.
+- Per market, the stop is better on NQ (2024-25), NVDA and GOOGL, and worse on CL in 2020-23 (-$343 vs $+236).
+- **It passes the rule:** better in the portfolio in all three periods, and the holdout is $+599. Liquid can't rest a buy-stop, though (see above), so the backtest's fill at the level is optimistic.
+
+### b. RSI(2): resting limit buy at the RSI(2) = 10 price vs the close-based entry
+
+The limit price is the highest price at which today's close would give RSI(2) < 10, placed only when that price is above yesterday's 200-day SMA. It fills if the day's low reaches it.
+
+| All five | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| Close entry (live) | 121 tr, avg $+46, $+5,615 | 93 tr, $+4,640 | 46 tr, avg $+47, $+2,158 |
+| Limit entry | 207 tr, avg $+34, $+7,003 | 138 tr, $+4,845 | 69 tr, avg $+24, **$+1,619** |
+| **Portfolio, RSI(2) limit + TR close** | **$+6,836** (vs $+7,974) | $+3,543 | $+3,586 (vs $+3,495) |
+
+- The limit fills on many intraday dips that recover by the close. Those were the good ones (avg $+60).
+- Fills where the close also gave RSI(2) < 10 averaged $-1: buying before the close on a falling day gets a worse price than waiting.
+- In the shared slots it crowds out better trades: $-1,138 in 2020-23. **Fails.**
+
+### c. Pre-close decision at 15:45 ET (ES only: the only market with 1-minute data here)
+
+| ES RSI(2) | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| Decide + fill at the 00:00 UTC close (live) | 25 tr, $+343 | 25 tr, $+676 | 12 tr, $+495 |
+| Decide + fill at 15:45 ET | 25 tr, $+736 | 26 tr, $+698 | 11 tr, $+487 |
+| Portfolio (ES at 15:45 ET, rest unchanged) | $+8,435 (vs $+7,974) | $+3,065 (vs $+3,088) | $+3,569 (vs $+3,495) |
+
+- 44 of 62 entry days are the same at both times.
+- Deciding at the US cash close is at least as good as waiting for Liquid's 00:00 UTC close: better in 2020-23, equal since. It passes, but only for ES.
+- Testing NQ, CL, NVDA and GOOGL needs 1-minute data. Databento quote: front-month continuous ohlcv-1m 2020-01 to 2026-10, NQ $8.80, CL $8.72, NVDA $0.90, GOOGL $0.77, **about $19.20** (all contracts instead: $191). Not bought.
+- **The same data would also test the realistic version of (a):** entering at the first hourly check after the cross, plus approval delay, instead of at the level.
+
+### Adopt / drop
+
+| Change | Verdict | Why |
+|---|---|---|
+| TR entry by buy-stop at the 200-day SMA | **Adopt in principle; needs a realistic test first** | Portfolio better in all three periods ($+8,312 / $+3,874 / $+4,094 vs $+7,974 / $+3,088 / $+3,495). Liquid has no stop orders, so live it is "order agent sees the price above the level, proposes a market buy, you approve". The fill comes later than the level, and nothing fills while you're away. Test that version on 1-minute data (about $19) before relying on it. |
+| RSI(2) entry by resting limit | **Drop** | $-1,138 in 2020-23 in the portfolio; lower average trade; worse holdout on its own. |
+| Pre-close (15:45 ET) decisions | **Watch: ES passes, others untested** | ES better in 2020-23 and equal since. Needs the same 1-minute data for NQ, CL, NVDA and GOOGL. |
+| RSI(2) exit by resting reduce-only limit at the mean of the last 4 closes | Not tested | A close above that price is the 5-day-SMA exit, but an intraday touch would sell early. Can be tested on the same 1-minute data. |
+
+The order-agent design (proposed, not set up) is in `liquid/order_agent.md`.
