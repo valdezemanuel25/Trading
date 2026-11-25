@@ -2,7 +2,7 @@
 # Runs each weekday at ~15:50 ET on Zapier's servers. Downloads daily closes for the S&P 500 and Nasdaq 100
 # indexes from Yahoo Finance (today's close = the live price at 15:50), then reports per market:
 #   action = LONG SETUP  (close > 200-day SMA and RSI(2) < 10)   -> buy at the close
-#            EXIT        (close > 5-day SMA)                      -> sell at the close if long
+#            EXIT        (first close back above the 5-day SMA)   -> sell at the close if long
 #            NONE
 # Later Zap steps: Filter (only continue if any_signal is true) -> Notion "RSI2 Signals" row -> email / push.
 # Same rules as research/rsi2.py and thinkorswim/RSI2PullbackAlert.ts. Index prices stand in for /MES and /MNQ.
@@ -31,10 +31,11 @@ def rsi2(c):
 
 def check(c):
     last, sma5, sma200 = c[-1], sum(c[-5:]) / 5, sum(c[-200:]) / 200
+    prev_below5 = c[-2] <= sum(c[-6:-1]) / 5      # yesterday closed at/below its 5-day SMA
     r = rsi2(c)
     if last > sma200 and r < RSI_ENTRY:
         action = "LONG SETUP"
-    elif last > sma5:
+    elif last > sma5 and prev_below5:
         action = "EXIT"
     else:
         action = "NONE"

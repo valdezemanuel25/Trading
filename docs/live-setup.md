@@ -60,7 +60,7 @@ Two forward tests. Neither is proven for real size.
 1. **Trigger:** Schedule by Zapier, every weekday at 15:50 America/New_York.
 2. **Action:** Code by Zapier, Run Python. Paste `zapier/rsi2_check.py`, which reads the S&P 500 and Nasdaq 100 index closes from Yahoo Finance.
    - The logic flags all 62 backtest entries.
-   - It also repeats LONG SETUP on days a trade is already open: ignore those.
+   - It also repeats LONG SETUP on days a trade is already open, and flags EXIT about once a week (first close back above the 5-day SMA) whether or not you are long. Act on EXIT only when holding that market.
 3. **Filter by Zapier:** only continue if `any_signal` is true.
 4. **Notion, Create Data Source Item, in RSI2 Signals:** Signal = `message`; Date = now; Alert text = `message`; Market and Action from `MES_action` / `MNQ_action`.
 5. **Notify:** Email by Zapier, or the Zapier app's push, with `message`.
