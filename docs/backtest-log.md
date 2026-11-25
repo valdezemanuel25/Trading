@@ -614,7 +614,7 @@ Files are in `data/intraday/`, fetched with `backtest/fetch_1m.py` (one year per
 | Buy-stop at the level (daily-bar test, not possible on Liquid) | $+3,425 / $+814 / $+3,020 | $+8,312 / $+3,874 / $+4,094 |
 | Hourly, approved at once | $+2,627 / $+349 / $+2,482 | **$+7,649** / $+3,567 / $+3,595 |
 | Hourly, 30-minute approval | $+2,894 / $-10 / $+2,589 | $+8,015 / $+3,398 / $+3,730 |
-| Hourly, 60-minute approval | $+2,948 / $+124 / $+2,690 | $+8,145 / $+3,412 / $+3,740 |
+| Hourly, 60-minute approval | $+2,948 / $+124 / $+2,690 | $+8,120 / $+3,412 / $+3,740 |
 
 - 125 of 136 entries came at an hourly check. The fill was a median 0.39-0.53% above the level (the price runs past it between checks).
 - 43 were false breakouts (closed back below the same day), costing about $3,000.
