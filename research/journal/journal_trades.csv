@@ -1,0 +1,62 @@
+date,title,instrument,dir,entry,exit,pts,setup,note
+2026-04-29,Shorted ES Mi,MES,S,7156,7163,-7,OTHER,counter-trend short at VAL on CVD
+2026-05-01,Shorted ES Mi,MES,S,7292,,,OTHER,stopped out; logged exit 7230.25 is the target not the fill; loss size unknown
+2026-05-01,Shorted ES Mi #2,MES,S,7283.75,7275,8.75,OTHER,LVN into POC on lack of buying
+2026-05-05,Long ES (actually short),ES,S,7281,7271,10,FADE_HIGH,rejected PDH/VAH twice -> POC; +$500
+2026-05-05,Long ES,ES,L,7274,7280,6,TREND,pullback to premarket high -> PD VAH
+2026-05-07,Short ES,ES,S,7386,7390.25,-4.25,TREND,chased break below POC/VAL
+2026-05-07,Short ES,ES,S,7407,7394,13,FADE_HIGH,weekly high rejection -> POC
+2026-05-08,Short ES,ES,S,7416,7410,6,TREND,break below POC -> PDL
+2026-05-08,Short ES,ES,S,7411,7418,-7,OTHER,against trend; no candle close
+2026-05-08,Short ES,ES,S,7406,7412,-6,FADE_HIGH,pullback to POC; entered before candle close
+2026-05-12,Long Es,ES,L,7405,7408,3,RECLAIM_LOW,bounce off VAL
+2026-05-12,Long ES,ES,L,7377,7388,11,TREND,close above POC -> VWAP
+2026-05-12,Long ES,ES,L,7398,7408,10,RECLAIM_LOW,swept PDL; 5m close back above
+2026-05-14,Short ES,ES,S,7498,7488,10,FADE_HIGH,wick above PDH; close back below -> POC
+2026-05-15,Long MES,MES,L,7467,7458,-9,TREND,breakout above VAH on CVD
+2026-05-15,Long ES,ES,L,7447.25,7461,13.75,TREND,close above POC -> VAH
+2026-05-19,Short ES,ES,S,7388,7380,8,FADE_HIGH,POC rejection after 3 VAH rejections -> VAL
+2026-05-19,Short Es,ES,S,7366,7362,4,TREND,break of premarket low -> last week low
+2026-05-19,Short ES,ES,S,7385,7389,-4,OTHER,platform problem; late entry
+2026-05-21,Long MES,MES,L,7426,7433,7,RECLAIM_LOW,rejected premarket low; close above 5m EMA -> VAH
+2026-05-21,Long MES,MES,L,7443,7437,-6,TREND,momentum above VAH; no retest
+2026-05-21,Long MES,MES,L,7421,7416,-5,TREND,VAH retest idea; stuck at POC
+2026-05-22,SHORT MES,MES,S,7511,7496,15,FADE_HIGH,swept premarket high; close below -> POC
+2026-05-27,LONG MES,MES,L,7531,7544,13,RECLAIM_LOW,swept premarket low; next candle closed above
+2026-05-28,Short MES,MES,S,7576,7580,-4,FADE_HIGH,faded a news rally; close below 5m EMA
+2026-05-28,Short MES,MES,S,7527,7531,-4,FADE_HIGH,after premarket-high bounce; choppy at POC
+2026-05-29,Short MES,MES,S,7601,7593,8,FADE_HIGH,rejecting 7611; close below 5m EMA above VAH -> POC
+2026-06-04,Short MES,MES,S,7554,7561,-7,FADE_HIGH,swept premarket high; close below; target missed by 1pt
+2026-06-05,Short MES,MES,S,7542,7524,18,TREND,bearish bias (rejected SMAs/VWAP overnight) -> PDL
+2026-06-09,Short MES,MES,S,7471,7451,20,FADE_HIGH,wick above PDH and 4h SMA21; close below -> POC
+2026-06-23,Short MES,MES,S,7473,7440,33,FADE_HIGH,failed close above 4h SMA200/21; CVD flip -> POC
+2026-06-23,Long MES,MES,L,7473,7489,16,RECLAIM_LOW,wicked 4h/1h support at open; closed above
+2026-06-25,LONG MES,MES,L,7407,7432,25,RECLAIM_LOW,swept premarket/PDL/monthly lows; next candle above -> VAL
+2026-07-09,Short MES,MES,S,7555,7536,19,FADE_HIGH,overextended above VAH; close below VAH and 5m EMA -> VAL
+2026-07-10,Short MES,MES,S,7593,7578,15,FADE_HIGH,swept all-time high; close below 5m EMA and VAH
+2026-07-17,Long MES,MES,L,7482,7508,26,RECLAIM_LOW,daily low tested 3x and held
+2026-07-31,Short MES,MES,S,7484,7475,9,FADE_HIGH,wick to weekly level/4h SMA/VAH; close below 5m EMA
+2026-08-13,Short MES,MES,S,7831,7807,24,FADE_HIGH,7838 rejected 3x; close below VAH and 5m EMA -> VWAP
+2026-08-14,Short MES,MES,S,7822,7810,12,FADE_HIGH,1h resistance 7830; close below 5m EMA -> prior open
+2026-08-20,SHORT ES,ES,S,7705,7697,8,FADE_HIGH,rejected 5m SMA50 / 1h VWAP 3x -> BB mid
+2026-08-27,Long ES,ES,L,7707,7714,7,RECLAIM_LOW,first candle swept premarket low; below VAL and lower BB
+2026-09-01,Long ES,ES,L,7650,7660,10,TREND,close above POC after SMA50 tests -> 1h VWAP
+2026-09-03,SHORT MES,MES,S,7719,7700,19,FADE_HIGH,opening fade: close below the first 5m candle -> 1h VWAP
+2026-09-15,SHORT ES,ES,S,7678,7665,13,FADE_HIGH,failed reclaim of weekly high; close below VWAP and SMA50 -> VAL
+2026-09-22,Short ES,ES,S,7840,7832,8,FADE_HIGH,wick above prior ATH; close below 5m 9 SMA -> VAL
+2026-09-25,Short ES,ES,S,7783.5,7773,10.5,FADE_HIGH,7800 rejected; at VAH; break of 5m SMA50
+2026-09-29,SHORT ES,ES,S,7740.5,7730,10.5,FADE_HIGH,rejected VWAP at POC -> VAL
+2026-10-01,SHORT ES,ES,S,7734,7712,22,FADE_HIGH,POC/SMA50 rejected 4x at open -> SMA200
+2026-10-13,SHORT ES,ES,S,7860,7852,8,FADE_HIGH,first 5m candle failed at 1h/4h resistance -> POC
+2026-10-15,LONG MES,MES,L,7731,7745,14,RECLAIM_LOW,wick below 7730 premarket low; close above -> POC
+2026-10-16,SHORT ES,ES,S,7795,7785,10,FADE_HIGH,7800 rejected 5x overnight; opened below POC -> lower VWAP band
+2026-10-20,SHORT ES,ES,S,7723,7715,8,FADE_HIGH,failed to break 7730 twice at open -> VAL
+2026-10-22,LONG MES,MES,L,7736,7730,-6,SCALP,eval account; no notes
+2026-10-22,LONG MES,MES,L,7733.5,7726,-7.5,SCALP,eval account; no notes
+2026-10-22,LONG MES,MES,L,7728.75,7734.75,6,SCALP,eval account; no notes
+2026-10-22,LONG MES,MES,L,7741.75,7735.75,-6,SCALP,eval account; no notes
+2026-10-22,SHORT MES,MES,S,7734.5,7728.5,6,SCALP,eval account; no notes
+2026-10-22,SHORT MES,MES,S,7724.75,7720.5,4.25,SCALP,eval account; no notes
+2026-10-22,SHORT MES,MES,S,7713.25,7710,3.25,SCALP,eval account; no notes
+2026-10-27,SHORT MES,MES,S,7727,7717,10,FADE_HIGH,wick and close below VAH after POC test -> below VAL
+2026-10-29,LONG MES,MES,L,7738,7757.25,19.25,RECLAIM_LOW,wick below 4h SMA21/200 and 7731; close above lower BB -> 5m SMA21
