@@ -84,7 +84,7 @@ def main():
                     raise
                 print(f"  {n} {y0[:4]}: {e.__class__.__name__}, retrying", flush=True)
         open(os.path.join(parts_dir(n), f"{y0[:4]}.csv"), "wb").write(text)
-        print(f"{n} {y0[:4]}: {text.count(b'\\n') - 1} rows", flush=True)
+        print(f"{n} {y0[:4]}: {text.count(b'\n') - 1} rows", flush=True)
     for n in REQ:
         path = os.path.join(OUT, f"{n}_1m.csv.zst")
         if os.path.exists(path):

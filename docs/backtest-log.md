@@ -582,9 +582,86 @@ The limit price is the highest price at which today's close would give RSI(2) < 
 
 | Change | Verdict | Why |
 |---|---|---|
-| TR entry by buy-stop at the 200-day SMA | **Adopt in principle; needs a realistic test first** | Portfolio better in all three periods ($+8,312 / $+3,874 / $+4,094 vs $+7,974 / $+3,088 / $+3,495). Liquid has no stop orders, so live it is "order agent sees the price above the level, proposes a market buy, you approve". The fill comes later than the level, and nothing fills while you're away. Test that version on 1-minute data (about $19) before relying on it. |
+| TR entry by buy-stop at the 200-day SMA | **Superseded: dropped after the 1-minute test below** (realistic hourly entry: $-325 to $+146 in 2020-23) | Portfolio better in all three periods ($+8,312 / $+3,874 / $+4,094 vs $+7,974 / $+3,088 / $+3,495). Liquid has no stop orders, so live it is "order agent sees the price above the level, proposes a market buy, you approve". The fill comes later than the level, and nothing fills while you're away. Test that version on 1-minute data (about $19) before relying on it. |
 | RSI(2) entry by resting limit | **Drop** | $-1,138 in 2020-23 in the portfolio; lower average trade; worse holdout on its own. |
-| Pre-close (15:45 ET) decisions | **Watch: ES passes, others untested** | ES better in 2020-23 and equal since. Needs the same 1-minute data for NQ, CL, NVDA and GOOGL. |
+| Pre-close (15:45 ET) decisions | **See the 1-minute test below:** RSI(2) fails; TR at 15:45 is watch only ($+49 on the holdout) | ES better in 2020-23 and equal since. Needs the same 1-minute data for NQ, CL, NVDA and GOOGL. |
 | RSI(2) exit by resting reduce-only limit at the mean of the last 4 closes | Not tested | A close above that price is the 5-day-SMA exit, but an intraday touch would sell early. Can be tested on the same 1-minute data. |
 
 The order-agent design (proposed, not set up) is in `liquid/order_agent.md`.
+
+## 2026-11-25: realistic intraday tests on 1-minute data (research only)
+
+**Data.** Databento ohlcv-1m, 2020-01 to 2026-10-28, about $19.46 in total (an NVDA stream dropped once and was resumed):
+- NQ and CL front month (continuous by volume);
+- NVDA and GOOGL Nasdaq prints;
+- ES from the repo's own 1-minute files.
+
+Files are in `data/intraday/`, fetched with `backtest/fetch_1m.py` (one year per request, resumable).
+
+**Method.** Script: `python3 research/intraday_1m.py`.
+- Every intraday price is put on the daily total-return scale (price x that day's index close / the same contract's last print of the UTC day).
+- The 15:45 ET price is known on 96-99% of days. It differs from the 00:00 UTC close by a median 0.14-0.18% and a 95th percentile of 0.6-1.0%.
+- Same costs and the same 2-slot, one-per-market portfolio as before. **Live portfolio for reference: $+7,974 / $+3,088 / $+3,495.**
+
+### 1. Trend reclaim as the order agent would trade it (no buy-stop on Liquid)
+
+- Hourly checks 9:45-15:45 ET. At the first check above yesterday's 200-day SMA, buy at the price `delay` minutes later, the time you take to approve.
+- If no check sees a cross but the day closes above the SMA, buy at the close (the after-close wake). Exits unchanged.
+
+| TR entry | TR alone (4 markets) 2020-23 / 2024-25 / holdout | Portfolio 2020-23 / 2024-25 / holdout |
+|---|---|---|
+| Close (live) | $+3,301 / $+13 / $+2,482 | $+7,974 / $+3,088 / $+3,495 |
+| Buy-stop at the level (daily-bar test, not possible on Liquid) | $+3,425 / $+814 / $+3,020 | $+8,312 / $+3,874 / $+4,094 |
+| Hourly, approved at once | $+2,627 / $+349 / $+2,482 | **$+7,649** / $+3,567 / $+3,595 |
+| Hourly, 30-minute approval | $+2,894 / $-10 / $+2,589 | $+8,015 / $+3,398 / $+3,730 |
+| Hourly, 60-minute approval | $+2,948 / $+124 / $+2,690 | $+8,145 / $+3,412 / $+3,740 |
+
+- 125 of 136 entries came at an hourly check. The fill was a median 0.39-0.53% above the level (the price runs past it between checks).
+- 43 were false breakouts (closed back below the same day), costing about $3,000.
+- **Realistically the gain over the close entry is $-325 to $+146 in 2020-23 and $+100 to $+245 on the holdout.** That is a few dollars a trade, inside the noise.
+- On its own the hourly TR is worse than the close entry in 2020-23 at every delay.
+- The daily-bar buy-stop result overstated the gain by filling exactly at the level.
+- **Verdict: drop.** It isn't worth an order agent and an approval at every cross.
+
+### 2. Pre-close: decide and fill at 15:45 ET (all five markets)
+
+| | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| RSI(2) at 15:45, TR close | $+7,355 | $+4,257 | $+3,461 |
+| RSI(2) close, TR at 15:45 | **$+9,056** (DD -$832) | $+3,326 | $+3,544 |
+| Both at 15:45 | $+8,396 | $+4,462 | $+3,321 |
+
+**RSI(2) per market, 15:45 vs close:**
+- Better in 2020-23 on ES ($+730 vs $+343), NQ ($+386 vs $+17), NVDA ($+1,668 vs $+1,531) and GOOGL ($+1,456 vs $+1,303); worse on CL ($+1,278 vs $+2,421).
+- The four picked on 2020-23 sum to $-207 vs the close on the holdout, with GOOGL $-63 vs $+258. **Fails.**
+
+**TR at 15:45:**
+- Better in 2020-23 on NVDA ($+3,631 vs $+2,556), NQ and CL; worse on GOOGL ($-189 vs $+135).
+- In the portfolio: $+1,082 in 2020-23 (mostly NVDA), $+238 in 2024-25, and only **$+49 on the holdout**.
+- Passes the letter of the rule but not by a margin worth a workflow change: the check would have to run at 15:45 ET, and you'd have to approve before the US close every day.
+- **Verdict: watch, don't adopt.**
+
+### 3. RSI(2) exit by a resting reduce-only limit (daily data)
+
+From the day after entry, a limit sell rests at the mean of the last 4 closes (a close above it is a close above the 5-day SMA). Fills if the day's high reaches it.
+
+| | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| Close exit (live), RSI(2) alone | $+5,615 | $+4,640 | $+2,158 |
+| Resting exit, RSI(2) alone | $+5,065 | $+4,520 | **$+486** |
+| Portfolio with TR close | $+8,074 | $+3,139 | **$+2,038** (vs $+3,495) |
+
+- It cuts the worst trade (-$423 vs -$866) but sells winners too early: intraday pops that the close would have kept.
+- **Verdict: drop.**
+
+### Conclusion for the order agent
+
+Once fills are realistic, none of the intraday variants beats the close-based rules by more than noise:
+- hourly TR: $-325 to $+146 in 2020-23;
+- TR at 15:45 ET: $+49 on the holdout;
+- RSI(2) at 15:45 ET: fails;
+- resting limits: fail.
+
+**Recommendation: keep the close-based workflow and don't build the order agent.** `liquid/order_agent.md` stays as a design for later, e.g. if a future rule needs intraday orders.
+
+The earlier entry "Adopt in principle" for the TR buy-stop (section "intraday entries") is superseded by this test.

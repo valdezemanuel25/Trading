@@ -1,4 +1,8 @@
-# Order agent for the Liquid paper rules (PROPOSED, not set up)
+# Order agent for the Liquid paper rules (PROPOSED, not set up; NOT recommended for now)
+
+**2026-11-25, after the 1-minute test (`docs/backtest-log.md`, "realistic intraday tests"):**
+- No intraday variant beats the close-based rules by more than noise, so the agent isn't recommended.
+- This design is kept for a future rule that needs intraday orders.
 
 Status: design only, written 2026-11-25. Nothing here runs until the user approves it. It depends on Part A
 (`docs/backtest-log.md`, "intraday entries"): today only the trend-reclaim (TR) intraday entry passed, and only
