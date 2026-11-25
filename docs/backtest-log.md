@@ -509,10 +509,10 @@ At about 40-60 signals a year across the live rules, a first look needs 6-12 mon
 
 | Strategy | Verdict | Why |
 |---|---|---|
-| **Trend reclaim, exit below the 200-day or after 20 days, on CL, GOOGL, NQ, NVDA** | **Adopt (pending your approval)** | Positive in 2020-23 ($+3,301) and on the holdout ($+2,482, 12 trades); in the shared portfolio better in all three periods ($+9,362 / $+2,665 / $+3,495 vs $+5,082 / $+2,198 / $+1,766). Fires when RSI(2) is standing aside. |
+| **Trend reclaim, exit below the 200-day or after 20 days, on CL, GOOGL, NQ, NVDA** | **Adopted 2026-11-25** (with one position per market: portfolio $+7,974 / $+3,088 / $+3,495) | Positive in 2020-23 ($+3,301) and on the holdout ($+2,482, 12 trades); in the shared portfolio better in all three periods ($+9,362 / $+2,665 / $+3,495 vs $+5,082 / $+2,198 / $+1,766). Fires when RSI(2) is standing aside. |
 | RSI(2) < 10 below the 200-day (DIP) on ES, NQ, NVDA, GOOGL | **Watch** | Passes the rule ($+3,393 / holdout $+749) but adds only $+112 on the holdout in the portfolio and lowers it when combined with the trend reclaim. Never on CL. |
 | Trend reclaim with no time cap | Drop | Result rests on one or two multi-month holds; loses $2,942 in 2024-25 in the portfolio. |
 | Weekly momentum rotation (top 1 or 2) | Drop | Negative or flat on the 2026 holdout; blocks RSI(2) for weeks. |
 | Catastrophe stop 2x / 3x ATR | Drop | Costs $1,150-1,730 in 2020-23 to trim the worst trade by $0-200. |
 | Brent/WTI and GOOGL/Nasdaq spreads | Drop | Negative in 2020-23; each trade takes both slots and needs a short leg. |
-| Positioning log | Proposed | Data collection only; test as a filter after 6-12 months. |
+| Positioning log | **Adopted 2026-11-25** | Data collection only; test as a filter after 6-12 months. |
