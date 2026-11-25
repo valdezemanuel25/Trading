@@ -55,3 +55,15 @@ Two forward tests. Neither is proven for real size.
 ## Open questions for the next session
 - **Notion journal:** its 60 logged trades average +8 pts, but Jun-Oct shows 96% wins (losers probably not logged). The Oct 22 fully-logged day was breakeven. A complete log for 4-6 weeks decides whether the discretionary version has an edge.
 - **Code location:** everything (code, data, docs) is on branch `claude/real-cvd-plan-bgj7d7`. The ToS files were also copied to `claude/trading-chart-trigger-winners-8ne4fd`. `main` has only the raw data upload.
+
+## Automation: Zapier daily RSI(2) check (built by the user in Zapier; runs on Zapier, no Claude usage)
+1. **Trigger:** Schedule by Zapier, every weekday at 15:50 America/New_York.
+2. **Action:** Code by Zapier, Run Python. Paste `zapier/rsi2_check.py`, which reads the S&P 500 and Nasdaq 100 index closes from Yahoo Finance.
+   - The logic flags all 62 backtest entries.
+   - It also repeats LONG SETUP on days a trade is already open: ignore those.
+3. **Filter by Zapier:** only continue if `any_signal` is true.
+4. **Notion, Create Data Source Item, in RSI2 Signals:** Signal = `message`; Date = now; Alert text = `message`; Market and Action from `MES_action` / `MNQ_action`.
+5. **Notify:** Email by Zapier, or the Zapier app's push, with `message`.
+
+A 4-5 step Zap needs a paid Zapier plan; the free plan allows only 2-step Zaps.
+Placing the Liquid paper order stays a one-line request to Claude ("RSI2 long S&P"). Liquid has no Zapier app, and its "automated trading" tool only saves a spending limit.
