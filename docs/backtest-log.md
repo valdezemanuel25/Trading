@@ -214,3 +214,123 @@ Script: `python3 backtest/minimal_compare.py`. Each cell is trades, average gros
   - Failed breakouts need the 1h/4h SMAs, so the core sets drop them. "Long-only failed breakouts" is a lead to test out of sample, not a rule.
 
 **Conclusion:** keep the current indicator set. Removing indicators to declutter the chart is fine for **display** (the Lite study), but the logic should keep the HTF SMAs and previous day/week levels.
+
+## 2026-11-25: RSI(2) round 2: more markets, rule variants, the 200-day filter, live measurement
+
+Research only. The live rules, the scheduled check and Liquid orders are unchanged.
+
+Script: `python3 research/rsi2_variants.py`. It uses the same data and rules as `research/multi.py`: ES, NQ, RTY and YM futures, 00:00 UTC daily closes, roll-adjusted indicators, each trade priced in its entry contract. Long only: close above the 200-day SMA and RSI(2) below 10; sell on the first close above the 5-day SMA. Unless noted, $ is 1 micro each, net of costs, and the baseline reproduces the existing results exactly ($+5,460 / $+9,474 / $+12,021).
+
+**Acceptance rule:** a change must beat the baseline in 2020-23 **and** hold up on the 2026 holdout (2026-01 to 2026-10-28). 2024-25 is shown for context only.
+
+**Correction:** the "-$4,990 worst trade (MNQ)" in `docs/live-setup.md` comes from the RSI(2) < 30 run. Under the live rule (RSI(2) < 10) the worst trade is **-$3,988** (MNQ, 2025-02-21 to 03-14, held 15 days). It is the same Feb-Mar 2025 slide; ES lost $2,009 on the same dates.
+
+### 1. More markets with the same rules: waiting on a data source
+
+Liquid lists (`search_markets`, 2026-11-25):
+- **Single stocks:** `xyz:AAPL`, `xyz:NVDA`, `xyz:MSFT`, `xyz:TSLA`, `xyz:AMZN`, `xyz:GOOGL`, `xyz:META`, and others (NFLX, MU, IBM, ...).
+- **Commodities:** `xyz:GOLD`, `xyz:SILVER`, `xyz:CL` (WTI), `xyz:BRENTOIL`.
+- **Crypto:** `BTC`, `ETH`, `SOL`, `HYPE`.
+- **Other indices:** `xyz:JP225`, `xyz:KR200`, `xyz:NIFTY`.
+
+The repo has daily history only for ES, NQ, RTY and YM, and `show_chart` stops at 200 daily candles (`xyz:SP500` itself has about 250 days of history on Liquid). These markets need daily data from 2019 on. Nothing has been added yet. The options are in the recommendation below.
+
+### 2a. Entry threshold: RSI(2) < 10 vs < 30 (portfolio, 1 micro each)
+
+| Rule | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| **< 10 (live)** | 100 tr (31/yr), win 69%, **avg $+55**, net $+5,460, worst -$1,530, maxDD -$2,902 | 88 tr, 74%, avg $+108, net $+9,474, worst -$3,988, DD -$6,221 | 42 tr (51/yr), 83%, **avg $+286**, net **$+12,021**, worst -$752, DD -$789 |
+| < 30 | 224 tr (70/yr), 67%, **avg $+28**, net $+6,260, worst -$2,138, maxDD -$7,094 | 184 tr, 69%, avg $+43, net $+7,955, worst -$4,990, DD -$10,623 | 90 tr (110/yr), 76%, **avg $+111**, net **$+9,974**, worst -$2,158, DD -$2,158 |
+
+- RSI(2) < 30 gives 2.2x the trades, but the average trade falls by half (2020-23) to three fifths (holdout), and max drawdown is 2.4-2.7x larger.
+- Net is about the same in 2020-23 and lower on the holdout.
+- By market, < 30 loses money on RTY in 2020-23 (-$1,124) and on YM in 2024-25 (-$859).
+- **Verdict: drop.** More trades, not more profit, and fails on the holdout.
+
+### 2b. Time stop: also exit N trading days after entry (portfolio, 1 micro each)
+
+| Exit rule | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| **5-day SMA only (live)** | net **$+5,460**, worst -$1,530, DD -$2,902 | $+9,474, worst -$3,988, DD -$6,221 | **$+12,021**, worst -$752 |
+| + 5-day time stop | $+3,374, worst -$2,006, DD -$4,216 | $+13,482, worst -$1,577, DD -$2,347 | $+11,215, worst -$636 |
+| + 7-day time stop | $+4,379, worst -$2,196, DD -$4,245 | $+10,928, worst -$2,166, DD -$3,374 | $+11,927, worst -$846 |
+| + 10-day time stop | $+4,395, worst -$1,530, DD -$3,332 | $+11,140, worst -$2,908, DD -$4,426 | $+12,021 (unchanged) |
+
+- Only 38 of 238 trades last more than 5 days, 17 more than 7, and 8 more than 10.
+- A time stop cuts the Feb-Mar 2025 loser (worst trade -$3,988 becomes -$1,577 with a 5-day stop), which is why 2024-25 improves.
+- In 2020-23 it is worse at every N: slow trades there tended to recover, and the worst trade gets worse (-$2,006 / -$2,196).
+- On the holdout it is the same or lower.
+- **Verdict: drop.** It helps the one period that contains the big loser and fails both test periods.
+
+### 2c. Volatility sizing: flat $5,000 vs ATR-scaled notional (Liquid sizing, 0.10% round-trip cost assumed)
+
+ATR-sized notional = 57.4 / (ATR14 / close). This averages $5,000 in 2020-23; per-trade sizes ranged $2,186-$8,717 and never needed leverage above 2x.
+
+| Sizing | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| **Flat $5,000 (live)** | net **$+1,250**, worst -$342, maxDD -$773, net/DD 1.6, trade Sharpe 0.77 | $+1,142, worst -$465, DD -$865, net/DD 1.3, Sharpe 0.91 | **$+1,532**, worst -$160, DD -$204, net/DD 7.5, Sharpe 4.26 |
+| ATR-scaled | $+1,183, worst -$282, DD -$819, net/DD 1.4, Sharpe 0.81 | $+1,074, worst -$374, DD -$881, net/DD 1.2, Sharpe 0.91 | $+1,177, worst -$131, DD -$215, net/DD 5.5, Sharpe 3.91 |
+
+- ATR sizing trims the worst trade by about 20%.
+- Net, drawdown and net/maxDD are no better in 2020-23 and worse on the holdout. Calm, rising markets (where it sizes up) and stressed ones (where it sizes down) did not differ enough in edge.
+- **Verdict: drop.** Keep the flat $5,000.
+- For scale: $5,000 notional is about 1/7 of one MES and 1/10 of one MNQ, so the paper P&L is about a tenth of the micro numbers above.
+
+### 3. Signal accuracy: Liquid's sma200 vs a 200-trading-day SMA
+
+**What Liquid computes:**
+- `sma200` from `get_technical_indicators` is the mean of the last **200 calendar daily candles**: 7,563-7,565 from `show_chart` vs 7,564.3 reported (candles saved in `research/data/liquid_sp500_1d_200.json`).
+- Those 200 candles hold only **142-143 weekday closes**, so it is roughly a 143-trading-day average.
+- Dropping the weekend candles from the same window barely moves it (7,564.8, a 0.02% difference). Weekend perp prices sit close to Friday's close.
+
+**How often it changes the filter.** Simulated on the futures data since 2021, with weekend candles filled with Friday's close:
+
+| Market | Days where above/below the 200-day differs: Liquid-style vs 200 weekdays | Same, weekdays-in-window vs Liquid-style | RSI(2)<10 days with a different filter | Median gap between the two SMAs |
+|---|---|---|---|---|
+| ES | 5.8% | 0.20% | 15 of 157 | 1.5% |
+| NQ | 4.4% | 0.13% | 10 of 160 | 2.1% |
+| RTY | 10.2% | 0.53% | 23 of 185 | 1.6% |
+| YM | 5.7% | 0.07% | 20 of 181 | 1.1% |
+
+**Backtest with each filter (portfolio, 1 micro each):**
+
+| Filter | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| **200 weekdays (what the backtest assumes)** | 100 tr, $+5,460 | 88 tr, $+9,474 | **42 tr, $+12,021** |
+| Liquid sma200 (200 calendar candles) | 94 tr, $+8,753 | 81 tr, $+8,544 | 37 tr, $+9,764 |
+| Weekday closes inside the same window | 95 tr, $+9,037 | 81 tr, $+8,544 | 37 tr, $+9,764 |
+
+**Findings:**
+- **It matters.** The live filter disagrees with the tested one on about 1 day in 17 (ES and NQ). On the holdout it would have skipped 5 of 42 trades, all winners (-$2,257).
+- **Liquid's shorter window is not better:** it wins in 2020-23 but loses in 2024-25 and on the holdout, so it fails the acceptance rule. The 200-weekday SMA stays the reference.
+- **"Weekday-only closes" alone doesn't fix it.** The weekend candles are not the problem; the window length is. A true 200-weekday SMA needs about 280 calendar candles, more than `show_chart` returns.
+
+**Proposed fix (not applied to the live check):**
+- `liquid/rsi2_signal.py` now takes `--history FILE` (past Liquid daily candles) and reports `sma200_weekday` and `filter_agrees` once 200 weekday closes exist. `--use-weekday-sma` would make it the filter.
+- Without those flags the output is byte-for-byte the same as before.
+- To use it, the daily check would need to save each day's candles to a history file. Seeded with today's 200 candles (142 weekdays), it reaches 200 weekdays in about 12 weeks (mid-February 2027). Seeding from an outside daily source (see item 1) would make it available at once.
+- The dashboard's `signals` calc would change the same way: read the saved history instead of only the last 30 candles.
+- Today it makes no difference: both indices are 5-11% below either version of the average.
+
+### 4. Measurement: live vs backtest on the dashboard
+
+New section "Live vs backtest" on the RSI2 Forward Test dashboard (https://claude.ai/artifact/22FJo7qvavG7uHKQSckF7L). For each closed paper trade it shows:
+- the live return and P&L;
+- the backtest's average trade for that market at the same size: ES +0.589% gross / $+24.4 net at $5k, NQ +0.412% / $+15.6, over 2020-2026 (file `rsi2_bt_per_trade.json` on the dashboard);
+- the difference between the two.
+
+It also shows the **close-timing gap**: the live return (Liquid's 00:00 UTC closes) minus the futures return between the CME settlements on the same entry and exit dates. An editor enters the two settlement prices per trade in a small form on the page. They are stored with the dashboard (`data/settlements`), because no connected source has CME settlements.
+
+The section stays empty until a paper trade closes. Close timing is worth watching: ES alone made $+28,500 (16:00 ET closes, `rsi2.py`) vs $+18,075 (00:00 UTC closes, `multi.py`) in 2020-23 on the same 25 signals, and $+21,202 vs $+39,840 on the holdout.
+
+### Recommendation
+
+| Item | Verdict |
+|---|---|
+| RSI(2) < 30 entry | **Drop.** Half the profit per trade, 2.5x the drawdown, lower holdout net. |
+| Time stop (5/7/10 days) | **Drop.** Only helps 2024-25 (the Feb 2025 loser); worse in 2020-23 and not better on the holdout. |
+| ATR sizing | **Drop.** Smaller worst trade, but lower net and net/DD in both test periods. Keep $5,000 flat. |
+| 200-day filter: Liquid's 200-calendar-candle sma200 | **Fix (pending your approval).** It differs from the tested 200-weekday SMA on ~5% of days and would have skipped 5 holdout winners. Keep a Liquid daily-close history and use `sma200_weekday` once it has 200 weekdays; until then, show both on the dashboard. |
+| Live-vs-backtest section | **Adopted** (measurement only, no rule change). |
+| More markets | **Pending data.** Needs your OK on a data source. |
+| Docs | Correct the worst trade in `docs/live-setup.md` to -$3,988 (MNQ, RSI(2) < 10) once you approve live-doc edits. |
