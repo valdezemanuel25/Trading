@@ -384,3 +384,135 @@ The section stays empty until a paper trade closes. Close timing is worth watchi
 | Live-vs-backtest section | **Adopted** (measurement only, no rule change). |
 | More markets | **Adopt NVDA, GOOGL and CL (WTI)** on Liquid (`xyz:NVDA`, `xyz:GOOGL`, `xyz:CL`), $5,000 each, at most 2 open positions, first signal first. Watch BTC, BZ, ETH, AAPL, MSFT and META. Drop SI, GC, TSLA and AMZN. Caveat: the selection used all periods; picked on 2020-23 alone the new markets made about half of ES/NQ's per-trade edge on the holdout. |
 | Docs | Correct the worst trade in `docs/live-setup.md` to -$3,988 (MNQ, RSI(2) < 10) once you approve live-doc edits. |
+
+## 2026-11-25: new strategies beside the live RSI(2) rule (research only)
+
+**Question.** All five live markets are below their 200-day SMA, so RSI(2) rarely fires. Which daily or weekly strategies could share the two $5,000 slots?
+
+**Status.** Research only. No live rule, scheduled task or Liquid order changed.
+
+**Script and data.** `python3 research/strategies2.py`, on the Databento daily data already in `data/daily/` (no new data bought).
+- Every market is one daily series. Futures are chained front contracts into a total-return index, so rolls add no jump. Stocks are split-adjusted.
+- Decisions and fills at the 00:00 UTC daily close.
+- $5,000 per trade, 0.10% round-trip cost, no funding.
+- Portfolio: 2 slots shared with the live RSI(2) rule; RSI(2) wins same-day ties, otherwise first come first served.
+- This engine's RSI(2) baseline differs slightly from `rsi2_markets.py` (total-return index instead of entry-contract pricing): 2 slots, live five = 2020-23 $+5,082, 2024-25 $+2,198, 2026 holdout $+1,766.
+
+**Selection rule.** Markets and settings are picked on 2020-23 only, then checked on the 2026 holdout (to 2026-10-28). 2024-25 is context. A strategy is accepted only if it is positive in 2020-23 **and** holds on the holdout, both on its own and in the shared portfolio.
+
+### 1. Trend reclaim (long): first close back above the 200-day SMA
+
+Tested on the live five, the watch list, RTY and YM. Exit on a close back below the SMA, or after N days.
+
+| Exit | Picked on 2020-23 (Liquid markets, net > 0) | Own result 2020-23 / 2024-25 / holdout | Portfolio with RSI(2): 2020-23 / 2024-25 / holdout |
+|---|---|---|---|
+| Close below SMA only | AAPL BTC BZ CL ES ETH GOOGL MSFT NQ NVDA | $+81,594 / $+1,747 / $+15,181 (win 22%) | $+46,865 / **$-2,942** / $+10,725 |
+| or 10 days | AAPL BTC BZ NQ NVDA | $+5,652 / $-622 / $+1,895 | $+10,559 / $+1,593 / $+3,063 |
+| **or 20 days** | AAPL BTC BZ CL GOOGL NQ NVDA | $+7,213 / $-724 / $+3,351 | $+14,171 / $+2,885 / $+3,706 |
+| **or 20 days, live markets only (CL, GOOGL, NQ, NVDA)** | the four live ones from the 20-day list | **$+3,301 / $+13 / $+2,482** (37 / 41 / 12 trades, win 30% / 27% / 58%, worst -$377, max DD -$1,950) | **$+9,362 / $+2,665 / $+3,495** (RSI(2) alone $+5,082 / $+2,198 / $+1,766) |
+
+- **It's a trend-follower:** 20-30% winners, small losses, a few large wins.
+- **The "close below SMA" exit is dominated by a few huge holds:** NVDA 2023-25 is $+39,630 of the 2020-23 result, and one 2026 Brent trade is $+7,149. It holds slots for months, crowds out RSI(2) and loses $2,942 in 2024-25 in the portfolio. Too dependent on one or two trades.
+- **The 20-day cap keeps the trades short** (9 days on average) and is positive in the portfolio in all three periods.
+  - Choosing 20 days over "below SMA only" used 2024-25 (context), not the holdout.
+  - Choosing 20 days over 10 used 2020-23.
+- **It fires when RSI(2) can't:** 65 of 90 entries on the four live markets came on days RSI(2) held nothing. Those are exactly the days just after a market reclaims its 200-day.
+- **Holdout caveat:** only 12 trades.
+
+### 2. RSI(2) < 10 below the 200-day SMA (what variant B adds)
+
+Live five markets, entry only when the close is at or below the 200-day SMA, exit on the first close above the 5-day SMA.
+
+| Market | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| ES | 21 tr, 71% win, $+449, worst -$328 | 4 tr, $+74 | 3 tr, $+130 |
+| NQ | 20 tr, 70%, $+271, worst -$369 | 5 tr, $+206 | 3 tr, $+224 |
+| NVDA | 17 tr, 76%, $+2,407, worst -$434 | 5 tr, $+2,020 | 3 tr, $+528 |
+| GOOGL | 24 tr, 62%, $+266, worst -$488 | 9 tr, $+719 | 3 tr, $-132 |
+| CL | 27 tr, 48%, **$-3,397**, worst -$1,909 | 21 tr, $+793 | 1 tr, $+321 |
+| **Picked on 2020-23 (ES, NQ, NVDA, GOOGL)** | 82 tr (20/yr), 70%, $+3,393, DD -$1,520 | 23 tr, $+3,019 | 12 tr, 83%, $+749, worst -$493 |
+| Portfolio with RSI(2) | $+6,748 (vs $+5,082) | $+4,277 (vs $+2,198) | $+1,878 (vs $+1,766) |
+
+- **Buying deep dips below the 200-day pays on the indices and the two stocks. It doesn't pay on WTI:** -$3,397 in 2020-23, with a -$1,909 trade in the 2020 oil crash.
+- 83 of 117 entries came while RSI(2) held nothing.
+- On the holdout it adds only $+112 in the portfolio.
+- **Variant B as one rule** (no filter at all) on the live five is worse than the live rule in 2020-23 ($+2,182, DD -$5,014). The filter earns its keep on WTI.
+
+### 3. Weekly momentum rotation
+
+Universe: the live five plus BTC, BZ, ETH, AAPL, MSFT and META. At the last weekday close of each week, hold the top 1 or 2 by mean(63-day, 126-day return), only among markets above their 200-day SMA.
+
+| Top | Own result 2020-23 / 2024-25 / holdout | Portfolio with RSI(2) |
+|---|---|---|
+| 1 | $+15,990 / $+1,896 / **$-299** (14 tr) | $+19,468 / $+2,677 / **$+795** (vs $+1,766) |
+| 2 | $+23,397 / $+9,289 / $+200 (19 tr, 37% win) | $+23,604 / $+9,178 / **$-207** (vs $+1,766) |
+
+- Strong in 2020-25 (NVDA and BTC trends), but flat to negative on the 2026 holdout.
+- It holds both slots for weeks (average hold 22-31 trading days), so RSI(2) took only 3 trades on the holdout with top 2.
+- Fails the holdout.
+
+### 4. Catastrophe stop on the live RSI(2) rule
+
+Stop at k x ATR(14) below entry, checked on daily lows, filled at the stop or the open if lower.
+
+| Stop | Worst trade (live five) | Portfolio 2020-23 / 2024-25 / holdout |
+|---|---|---|
+| None (live) | -$866 (NVDA) | $+5,082 / $+2,198 / $+1,766 |
+| 2x ATR | -$666 | $+3,351 / $+2,129 / $+1,894 |
+| 3x ATR | -$820 | $+3,931 / $+2,302 / $+1,766 |
+
+- **A wide stop barely trims the worst trade, and costs $1,150-1,730 in 2020-23.** RSI(2) losers usually come back. After a stop the rule often re-enters and loses again (CL holdout: -$666 with the stop vs -$526 without).
+- At $5,000 a trade the worst loss without a stop is already only -$866.
+
+### 5. Spread mean reversion (optional)
+
+Long the cheap leg, short the rich leg, $5,000 each, so a trade uses both slots. Entry at a 20-day z-score of 2 or more; exit when z crosses 0 or after 20 days.
+
+| Pair | 2020-23 | 2024-25 | 2026 holdout |
+|---|---|---|---|
+| Brent vs WTI | 38 tr, $-263 | 16 tr, $-85 | 8 tr, $+322 |
+| GOOGL vs Nasdaq 100 | 42 tr, $-767 | 21 tr, $-575, worst -$1,243 | 8 tr, $-76 |
+
+Both negative in 2020-23. Drop.
+
+### Combining the two that pass
+
+| RSI(2) live plus | 2020-23 | 2024-25 | 2026 holdout | Max DD (worst period) |
+|---|---|---|---|---|
+| nothing (live) | $+5,082 | $+2,198 | $+1,766 | -$1,077 |
+| **trend reclaim, 20-day cap, CL/GOOGL/NQ/NVDA** | **$+9,362** | **$+2,665** | **$+3,495** | -$1,247 |
+| DIP on ES/NQ/NVDA/GOOGL | $+6,748 | $+4,277 | $+1,878 | -$1,486 |
+| both | $+9,970 | $+4,599 | $+2,639 | -$1,686 |
+
+Adding DIP on top of the trend reclaim lowers the holdout (it takes slots the reclaim trades would use).
+
+### Proposed (not switched on): log Liquid positioning daily
+
+Add one step to the daily check, after the signals:
+- For each live market, call `analyze_market` and save one document to the dashboard store: collection `data/rsi2/positioning`, doc id `<YYYY-MM-DD>_<KEY>`.
+- Fields:
+  - `date`, `symbol`, `markPx`;
+  - `funding_pct` (number from "0.0006%");
+  - `oi_usd`, `day_volume_usd`;
+  - `smart_long_pct` and `crowd_long_pct`, parsed from the smartMoney line ("smart money 35% long vs losing crowd 80% long");
+  - the per-size-bucket `bias` (10 numbers) and `createdAt`.
+- About 2 KB per market per day.
+- No order or rule depends on it.
+
+**Test after enough trades:**
+- whether entries with smart money below the crowd (a contrarian gap) do better than the rest;
+- whether high funding before an entry hurts.
+
+At about 40-60 signals a year across the live rules, a first look needs 6-12 months of logging. Nothing can be backtested earlier, because Liquid has no history of this data.
+
+### Adopt / drop / watch
+
+| Strategy | Verdict | Why |
+|---|---|---|
+| **Trend reclaim, exit below the 200-day or after 20 days, on CL, GOOGL, NQ, NVDA** | **Adopt (pending your approval)** | Positive in 2020-23 ($+3,301) and on the holdout ($+2,482, 12 trades); in the shared portfolio better in all three periods ($+9,362 / $+2,665 / $+3,495 vs $+5,082 / $+2,198 / $+1,766). Fires when RSI(2) is standing aside. |
+| RSI(2) < 10 below the 200-day (DIP) on ES, NQ, NVDA, GOOGL | **Watch** | Passes the rule ($+3,393 / holdout $+749) but adds only $+112 on the holdout in the portfolio and lowers it when combined with the trend reclaim. Never on CL. |
+| Trend reclaim with no time cap | Drop | Result rests on one or two multi-month holds; loses $2,942 in 2024-25 in the portfolio. |
+| Weekly momentum rotation (top 1 or 2) | Drop | Negative or flat on the 2026 holdout; blocks RSI(2) for weeks. |
+| Catastrophe stop 2x / 3x ATR | Drop | Costs $1,150-1,730 in 2020-23 to trim the worst trade by $0-200. |
+| Brent/WTI and GOOGL/Nasdaq spreads | Drop | Negative in 2020-23; each trade takes both slots and needs a short leg. |
+| Positioning log | Proposed | Data collection only; test as a filter after 6-12 months. |
