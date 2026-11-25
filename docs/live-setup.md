@@ -16,31 +16,38 @@ Two forward tests. Neither is proven for real size.
 | Log | Notion **E Signals** on the page "Forward Test: Journal Triggers E" (private). Every signal by hand, losers and skips included |
 | Backtest | Roughly breakeven to slightly positive after costs |
 
-### 2. RSI(2) pullback (daily, long only), paper traded on Liquid
+### 2. RSI(2) pullback (daily, long only): Liquid only
+Decision 2026-11-25: Liquid only for this strategy. **No ToS and no Zapier.**
+
 | Item | Setting |
 |---|---|
-| Rules | Close > 200-day SMA and RSI(2) < 10 -> buy at the close; sell at the close once close > 5-day SMA. No shorts, no stop |
-| Signal source | ToS `thinkorswim/RSI2PullbackAlert.ts` on **/MES** and **/MNQ daily** charts (`market` input set per chart, `rsiLongEntry = 10`). Check at about 15:50 ET / 14:50 CT |
-| Execution | **Liquid paper trading**: `xyz:SP500` (for /MES) and `xyz:XYZ100` (for /MNQ). Liquid has no Russell or Dow |
-| Size | $5,000 notional per market at 1x leverage; both can be open at once ($10k paper account) |
-| Order flow | The user says e.g. "RSI2 long S&P" or "RSI2 exit Nasdaq". Claude prepares the paper order, the user approves the exact order, then Claude executes it |
-| Log | Notion **RSI2 Signals** on the page "Forward Test: RSI(2) Pullback" (private). Claude adds a row per trade: entry, exit, points, days held |
-| Backtest (4 micros, 1 each, net) | 2020-23 +$5,460, 2024-25 +$9,474, 2026 holdout +$12,021. Worst single trade -$4,990 (MNQ) |
+| Rules | Long only. Close > 200-day SMA and RSI(2) < 10 -> buy. Sell on the first close back above the 5-day SMA. No shorts, no stop |
+| Markets | Liquid **paper**: `xyz:SP500` and `xyz:XYZ100` (no Russell or Dow on Liquid) |
+| Data | Liquid `show_chart` (1d, limit 30) for the candles and `get_technical_indicators` (1d, sma) for the SMA200. Compute with `liquid/rsi2_signal.py`: completed **weekday** candles only, 00:00 UTC closes |
+| Daily check | The user sends one message, e.g. **"RSI2 check"**, any time after the daily candle closes (00:00 UTC = 7 PM ET winter / 8 PM summer). Claude fetches both markets, computes the signal and reports LONG SETUP / EXIT / NONE |
+| Orders | On LONG SETUP, or EXIT while holding: Claude prepares the paper order ($5,000 notional, 1x), the user approves the exact order, Claude executes it. Liquid requires this approval for every order |
+| Log | Liquid's own history (`get_position_history`, `get_portfolio`) is the trade log. The Notion RSI2 Signals page is optional |
+| Backtest (00:00 UTC closes, 1 micro each, ES+NQ part of research/multi.py) | Positive in every period. Worst single trade -$4,990 (MNQ); no stop |
+
+**Why one manual message a day:**
+- Liquid has no alerts or scheduler. Its "automated trading" tool only saves a spending limit.
+- The user doesn't want scheduled tasks run from Claude sessions.
+- Every Liquid order needs the user's explicit approval anyway.
 
 **Liquid account state:**
 - Paper mode is ON in the user's mobile app **and** on Claude's Liquid connection (enabled 2026-11-25).
 - Paper account: $10,000, no positions.
-- Each platform keeps its own mode. Before any order, check `paper_trading_status`, and keep Liquid's own order-approval rules.
-- Liquid's indicator tool gives the SMA200 but not RSI(2) or the 5-day SMA: signals come from ToS.
+- Each platform keeps its own mode. Check `paper_trading_status` before any order.
 
-**Market state on 2026-11-25:**
-- Both indices are below their 200-day SMA (S&P500 7,181 vs 7,564; NASDAQ100 26,127 vs 29,292).
-- The strategy is standing aside; no trades until a close back above the 200-day.
+**Signal on 2026-11-24 (last completed candle):**
+- S&P500: close 7,184.9, RSI(2) 49.8, SMA200 7,564 -> NONE (below the 200-day).
+- NASDAQ100: close 26,143, RSI(2) 42.1, SMA200 29,292 -> NONE (below the 200-day).
+- No trades until a close back above the 200-day SMA.
 
 ## Not used (tested 2026-11)
 - **ToS study alerts can't be emailed.** `Alert()` in a chart study fired in the platform only; no email reached Gmail with "Alert is triggered -> Send e-mail" on. So the email -> Zapier -> Notion plan was dropped.
 - **Zapier's connection can't build Zaps.** It runs single actions only.
-- **Logging is by hand,** about 2-3 rows a week in total.
+- **Logging:** Journal Triggers E by hand in Notion; RSI(2) uses Liquid's own history.
 - **No scheduled tasks:** the user doesn't want them run from Claude sessions.
 
 ## Tested, no durable edge (don't revisit without new data)
@@ -55,15 +62,3 @@ Two forward tests. Neither is proven for real size.
 ## Open questions for the next session
 - **Notion journal:** its 60 logged trades average +8 pts, but Jun-Oct shows 96% wins (losers probably not logged). The Oct 22 fully-logged day was breakeven. A complete log for 4-6 weeks decides whether the discretionary version has an edge.
 - **Code location:** everything (code, data, docs) is on branch `claude/real-cvd-plan-bgj7d7`. The ToS files were also copied to `claude/trading-chart-trigger-winners-8ne4fd`. `main` has only the raw data upload.
-
-## Automation: Zapier daily RSI(2) check (built by the user in Zapier; runs on Zapier, no Claude usage)
-1. **Trigger:** Schedule by Zapier, every weekday at 15:50 America/New_York.
-2. **Action:** Code by Zapier, Run Python. Paste `zapier/rsi2_check.py`, which reads the S&P 500 and Nasdaq 100 index closes from Yahoo Finance.
-   - The logic flags all 62 backtest entries.
-   - It also repeats LONG SETUP on days a trade is already open, and flags EXIT about once a week (first close back above the 5-day SMA) whether or not you are long. Act on EXIT only when holding that market.
-3. **Filter by Zapier:** only continue if `any_signal` is true.
-4. **Notion, Create Data Source Item, in RSI2 Signals:** Signal = `message`; Date = now; Alert text = `message`; Market and Action from `MES_action` / `MNQ_action`.
-5. **Notify:** Email by Zapier, or the Zapier app's push, with `message`.
-
-A 4-5 step Zap needs a paid Zapier plan; the free plan allows only 2-step Zaps.
-Placing the Liquid paper order stays a one-line request to Claude ("RSI2 long S&P"). Liquid has no Zapier app, and its "automated trading" tool only saves a spending limit.
