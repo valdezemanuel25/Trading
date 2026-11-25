@@ -741,3 +741,78 @@ Order-book snapshot (one moment, US hours, for context only):
 - **Decision: keep 0.10% per round trip as the Liquid cost** (fees plus slippage, unmeasured). The spread alone is far below it,
   so 0.10% is probably conservative, unless Liquid's fees are higher than the usual ~0.045% per side taker rate on Hyperliquid
   (not verified). Re-measure from the first 10+ paper round trips.
+
+## 2026-11-25: intraday agent on Liquid, step 2: four hourly-wake rules (research only)
+
+Script: `python3 research/intraday_agent.py` (about 30 s). Data already in the repo, nothing bought: ES
+(`data/glbx-mdp3-*`), NQ and CL (`data/intraday/*_1m.csv.zst`), 2020-01-02 to 2026-10-28. That's 1,703 ES/NQ and
+1,683 CL session days after skipping roll days.
+
+**Method**
+- **What the agent sees.** It wakes at :45, 9:45-15:45 ET. It sees:
+  - price;
+  - clock-hour 1h candles over the 24-hour session (like Liquid's);
+  - session VWAP from 9:30;
+  - hourly Bollinger Bands (20, 2);
+  - the 9:30-10:30 opening range;
+  - yesterday's 00:00 UTC daily close vs its 200-day SMA (roll-adjusted daily series, `research/strategies2.py`).
+- **Fills.**
+  - A market order at a wake fills at the 1-minute close 5 minutes later (your approval).
+  - So do wake-checked exits.
+  - Resting stops and take-profits are Liquid position TP/SL, approved with the entry. They fill at the level, or at
+    the bar's open if a bar gaps through it. A bar touching both counts as the stop.
+  - Anything still open closes at the 15:45 wake (fill 15:50).
+- **Rules.** As specified. Rule 2 names no stop, so it gets a resting catastrophe stop at k x hourly ATR(14), which
+  also sets its size.
+- **Size and costs.**
+  - $50 risk to the stop level at entry (VWAP for rules 1 and 4, range middle for 3), notional capped at $20,000
+    (2x the $10,000 budget).
+  - Liquid cost: 0.10% of notional round trip, from step 1.
+  - Futures cost for comparison: ES 0.6 pt, NQ 0.75 pt, CL 0.025 per round trip.
+- **Daily limits** (ES, NQ and CL together): at most 2 trades, no new entry after -$100 realised, one trade per
+  market per day.
+- **Picking.** Settings picked on 2020-23, all markets pooled, Liquid cost. 14 settings in all.
+
+**Results, picked settings, all markets together.** Cells: trades, win %, average $ per trade (standard error), total $.
+
+| Rule (picked setting) | Cost | 2020-23 | 2024-25 | 2026 holdout | Pass |
+|---|---|---|---|---|---|
+| 1 VWAP trend hold (slope 60 min) | Liquid | 635, 49%, -1.4 (3.5), $-883 | 341, 48%, -10.2 (4.2), $-3,485 | 127, 40%, -18.2 (7.0), $-2,318 | no |
+| | futures | 635, 52%, +8.4 (3.5), $+5,334 | 341, 53%, +1.9 (4.2), $+659 | 127, 46%, -6.3 (7.0), $-804 | no |
+| 2 Bollinger snap-back (resting TP at mid, 3 ATR stop) | Liquid | 508, 46%, -7.0 (1.4), $-3,547 | 390, 49%, -6.6 (1.6), $-2,572 | 163, 42%, -6.2 (2.3), $-1,017 | no |
+| | futures | 508, 54%, -1.4 (1.4), $-714 | 390, 58%, +0.7 (1.6), $+260 | 163, 54%, -0.8 (2.2), $-137 | no |
+| 3 First-hour breakout (stop on hourly close past mid) | Liquid | 698, 50%, -4.4 (3.0), $-3,055 | 380, 46%, -13.6 (3.5), $-5,173 | 139, 40%, -15.4 (5.4), $-2,143 | no |
+| | futures | 698, 55%, +3.9 (3.0), $+2,743 | 380, 51%, -2.9 (3.5), $-1,090 | 139, 45%, -5.1 (5.4), $-709 | no |
+| 4 Band walk (slope 60, %B >= 0.9) | Liquid | 200, 55%, +9.8 (6.6), $+1,961 | 109, 52%, -3.5 (6.9), $-379 | 32, 44%, -4.4 (15.9), $-141 | no |
+| | futures | 200, 60%, +19.4 (6.6), $+3,885 | 109, 59%, +8.5 (7.0), $+926 | 32, 47%, +7.5 (15.9), $+241 | no |
+
+**Per market, Liquid cost, holdout.**
+
+| Rule | ES | NQ | CL |
+|---|---|---|---|
+| 1 | $-1,265 | $-643 | $-410 |
+| 2 | $-577 | $-465 | $+26 |
+| 3 | $-1,275 | $-197 | $-671 |
+| 4 | $-371 | $-150 | $+381 (10 trades) |
+
+Other settings, 2020-23, Liquid:
+- rule 1, slope 30: $-2,488;
+- rule 2, other three settings: $-3,859 to $-6,373;
+- rule 3, resting stop: $-4,545;
+- rule 4, other five settings: $+211 to $+1,858.
+
+**Findings**
+- **Nothing beats noise. No rule passes.** Only rule 4 is positive in 2020-23, at +1.5 standard errors and picked
+  as the best of six settings. It then loses in 2024-25 and on the holdout. Every other rule loses in 2020-23 at
+  Liquid's cost.
+- **Even at futures costs nothing passes.**
+  - Rule 1 makes $+5,334 in 2020-23, then fades to $+659 and loses on the holdout.
+  - Rule 4 is positive in all three periods at futures cost, but the holdout average (+$7.5) is far inside its
+    standard error ($15.9) on 32 trades.
+- **The moves are smaller than the target.** The median move per trade is 0.33-0.44%, not 0.5-1%. Liquid's 0.10% is
+  about 20-28% of the average gross move, which turns rules 1 and 3 from small winners at futures cost into losers.
+- **Caveats.**
+  - The Liquid cost is still an assumption (step 1).
+  - Only one trade per market per day.
+  - The opening range and VWAP use CME volume, not Liquid's.
+- **Verdict: no intraday agent.** Step 3 (agent design) isn't proposed. `liquid/order_agent.md` stays parked.
