@@ -902,7 +902,7 @@ So none of these is a real edge that Liquid's cost alone kills. They are noise a
 - **Concentration.** Even A's small 2020-23 profit drops to $+292 without NVDA. D's goes to about $0 without its
   best market (it has only CL).
 - **Running total across the whole intraday search** (this file and `docs/strategy-search.md`):
-  - about 15 rule families and well over 100 settings;
+  - about 20 rule families and well over 100 settings;
   - not one intraday rule has passed a clean out-of-sample test at Liquid's cost.
 - **Verdict: no edge. No intraday agent is proposed**, and nothing is set up. The after-close RSI(2) + trend-reclaim
   setup is unchanged.
