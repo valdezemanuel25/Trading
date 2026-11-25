@@ -301,7 +301,7 @@ ATR-sized notional = 57.4 / (ATR14 / close). This averages $5,000 in 2020-23; pe
 | Weekday closes inside the same window | 95 tr, $+9,037 | 81 tr, $+8,544 | 37 tr, $+9,764 |
 
 **Findings:**
-- **It matters.** The live filter disagrees with the tested one on about 1 day in 17 (ES and NQ). On the holdout it would have skipped 5 of 42 trades, all winners (-$2,257).
+- **It matters.** The live filter disagrees with the tested one on about 1 day in 17 (ES and NQ). On the holdout it would have skipped 5 of 42 trades (ES 02-05 and 03-03, RTY 03-06, YM 10-01, NQ 10-22): four winners and one -$36 loser, $2,257 in total.
 - **Liquid's shorter window is not better:** it wins in 2020-23 but loses in 2024-25 and on the holdout, so it fails the acceptance rule. The 200-weekday SMA stays the reference.
 - **"Weekday-only closes" alone doesn't fix it.** The weekend candles are not the problem; the window length is. A true 200-weekday SMA needs about 280 calendar candles, more than `show_chart` returns.
 
@@ -330,7 +330,7 @@ The section stays empty until a paper trade closes. Close timing is worth watchi
 | RSI(2) < 30 entry | **Drop.** Half the profit per trade, 2.5x the drawdown, lower holdout net. |
 | Time stop (5/7/10 days) | **Drop.** Only helps 2024-25 (the Feb 2025 loser); worse in 2020-23 and not better on the holdout. |
 | ATR sizing | **Drop.** Smaller worst trade, but lower net and net/DD in both test periods. Keep $5,000 flat. |
-| 200-day filter: Liquid's 200-calendar-candle sma200 | **Fix (pending your approval).** It differs from the tested 200-weekday SMA on ~5% of days and would have skipped 5 holdout winners. Keep a Liquid daily-close history and use `sma200_weekday` once it has 200 weekdays; until then, show both on the dashboard. |
+| 200-day filter: Liquid's 200-calendar-candle sma200 | **Fix (pending your approval).** It differs from the tested 200-weekday SMA on ~5% of days and would have skipped 5 holdout trades worth $2,257 net. Keep a Liquid daily-close history and use `sma200_weekday` once it has 200 weekdays; until then, show both on the dashboard. |
 | Live-vs-backtest section | **Adopted** (measurement only, no rule change). |
 | More markets | **Pending data.** Needs your OK on a data source. |
 | Docs | Correct the worst trade in `docs/live-setup.md` to -$3,988 (MNQ, RSI(2) < 10) once you approve live-doc edits. |
