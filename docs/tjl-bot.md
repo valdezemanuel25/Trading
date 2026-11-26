@@ -22,7 +22,7 @@ the entry), and a paper balance that can be set to **$25,000**, the doc's sizing
 | 15:45 | Overnight check (doc line 28 rule plus the limits below); otherwise close |
 | 15:50 | Everything not carried is closed (flat by 15:51) |
 | 16:12 | Report: P&L from the fills, both versions simulated on the day's 5m bars, rows for Notion, `report.md` |
-| 16:37 | **Claude's daily report** (scheduled task): writes the rows to Notion "TJL Trades", re-reads the catalysts, refreshes market caps and the earnings calendar, sends you a summary |
+| 16:37 | **Claude's daily report** (scheduled task): writes the rows to Notion "TJL Trades", runs the **Webull cross-check**, re-reads the catalysts, refreshes market caps and the earnings calendar, sends you a summary |
 
 Half days: no new trades (doc). Holidays: the job sees the closed market and stops.
 
@@ -61,6 +61,14 @@ compares volume up to 16 minutes ago against the same window on the prior 14 day
 3. **Universe:** the same 75 Liquid names (`tjl/config.py`), market caps from Webull (refreshed daily by the report task).
 4. **Prior-day high/low** from regular-hours 5m bars (the doc's levels are regular-hours levels).
 5. **Fees:** Alpaca paper charges none; costs show up only as fill slippage. Real money would add tiny SEC/FINRA fees.
+
+## Webull cross-check (daily, automatic)
+`python3 -m tjlbot crosscheck` (run by the 16:37 task) rebuilds each of the 75 names' 9:00 gap, premarket high and
+volume from Webull's own 5m bars and prior close, then lists (1) numbers where Webull and the bot's feed disagree
+(gap by more than 0.5 point or on different sides of 3%, premarket high by more than 0.5%, volume by more than 30%,
+prior close by more than 0.2%) and (2) any name Webull shows gapping 3%+ above its prior-day high that the bot didn't
+flag, with the rule that excluded it. Output: `runs/tjl-bot/<date>/crosscheck.md` on `tjl-state`, plus a line in the
+daily summary. It only checks; it never changes what the bot does.
 
 ## Output and state
 Branch `tjl-state` (public, like the repo): `runs/tjl-bot/<date>/` holds `morning.json` (the plan, same format as the
