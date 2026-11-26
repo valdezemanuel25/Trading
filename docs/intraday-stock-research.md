@@ -14,13 +14,14 @@ Read this first in a new session that continues this work.
 - **No backtesting on stocks** (decided 2026-11-26). The strategy is validated by **forward paper trading on Liquid** instead. Don't spend a new session on historical stock backtests.
 - **Run both Trend Join versions on paper** (video 4 and video 6 rules), each trade tagged with its version. Document everything; more documentation is better.
 - **Long only for now.** Shorts come later.
-- **Sizing:** base 1% of the account at risk per trade; **A+ setups risk 2%**. Sized from the stop distance.
+- **Sizing:** see "Risk per trade" below ($250 normal / $500 A+ on a $25k sizing base).
 - **A+ checklist:** drafted from videos 3, 4, 6 and 7 (see "Watchlist rules and A+ checklist"). Videos 7-8 give no grading system of their own.
 - **Paper test length: at least 2 months** before judging.
 - **After-market analysis definition: left to Claude** (draft defaults below, under "After-market analysis: draft defaults").
-- **Paper capital (decided 2026-11-26):** keep the shared $10k paper account (no reset). Trend Join trades use **2-5x leverage**, and the **10% cap applies to margin**: at most $1,000 of margin per position (10% of equity). Size from risk: notional = risk $ / stop %, leverage = the lowest of 2-5x that keeps margin <= the cap. Max notional per position is therefore 5 x $1,000 = $5,000; if the risk-based size is bigger (tight stop or A+), size down to $5,000 and log the lower risk.
-  - Examples: 1% risk ($100), 3% stop -> $3,333 notional at 4x ($833 margin). A+ 2% risk ($200), 3% stop -> $6,667 wanted, capped at $5,000 at 5x (risk $150). A+ with a 4% stop -> $5,000 at 5x ($200 risk).
-  - Margin check: 2 Trend Join positions use at most $2,000 of margin. The RSI(2) test uses $5,000 notional per signal at 1x ($5,000 margin each, up to two markets), which could fill the account. **Open:** run RSI(2) at 2x (same $5k notional, $2.5k margin) so both tests always fit; not changed yet (needs the user's OK, it is the RSI(2) test's setting).
+- **Risk per trade (decided 2026-11-26, replaces the 1%/2% of $10k plan): sized for a $25k account. A+ risks $500 (2%), normal trades $250 (1%).** The stop is placed per the rules, and the position is sized so that hitting it loses that amount: notional = risk $ / stop %. Never more than $500 per trade.
+  - Liquid's paper reset only restores the default $10,000 (it cannot be set to $25k), so the paper account stays at $10k and **$25k is a sizing base, tracked in the trade log** (results in $ and R). No reset was done.
+  - Margin cap: 10% of $25k = **$2,500 of margin per position**; leverage 2-10x (lowest that fits; most stock perps allow 10x, MU's max is 10x). Example: $500 risk, 3% stop -> $16,667 notional at 7x ($2,381 margin). $250 risk, 3% stop -> $8,333 at 4x ($2,083 margin). Stops under ~2% would need more than 10x: size down and log the lower risk.
+  - Margin check on the real $10k paper balance: 2 Trend Join positions use up to $5,000 of margin; the RSI(2) test at 1x uses $5,000 per signal. **Open:** run RSI(2) at 2x (same $5k notional, $2.5k margin) so everything fits; not changed yet.
 - **Keep all filters, in tiers** so there is activity most days on paper: the core Trend Join filters are the daily screen (setups on about 65-70% of days); the focus filters (ADR >= 4-6%, $100B+ cap, high liquidity, hot sector, near highs, not extended) grade a setup A+ and size it up. Paper results by grade will show whether the focus filters matter.
 
 ## Sources reviewed (all Humbled Trader, YouTube)
