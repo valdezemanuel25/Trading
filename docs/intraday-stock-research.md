@@ -210,7 +210,7 @@ Run once a day after the close, in the same message as the RSI(2) check (one "da
 
 Draft default: TradingView alerts for the trigger (real data, phone push), Liquid for paper orders, Webull (after sign-in) to cross-check real premarket gappers and volume.
 
-**Free start (chosen 2026-11-26):** plain **price alerts** in a free app the user already has (Webull app, or TradingView's free plan, which allows only a few active alerts; check the current limit). No Pine script or webhook needed.
+**Free start (chosen 2026-11-26): Webull price alerts** (decided by the user), in the Webull app (real exchange data incl. premarket). No Pine script or webhook needed. To check after the Webull connector is signed in again: whether its tools can create the price alerts and a "Trend Join" watchlist directly, and give real premarket gappers/volume for the morning update.
 1. The morning update gives each of the 1-2 names one **trigger price** = max(premarket high, high of day so far), plus the stop and 1R.
 2. The user sets one "price crosses above" alert per name (2 alerts max).
 3. When it fires after 10:00, the user messages Claude ("TJ trigger NVDA"). Claude checks the 5m chart on Liquid (optional video 5 rule: a 5m close above VWAP + 8 EMA) and prepares the Liquid paper order with the stop; the user approves.
