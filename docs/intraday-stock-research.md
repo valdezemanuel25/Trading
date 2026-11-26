@@ -10,6 +10,7 @@ Read this first in a new session that continues this work.
 - **Venue: Liquid first** (stock perpetuals, paper mode). Add other data sources only if Liquid falls short.
 - **Overnight holds allowed** (for A+ trades; see the open question below).
 - **Grade and size:** A+ = every filter passes plus a real catalyst, sized 2-3x; average setups normal or smaller.
+- **Trade frequency: at most 2 trades a day**, and only when the stock and the after-market analysis line up. Zero-trade days are fine (no forcing trades).
 
 ## Sources reviewed (all Humbled Trader, YouTube)
 Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high demand") on every model for hours on 2026-11-26, even for plain text calls, so the summaries came from Claude Code on the user's PC (local engine: captions + frames). Timestamps refer to the videos.
@@ -216,7 +217,7 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - Trade log and audit format (video 3's dashboard), to measure whether filters and grades help.
 
 ## Next steps (suggested order)
-1. Estimate trade frequency from Liquid daily candles (quick, no new data).
+1. Estimate trade frequency from Liquid daily candles (quick, no new data). Cap is 2 trades/day (decided); the open question is how many days have any qualifying setup.
 2. Read the presenter's blog rules (linked from video 4) and reconcile with video 6's `rules.json`; then lock the rule decisions above.
 3. Check Liquid's costs and order features (stop/TP at entry, partials, trailing stops).
 4. Choose a historical stock-data source for a real backtest.
