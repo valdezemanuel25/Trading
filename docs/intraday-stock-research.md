@@ -337,7 +337,7 @@ Routines: `docs/tjl-routines.md` (after-close check, morning check, TJ trigger).
 
 **Added later on 2026-11-26:** "TJ check <ticker>" (`tjl/manage.py`: hold / breakeven / swing-low trail / 21-EMA exit / 15:51 close, proposed as Liquid previews for approval; replayed on the TSLA test: hold at 14:30, close at 15:47) and "TJ audit" (`tjl/audit.py`: go/no-go verdict and splits from the Notion log; today: TOO EARLY, 0 trades). 18 tests pass.
 
-**Still open (user decisions):** shorts. (Overnight and the 9:00 morning check decided 2026-11-26.) **To verify on the first live days:** Webull snapshot fields in premarket, Liquid size decimals and real fees from the first fill.
+**Shorts: on hold** (user, 2026-11-26: "not yet"). The paper test stays long only; the three candidate short setups (breakdown fade, parabolic-open short, first-red-day short) stay undefined until the user reopens it. Suggested later: add one as version C (parabolic-open short has the clearest rules). Overnight and the 9:00 morning check decided 2026-11-26. **To verify on the first live days:** Webull snapshot fields in premarket, Liquid size decimals and real fees from the first fill.
 
 ## Intraday trigger: connection options (2026-11-26)
 | Option | What it gives | Status |
@@ -464,4 +464,4 @@ Done 2026-11-26 (see "Liquid checks for the paper test"). Remaining: confirm the
 2. Run the quick Liquid checks in section 3 (fees, order features, paper capital).
 3. Define the after-market analysis in section 2 and the session operations in section 4.
 4. Set the paper-test success criteria (section 5).
-5. ~~Then build: after-close report, morning gap update, intraday alerts, trade log.~~ Done 2026-11-26 (see "Build"). Next: run the paper test from Mon 2026-11-30; still open: shorts.
+5. ~~Then build: after-close report, morning gap update, intraday alerts, trade log.~~ Done 2026-11-26 (see "Build"). Next: run the paper test from Mon 2026-11-30 (long only; shorts on hold).
