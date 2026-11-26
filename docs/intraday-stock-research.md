@@ -32,6 +32,7 @@ Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high dem
 | 5 | "Live Trading on the 5-Minute Time Frame (how I keep it simple)" (25:57; presumably `gn02_Ic9i5U`) | **5m entry trigger (close above VWAP + 8 EMA)**, 8 EMA trail, first-red-day short |
 | 6 | "Claude + IBKR API: Complete AI Trading Bot Guide" (`UgWQtQ3MEVE`, 23:27) | Automated Trend Join Long (second rule version); **bot is slightly negative on paper** |
 | 7 | `VDN4jp4Uf1k` (how the presenter builds the watchlist) | **Pending**: source for the A+ checklist; run `/watch` on the PC and paste the summary |
+| 8 | `1kFtbpWq7a4` | **Pending**: second watchlist/A+ video; run together with video 7 on the PC |
 
 ### 1. VWAP crash course
 - Chart setup: session VWAP (bands off) + volume only; 2m and 5m intraday, daily alongside.
