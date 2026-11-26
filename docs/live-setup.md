@@ -32,13 +32,13 @@ Updated again 2026-11-25 (approved after "new strategies beside the live RSI(2) 
 |---|---|
 | Rule 1: RSI(2) | All five markets. Long only. Close > 200-day SMA and RSI(2) < 10 -> buy. Sell on the first close back above the 5-day SMA. No shorts, no stop, no time stop |
 | Rule 2: trend reclaim (TR) | `xyz:CL`, `xyz:GOOGL`, `xyz:XYZ100`, `xyz:NVDA` (not S&P 500: negative in 2020-23). Buy the first close back above the 200-day SMA (yesterday's close at or below yesterday's SMA, today's above today's). Sell on a close back below the 200-day SMA, or at the close of the 20th trading day after entry, whichever comes first |
-| Markets | Liquid **paper**: `xyz:SP500`, `xyz:XYZ100`, `xyz:NVDA`, `xyz:GOOGL`, `xyz:CL` (WTI). Watch list, not traded: BTC, Brent, ETH, AAPL, MSFT, META |
+| Markets | Liquid **paper**: `xyz:SP500`, `xyz:XYZ100`, `xyz:NVDA`, `xyz:GOOGL`, `xyz:CL` (WTI). Also followed, not traded: BTC, Brent, ETH, AAPL, MSFT, META |
 | Size | $5,000 notional per trade, 1x. **At most 2 positions open and one per market** ($10,000 paper account). With more setups than free slots: RSI(2) first (CL, SP500, GOOGL, NQ100, NVDA), then TR (CL, GOOGL, NQ100, NVDA); skip the rest |
 | Open-position records | Each open position records which rule opened it, because the exits differ: dashboard store `data/rsi2/open/<KEY>` (`{market, symbol, strategy: "RSI2"|"TR", entry_date, entry_px, notional}`), mirrored in `liquid/open/<KEY>.json`. Claude writes it after an approved order fills and deletes it after the close fills. The check warns if Liquid and the records disagree |
 | 200-day filter | Mean of the last **200 weekday closes**, from saved Liquid daily candles. Until a market has 200 saved weekday closes, the filter uses Liquid's own `sma200`, which is the mean of the last 200 *calendar* candles (~143 trading days). Seeded 2026-11-25 with 142 weekday closes per market, so the switch comes about mid-February 2027 |
 | Saved closes | Dashboard store `data/rsi2/history/<KEY>` (`{market, symbol, candles: [{t, c}], liquid_sma200: [{t, v}]}`), copied to `liquid/history/<KEY>.json` on this branch. The daily check adds each day's completed candles and Liquid's reported sma200 (TR needs yesterday's SMA too) |
 | Signal code | `liquid/rsi2_daily.py` (both rules, all markets, history merge, slots, open-position records). Completed **weekday** candles only, 00:00 UTC closes |
-| Positioning log | Data only, no rule uses it. Each check saves Liquid `analyze_market` per market (`liquid/positioning.py`): funding, open interest, volume, smart money vs losing crowd long %, bias by position size. Store `data/rsi2/positioning/<DATE>_<KEY>` (full log) and `data/rsi2/positioning_latest/<KEY>` (dashboard). Test as a filter after 6-12 months |
+| Positioning log | Data only, no rule uses it. Each check saves Liquid `analyze_market` per market (`liquid/positioning.py`): funding, open interest, volume, smart money vs losing crowd long %, bias by position size. Store `data/rsi2/positioning/<DATE>_<KEY>` (full log) and `data/rsi2/positioning_latest/<KEY>` (dashboard). First analysis at 60 logged trading days (see Watch list, point 4) |
 | Daily check | Scheduled task **"RSI2 daily check"**, cron `20 0 * * 2-6` UTC = 00:20 UTC Tue-Sat (7:20 PM ET winter / 8:20 PM summer), 20 min after each weekday candle closes. It fires into the Claude session that holds the Liquid connection (a fresh session would have no Liquid tools). It saves the closes and positioning, runs the check and reports RSI(2) and TR entries and exits per market. It places orders only after the user approves them (see Orders). The user can also send **"RSI2 check"** by hand |
 | Orders | **One approval per day** (since 2026-11-25). The check prepares every order first: sells as a `close_positions_batch` preview with an explicit list of the symbols to close (or `close_position` for one); buys as a `suggest_trades_batch` preview (or `suggest_trade` for one), each $5,000 notional, 1x, market, long. It shows one numbered list and asks once: "Reply approve to place all N orders, or name any to skip." On approve it executes exactly the previewed orders, sells first, then buys (one idempotency key per batch). A skip, a preview older than 15 minutes, or a changed portfolio means a fresh preview and a new approval. It reports each outcome (filled, rejected or pending) and updates `data/rsi2/open/<KEY>` and `liquid/open/<KEY>.json`. No order is placed without that approval |
 | Log | Liquid's own history (`get_position_history`, `get_portfolio`). The dashboard (https://claude.ai/artifact/22FJo7qvavG7uHKQSckF7L) shows signals for all five markets, the account, the trades, and live vs backtest per trade. Reference closes (CME settlement or Nasdaq close) are entered on the page for the close-timing gap |
@@ -65,6 +65,37 @@ Updated again 2026-11-25 (approved after "new strategies beside the live RSI(2) 
 | NVDA | 152.71 | 209.62 | +37% |
 | GOOGL | 279.36 | 344.41 | +23% |
 | WTI | 81.65 | 87.57 | +7.3% |
+
+### Watch list (info only, approved 2026-11-26)
+Plan fixed on 2026-11-26 after "patterns suggested by the first live check" in `docs/backtest-log.md`.
+
+1. **Two setups, shadow trades only.** They never place an order and never take a slot. Code: `liquid/watch.py`. It
+   uses the same saved closes, 200-day SMA and RSI(2) as the live check, from the 2026-11-26 candle on.
+
+   | Setup | Markets | Entry (at the close) | Exit |
+   |---|---|---|---|
+   | DEEP | NVDA, GOOGL | RSI(2) < 10 and close at least 10% below the 200-day SMA | First close above the 5-day SMA |
+   | DOWN4-B200 | SP500, NQ100, NVDA, GOOGL | 4 lower closes in a row, close below the 200-day SMA | First close above the 5-day SMA |
+
+   - One shadow position per setup and market. Shadow P&L = $5,000 x return - 0.10% ($5 per round trip).
+   - The daily report shows one "WATCH" line per entry or exit, the open shadow trades, and running totals.
+   - Shadow trades are logged to `liquid/watch/<candle date>.json` (that day's events, open shadow trades, all closed
+     ones) and committed with the daily run.
+   - Wired into the "RSI2 daily check" prompt only once the user approves the exact prompt diff.
+2. **Adoption rule (fixed now).** At the review, a setup is proposed for live only if all three hold:
+   - at least 8 closed shadow trades;
+   - net > 0 after costs;
+   - the backtest's portfolio change (`research/state_patterns.py`) stays positive when re-run with data to the
+     review date.
+
+   Otherwise it is dropped. No changes to either setup's settings before the review.
+3. **Review date: 2027-05-31**, or earlier once either setup has 8 closed shadow trades (the report then says
+   "REVIEW DUE"). Until then:
+   - no new strategy research rounds;
+   - no new watch setups (the cap is two).
+4. **Positioning: logging only.** First analysis once the log has 60 trading days: about mid-February 2027 (60
+   weekdays from 2026-11-24), later if days are missed. Question: does the crowd-vs-smart-money gap at entry change
+   RSI(2) and TR outcomes? It is tested as a filter on the existing rules only, not as a new setup.
 
 ## Not used (tested 2026-11)
 - **ToS study alerts can't be emailed.** `Alert()` in a chart study fired in the platform only; no email reached Gmail with "Alert is triggered -> Send e-mail" on. So the email -> Zapier -> Notion plan was dropped.
