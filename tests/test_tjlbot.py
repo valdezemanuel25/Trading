@@ -225,7 +225,7 @@ def _daily(days, start, step, rng=0.05, vol=5e6):
     return out
 
 
-def test_premarket_flags_the_gapper(tmp_path):
+def _premarket_bot(tmp_path):
     day = DAY
     prior = sessions.prev_trading_day(day)
     days = _weekdays_back(prior, 260)
@@ -246,7 +246,11 @@ def test_premarket_flags_the_gapper(tmp_path):
                                       news=[{"headline": "Micron raises guidance", "symbols": ["MU"]}]), daily, pre_today)
     bot = Bot(api, mk, str(tmp_path), clock=lambda: clk["t"], sleep=lambda s: None, log=lambda m: None)
     bot.load_calendar()
-    final = bot.premarket()
+    return bot, bot.premarket()
+
+
+def test_premarket_flags_the_gapper(tmp_path):
+    bot, final = _premarket_bot(tmp_path)
     assert final == ["MU"]
     assert bot.daily["catalyst"]["MU"]["type"] == "Earnings/guidance"
     ms = json.load(open(os.path.join(bot.dd, "morning.json")))
@@ -274,3 +278,35 @@ def test_full_day_two_jobs(tmp_path):
     assert t["status"] == "closed" and t["exit_reason"] == "Time 3:51" and not api.pos
     assert bot2.daily["eod_done"] and os.path.exists(os.path.join(bot2.dd, "report.md"))
     assert clk["t"].time() < dt.time(16, 16)
+
+
+def _webull_files(tmp_path, gaps, prior=None):
+    """Webull-format saved results: a snapshot (pre_close) and today's 5m PRE bars, newest first."""
+    snap, bars = [], []
+    for t, last in gaps.items():
+        snap.append({"symbol": t, "pre_close": str((prior or {}).get(t, 100.0)), "close": "101"})
+        rows = []
+        for i in range(60):   # 04:00-08:55 ET = 09:00-13:55 UTC in December
+            utc = dt.datetime(2026, 12, 1, 9, 0, tzinfo=dt.timezone.utc) + dt.timedelta(minutes=5 * i)
+            rows.append({"time": utc.strftime("%Y-%m-%dT%H:%M:%S.000+0000"), "open": str(last), "high": str(last + 0.1),
+                         "low": str(last - 0.1), "close": str(last), "volume": "400", "trading_session": "PRE"})
+        bars.append({"symbol": t, "result": rows[::-1]})
+    sp, bp = os.path.join(tmp_path, "snap.json"), os.path.join(tmp_path, "pre.json")
+    json.dump(snap, open(sp, "w"))
+    json.dump({"result": bars}, open(bp, "w"))
+    return sp, bp
+
+
+def test_crosscheck_agrees_and_finds_misses(tmp_path):
+    from tjlbot.__main__ import main
+    bot, final = _premarket_bot(tmp_path)
+    # Webull agrees on MU; shows NVDA gapping 4% (the bot's feed saw it flat); AMD's prior close differs
+    sp, bp = _webull_files(tmp_path, {"MU": 104.5, "NVDA": 104.0, "AMD": 100.2, "AVGO": 100.2, "MRVL": 100.2},
+                           prior={"AMD": 101.0})
+    main(["crosscheck", "--state", str(tmp_path), "--date", DAY.isoformat(), "--snapshot", sp, "--pre", bp])
+    st = json.load(open(os.path.join(bot.dd, "crosscheck.json")))
+    assert st["flagged_both"] == ["MU"] and not st["flagged_bot_only"]
+    assert [m["ticker"] for m in st["missed"]] == ["NVDA"] and "gap" in st["missed"][0]["why"]
+    issues = {d["ticker"]: " ".join(d["issues"]) for d in st["data_issues"]}
+    assert "gap" in issues["NVDA"] and "prior close" in issues["AMD"] and "MU" not in issues
+    assert os.path.exists(os.path.join(bot.dd, "crosscheck.md"))
