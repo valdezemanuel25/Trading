@@ -12,6 +12,12 @@ Read this first in a new session that continues this work.
 - **Grade and size:** A+ = every filter passes plus a real catalyst, sized 2-3x; average setups normal or smaller.
 - **Trade frequency: at most 2 trades a day**, and only when the stock and the after-market analysis line up. Zero-trade days are fine (no forcing trades).
 - **No backtesting on stocks** (decided 2026-11-26). The strategy is validated by **forward paper trading on Liquid** instead. Don't spend a new session on historical stock backtests.
+- **Run both Trend Join versions on paper** (video 4 and video 6 rules), each trade tagged with its version. Document everything; more documentation is better.
+- **Long only for now.** Shorts come later.
+- **Sizing:** base 1% of the account at risk per trade; **A+ setups risk 2%**. Sized from the stop distance.
+- **A+ checklist: pending** another video from the user on how the presenter picks stocks.
+- **Paper test length: at least 2 months** before judging.
+- **After-market analysis definition: left to Claude** (draft defaults below, under "After-market analysis: draft defaults").
 - **Keep all filters, in tiers** so there is activity most days on paper: the core Trend Join filters are the daily screen (setups on about 65-70% of days); the focus filters (ADR >= 4-6%, $100B+ cap, high liquidity, hot sector, near highs, not extended) grade a setup A+ and size it up. Paper results by grade will show whether the focus filters matter.
 
 ## Sources reviewed (all Humbled Trader, YouTube)
@@ -183,6 +189,26 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - **Working route:** run `/watch` in Claude Code on the user's Windows PC (local engine works: Python, ffmpeg, yt-dlp installed) and paste the summary. Remote Control (`claude remote-control` in `C:\Users\valde\trading-research`) starts sessions on the PC but does not attach the PC to an existing cloud session.
 - Prompt used for each video:
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
+
+## After-market analysis: draft defaults (chosen by Claude, 2026-11-26; change freely)
+Run once a day after the close, in the same message as the RSI(2) check (one "daily check" message from the user; no scheduled tasks).
+1. **Regime (SPY = `xyz:SP500`, weekday daily closes):** *trend* if the close is at least 1% from its 20-day SMA and the 20-day SMA's 5-day slope has the same sign; otherwise *sideways* -> no new Trend Join trades tomorrow (video 3: sideways days lost $77k). Also report the 200-day state; longs only below it with an A+ grade.
+2. **Sector heat:** rank groups by 5-day and 20-day return (average rank): semis/AI (SMH; NVDA, AMD, AVGO, MU, MRVL, SNDK, WDC, LRCX, AMAT, ARM, TSM), software (IGV; MSFT, ORCL, NOW, CRWD, PANW, NET, PLTR), internet (GOOGL, META, AMZN, NFLX), crypto-linked (COIN, MSTR, HOOD, IREN, CIFR), energy (XLE, CVX, VST, GEV), health (XBI, LLY, MRNA, HIMS). Top 2 groups = hot.
+3. **Watchlist screen** (Liquid's US-listed stocks, weekday daily candles): prior close > $3 and above its own 200-day SMA (computed from weekday candles); ADR20; distance from the 20-day SMA; position in the available high/low range. Rank: hot sector first, then ADR20, then nearness to highs; mark anything > 10% above its 20-day SMA as extended.
+4. **Catalysts:** `upcoming_earnings` (week) and `get_news` headlines for the names on the list.
+5. **Output:** top 5 names (trade at most 2), each with prior-day high/low, the 200d/20d levels, ADR, sector, catalyst, planned grade (A+ or normal) and risk (2% or 1%).
+6. **Morning update (about 9:00-9:30 ET):** which watchlist names gap >= 3% vs the 4:00 PM close (Liquid price), their premarket high, Liquid volume vs normal; confirm or drop.
+
+## Intraday trigger: connection options (2026-11-26)
+| Option | What it gives | Status |
+|---|---|---|
+| **TradingView alerts** | Price alerts or a Pine script alert on the 5m chart (break above PMH and HOD, optional 5m close above VWAP + 8 EMA), pushed to the phone app, email or a webhook (paid plan). Uses real exchange data, so premarket high, VWAP and volume are the real ones. | No connector found in Claude's directory. Works without one: the alert reaches the user's phone, the user messages Claude, Claude prepares the Liquid order. The repo already has Pine code (`pine/`). |
+| **Webull connector** | Real stock quotes, watchlists, analyst data and more (70+ tools); may cover premarket movers / screening. | Connected at the org level but **needs the user to sign in again** in claude.ai connector settings. Check its tools after sign-in. |
+| **Finviz** | Gap/volume screener (premarket gappers); Elite has alerts. | No connector. The public screener page could be read with Firecrawl (check finviz's terms). |
+| **Liquid** | `edit_watchlist` (named watchlists in the Liquid app); prices and 5m candles on request. | No alerts or scheduler. |
+| **Script on the user's PC** | A loop like video 6's bot (scan every 5-30 min, alert by Telegram/email). | Most work; only if the simpler options fall short. |
+
+Draft default: TradingView alerts for the trigger (real data, phone push), Liquid for paper orders, Webull (after sign-in) to cross-check real premarket gappers and volume.
 
 ## Trade-frequency estimate (2026-11-26)
 Liquid can't answer this historically (200 candles per call; daily candles run 00:00-24:00 UTC, so no 9:30 open or gap). Used Databento **EQUS.SUMMARY ohlcv-1d** (consolidated US daily bars, available from 2024-07-01, cost $0.07) for the 74 US-listed single stocks on Liquid (ETFs left out). Window with a valid 200d SMA: 2025-04-17 to 2026-11-25, 405 trading days. The ad-hoc script and data stayed in the session scratchpad (not in the repo).
