@@ -27,7 +27,10 @@ def _confirmed_swing_lows(bars):
     return out
 
 
-def run(trade, bars5, now, position_qty, current_stop, liquid_price, fill_price=None, sz_decimals=2, today=None):
+def run(trade, bars5, now, position_qty, current_stop, liquid_price, fill_price=None, sz_decimals=2, today=None,
+        partials_filled=None, price_round=None):
+    """partials_filled: number of partial targets already filled, when the broker reports it. Without it the count
+    is inferred from the position size, which misreads a partial entry fill (audit I2): pass --fill-qty then."""
     v = trade["real"]
     leg = trade["legs"][v]
     entry_day = dt.date.fromisoformat(trade["date"])
@@ -45,12 +48,16 @@ def run(trade, bars5, now, position_qty, current_stop, liquid_price, fill_price=
     entry_w, stop_w = trade["chart"]["last"], leg["webull_stop"]
     one_r_w = entry_w - stop_w
     liq_entry = fill_price or leg["liquid_entry_ref"]
-    to_liq = lambda px: hl_price(liq_entry * px / entry_w, sz_decimals)   # noqa: E731
+    rnd = price_round or (lambda p: hl_price(p, sz_decimals))
+    to_liq = lambda px: rnd(liq_entry * px / entry_w)   # noqa: E731
     last_w = done[-1]["close"] if done else entry_w
     hi_w = max((b["high"] for b in after), default=entry_w)
     r_now = (liquid_price - liq_entry) / (liq_entry - leg["liquid_stop"])
     qty0 = leg["quantity"]
-    thirds_left = round(position_qty / (qty0 / 3)) if qty0 else 0
+    if partials_filled is not None:
+        thirds_left = 3 - int(partials_filled)
+    else:
+        thirds_left = round(position_qty / (qty0 / 3)) if qty0 else 0
 
     actions, notes = [], []
     above21 = bool(e21 and e21[-1] and done and done[-1]["close"] >= e21[-1])
@@ -58,7 +65,7 @@ def run(trade, bars5, now, position_qty, current_stop, liquid_price, fill_price=
         actions.append({"do": "nothing open", "why": "position is flat (stop or targets filled); run the close-out"})
     elif now_min >= C.CARRY_CHECK:
         if r_now > 0 and above21:
-            be = hl_price(liq_entry, sz_decimals)
+            be = rnd(liq_entry)
             if current_stop < be:
                 actions.append({"do": "move stop", "to": be, "why": "carry overnight (in profit, above the 21 EMA): stop to breakeven"})
             notes.append(f"Overnight: CARRY ({r_now:+.2f}R, 5m close {done[-1]['close']:.2f} >= 21 EMA {e21[-1]:.2f}). "
@@ -79,7 +86,7 @@ def run(trade, bars5, now, position_qty, current_stop, liquid_price, fill_price=
         new_stop = current_stop
         why = None
         if reached_1r and current_stop < liq_entry:
-            new_stop, why = hl_price(liq_entry, sz_decimals), "+1R reached: stop to breakeven"
+            new_stop, why = rnd(liq_entry), "+1R reached: stop to breakeven"
         if reached_1r:
             lows = [after[j]["low"] for j in _confirmed_swing_lows(after)]
             if lows:

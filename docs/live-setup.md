@@ -1,6 +1,7 @@
 # Live setup and handoff (as of 2026-11-25)
 
 ## New session: start here (updated 2026-11-26)
+- **Trend Join now runs as an unattended bot on Alpaca paper** (`docs/tjl-bot.md`, code `tjlbot/`, workflow `.github/workflows/tjl-bot.yml`, state on branch `tjl-state`). Claude's daily report task (16:37 ET) writes its rows to Notion. The manual Liquid routines below remain for reference. Audit: `docs/audit-2026-11-26.md`.
 - Work lives on branch **`claude/loving-davinci-phos45`** (not merged into main). Check it out first.
 - Trend Join Long paper test: rules and decisions in `docs/intraday-stock-research.md`, daily steps in `docs/tjl-routines.md`, code `tjl/` (`python3 -m pytest tests/test_tjl.py -q`), daily outputs `runs/tjl/<date>/`.
 - Messages the user sends: "after-close check" (also runs the RSI(2) check below), "morning check" (9:00 ET), "TJ trigger <ticker>", "TJ check <ticker>" (the 3:45 check decides overnight holds), "TJ audit".

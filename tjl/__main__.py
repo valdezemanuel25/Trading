@@ -30,6 +30,18 @@ def _save(day, name, state, md, out_dir=None):
     return d
 
 
+def _now_et():
+    import datetime as _dt
+    from .webull import ET
+    return _dt.datetime.now(ET).strftime("%H:%M")
+
+
+def _today_et():
+    import datetime as _dt
+    from .webull import ET
+    return _dt.datetime.now(ET).date().isoformat()
+
+
 def _earnings(s):
     out = {}
     for part in filter(None, (s or "").split(",")):
@@ -54,7 +66,8 @@ def main(argv=None):
     m.add_argument("--state", required=True, help="after_close.json of the prior session")
     m.add_argument("--snapshot", nargs="+", required=True, help="get_stock_snapshot with extend_hour_required")
     m.add_argument("--pre", nargs="*", default=[], help="get_stock_bars M5 PRE (15 days) for the gappers")
-    m.add_argument("--date", help="session date (default: next session in the state)")
+    m.add_argument("--date", help="session date (default: today, ET)")
+    m.add_argument("--allow-snapshot", action="store_true", help="use the Webull snapshot for names with no PRE bars")
     m.add_argument("--now", help="ET clock time HH:MM for the RVOL window (default: last premarket bar)")
     m.add_argument("--out")
 
@@ -64,7 +77,7 @@ def main(argv=None):
     t.add_argument("--bars5", nargs="+", required=True, help="get_stock_bars M5 PRE,RTH for today")
     t.add_argument("--hist5", nargs="*", default=[], help="get_stock_bars M5 RTH, 15 sessions (RVOL for B)")
     t.add_argument("--liquid-price", type=float, required=True, help="Liquid mark price now")
-    t.add_argument("--now", help="ET clock time HH:MM (default: time of the last bar)")
+    t.add_argument("--now", help="ET clock time HH:MM (default: the clock now)")
     t.add_argument("--day-pnl", type=float, default=0.0, help="today's Trend Join P&L so far (realized + open)")
     t.add_argument("--trades-today", type=int, default=0)
     t.add_argument("--prev-version", choices=["A", "B"], help="version of the last real trade (for alternation)")
@@ -89,6 +102,7 @@ def main(argv=None):
     c.add_argument("--stop", type=float, required=True, help="current stop on Liquid")
     c.add_argument("--liquid-price", type=float, required=True)
     c.add_argument("--fill", type=float, help="actual entry fill on Liquid")
+    c.add_argument("--partials-filled", type=int, help="partial targets already filled (from open orders)")
     c.add_argument("--sz-decimals", type=int, default=2)
     c.add_argument("--date", help="today, if the position was carried from an earlier day")
     c.add_argument("--out")
@@ -125,13 +139,13 @@ def main(argv=None):
     elif args.cmd == "morning":
         prev = json.load(open(args.state))
         st = morning.run(prev, load_snapshot(args.snapshot), load_bars(args.pre) if args.pre else {},
-                         args.date, args.now)
+                         args.date or _today_et(), args.now, allow_snapshot=args.allow_snapshot)
         md = morning.report(st)
         d = _save(st["date"], "morning", st, md, args.out)
     elif args.cmd == "trigger":
         ms = json.load(open(args.state))
         st = trigger.run(args.ticker.upper(), ms, load_bars(args.bars5), load_bars(args.hist5) if args.hist5 else {},
-                         args.liquid_price, now=args.now, day_pnl=args.day_pnl, trades_today=args.trades_today,
+                         args.liquid_price, now=args.now or _now_et(), day_pnl=args.day_pnl, trades_today=args.trades_today,
                          prev_version=args.prev_version, catalyst=args.catalyst == "yes",
                          catalyst_text=args.catalyst_text, catalyst_type=args.catalyst_type,
                          sz_decimals=args.sz_decimals, max_lev=args.max_lev)
@@ -140,7 +154,7 @@ def main(argv=None):
     elif args.cmd == "check":
         tr = json.load(open(args.trade))
         st = manage.run(tr, load_bars(args.bars5), args.now, args.qty, args.stop, args.liquid_price,
-                        args.fill, args.sz_decimals, args.date)
+                        args.fill, args.sz_decimals, args.date, partials_filled=args.partials_filled)
         md = manage.report(st)
         d = _save(st["date"], f"check-{st['ticker']}-{args.now.replace(':', '')}", st, md, args.out)
     elif args.cmd == "audit":

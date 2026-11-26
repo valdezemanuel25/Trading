@@ -22,7 +22,7 @@ def _pre_stats(bars, day, now_min):
     for d in prior_days:
         vols.append(sum(b["volume"] for b in bars if b["date"] == d and b["session"] == "PRE"
                         and minutes_et(b["t"]) < now_min))
-    avg = sum(vols) / len(vols) if vols else 0
+    avg = sum(vols) / len(vols) if len(vols) >= C.MIN_RVOL_DAYS else 0   # too little history -> RVOL unknown
     vol = sum(b["volume"] for b in today)
     return {"pmh": max(b["high"] for b in today), "pml": min(b["low"] for b in today),
             "pm_last": today[-1]["close"], "pm_vol": vol, "pm_rvol": vol / avg if avg else None,
@@ -84,8 +84,18 @@ def plan(r):
     return out
 
 
-def run(prev, snapshot, pre_bars, date=None, now=None):
-    day = dt.date.fromisoformat(date) if date else dt.date.fromisoformat(prev["next_session"])
+def run(prev, snapshot, pre_bars, date, now=None, allow_snapshot=False):
+    """`date` is required: defaulting to the state's next session silently used the wrong day after a skipped
+    after-close (audit C2). The state must be from the trading day before `date`.
+    The Webull snapshot's extend_hour_* fields can still hold last night's after-hours (audit I8), so names
+    without 5m PRE bars are skipped unless allow_snapshot=True."""
+    if not date:
+        raise ValueError("pass the session date (--date YYYY-MM-DD)")
+    day = dt.date.fromisoformat(date) if isinstance(date, str) else date
+    expected = sessions.prev_trading_day(day)
+    if prev["session"] != expected.isoformat():
+        raise ValueError(f"after-close state is for {prev['session']}, but {day} needs the one for {expected}: "
+                         "run the after-close check for that session first")
     if now:
         hh, mm = map(int, now.split(":"))
         now_min = hh * 60 + mm
@@ -97,7 +107,7 @@ def run(prev, snapshot, pre_bars, date=None, now=None):
     for t in prev["step1_pass"]:
         m = prev["all"][t]
         pm = _pre_stats(pre_bars[t], day, now_min) if t in pre_bars else None
-        if pm is None and t in snapshot:
+        if pm is None and allow_snapshot and t in snapshot:
             pm = _snap_stats(snapshot[t])
         if pm is None or not pm["pm_last"]:
             continue

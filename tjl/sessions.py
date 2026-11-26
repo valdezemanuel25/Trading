@@ -11,10 +11,14 @@ HOLIDAYS = {
     "2027-09-06", "2027-11-25", "2027-12-24",
 }
 HALF_DAYS = {"2026-11-27", "2026-12-24", "2027-11-26"}
+YEARS = {2026, 2027}   # years the two tables cover; anything else raises instead of guessing
 
 
 def _d(x):
-    return x if isinstance(x, dt.date) else dt.date.fromisoformat(x)
+    d = x if isinstance(x, dt.date) else dt.date.fromisoformat(x)
+    if d.year not in YEARS:
+        raise ValueError(f"tjl/sessions.py has no NYSE holidays for {d.year}: add them (NYSE's holiday page)")
+    return d
 
 
 def is_trading_day(day):
@@ -30,6 +34,13 @@ def next_trading_day(day):
     day = _d(day) + dt.timedelta(days=1)
     while not is_trading_day(day):
         day += dt.timedelta(days=1)
+    return day
+
+
+def prev_trading_day(day):
+    day = _d(day) - dt.timedelta(days=1)
+    while not is_trading_day(day):
+        day -= dt.timedelta(days=1)
     return day
 
 

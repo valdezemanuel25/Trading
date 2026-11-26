@@ -90,14 +90,23 @@ def run(trade, bars5, version=None):
            "stop": stop, "risk": risk, **sim, "fee_r": fee_r, "r_net": sim["r_gross"] - fee_r}
     out["pnl"] = round(out["r_net"] * risk, 2)
     reason = sim["final_reason"]
+    out["sim_r"] = round(out["r_net"], 3)
+    if v != trade.get("shadow"):
+        # The real trade: only the measured excursions. Its P&L, fees and exit come from the broker; the simulated
+        # numbers would overwrite them (audit I7). sim_r goes in Notes for sim-vs-sim A/B pairs (audit I4).
+        out["notion_update"] = {"MFE R": round(sim["mfe_r"], 2), "MAE R": round(sim["mae_r"], 2)}
+        return out
     out["notion_update"] = {
-        "Status": "Shadow" if v == trade.get("shadow") else "Closed",
+        "Status": "Shadow",
         "Final exit price": round(sim["final_price"], 4),
         "date:Exit time:start": sim["final_time"].isoformat(), "date:Exit time:is_datetime": 1,
+        # a carry is a mark at the 15:50 open, not an exit (audit minor): logged as the time exit, noted in Notes
         "Exit reason": reason if reason in ("Stop", "Breakeven", "Trail", "Time 3:51") else
-            ("Overnight exit" if reason.startswith("Carry") else "Manual"),
+            ("Time 3:51" if reason.startswith("Carry") else "Manual"),
         "MFE R": round(sim["mfe_r"], 2), "MAE R": round(sim["mae_r"], 2),
         "Fees $": round(fee_r * risk, 2), "P&L $": out["pnl"],
+        "Notes": f"shadow simulated from 5m bars; sim_r={out['sim_r']:+.3f}"
+                 + ("; rest carried in the rule, marked at the 15:50 open" if reason.startswith("Carry") else ""),
     }
     return out
 

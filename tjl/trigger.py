@@ -23,6 +23,10 @@ def window_label(mins):
     return "14:00-15:30"
 
 
+def _done(b, cutoff_min):
+    return minutes_et(b["t"]) + 5 <= cutoff_min
+
+
 def chart(bars, day, now_min):
     """Today's 5m state up to now. The last bar may be in progress."""
     today = [b for b in bars if b["date"] == day and minutes_et(b["t"]) < now_min]
@@ -45,11 +49,14 @@ def chart(bars, day, now_min):
             "rth_vol": sum(b["volume"] for b in rth)}
 
 
-def intraday_rvol(hist, day, now_min, today_vol):
+def intraday_rvol(hist, day, cutoff_min, today_bars):
+    """RTH volume of today's completed 5m bars up to cutoff vs the same window on the prior 14 sessions.
+    Only complete bars on both sides (audit minor); fewer than MIN_RVOL_DAYS sessions -> None (audit I9)."""
     days = sorted({b["date"] for b in hist if b["date"] < day and b["session"] == "RTH"})[-C.RVOL_LOOKBACK:]
-    if not days:
-        return None, 0
-    vols = [sum(b["volume"] for b in hist if b["date"] == d and b["session"] == "RTH" and minutes_et(b["t"]) < now_min)
+    if len(days) < C.MIN_RVOL_DAYS:
+        return None, len(days)
+    today_vol = sum(b["volume"] for b in today_bars if b["date"] == day and b["session"] == "RTH" and _done(b, cutoff_min))
+    vols = [sum(b["volume"] for b in hist if b["date"] == d and b["session"] == "RTH" and _done(b, cutoff_min))
             for d in days]
     avg = sum(vols) / len(vols)
     return (today_vol / avg if avg else None), len(days)
@@ -65,36 +72,49 @@ def choose(eligible, prev_version):
     return real, ("A" if real == "B" else "B")
 
 
-def leg_plan(v, entry_ref, stop_ref, lp, risk, sz_dec, max_lev):
+def leg_plan(v, entry_ref, stop_ref, lp, risk, sz_dec, max_lev, price_round=None):
+    rnd = price_round or (lambda p: hl_price(p, sz_dec))
     stop_pct = (entry_ref - stop_ref) / entry_ref
-    liq_stop = hl_price(lp * (1 - stop_pct), sz_dec)
+    liq_stop = rnd(lp * (1 - stop_pct))
+    if liq_stop >= lp:
+        raise ValueError("stop rounds to the entry price")
     sz = size(lp, liq_stop, risk, max_lev)
     qty = floor_qty(sz["notional"] / lp, sz_dec)
     parts = []
     for r_mult, frac in PARTIALS[v]:
-        parts.append({"r": r_mult, "price": hl_price(lp * (1 + r_mult * stop_pct), sz_dec),
+        parts.append({"r": r_mult, "price": rnd(lp * (1 + r_mult * stop_pct)),
                       "quantity": floor_qty(qty * frac, sz_dec)})
     return {**sz, "version": v, "webull_stop": round(stop_ref, 4), "stop_pct": round(stop_pct * 100, 2),
             "liquid_entry_ref": lp, "liquid_stop": liq_stop, "one_r_liquid": round(lp - liq_stop, 4),
-            "quantity": qty, "partials": parts, "breakeven_at": hl_price(lp * (1 + stop_pct), sz_dec)}
+            "quantity": qty, "partials": parts, "breakeven_at": rnd(lp * (1 + stop_pct))}
 
 
-def run(ticker, ms, bars5, hist5, liquid_price, now=None, day_pnl=0.0, trades_today=0, prev_version=None,
-        catalyst=False, catalyst_text="", catalyst_type="None", sz_decimals=2, max_lev=10):
+def run(ticker, ms, bars5, hist5, liquid_price, now, day_pnl=0.0, trades_today=0, prev_version=None,
+        catalyst=False, catalyst_text="", catalyst_type="None", sz_decimals=2, max_lev=10,
+        vol_cutoff=None, price_round=None, risk_cap=None):
+    """`now` (ET clock HH:MM) is required: defaulting to the end of the last bar treated an in-progress bar as
+    complete and could open B's 10:05 window at 10:02 (audit C1).
+    vol_cutoff: ET HH:MM up to which volume is real (a delayed consolidated feed); default = now.
+    price_round: broker price rounding (default Hyperliquid 5 significant figures). risk_cap: lower the $ risk
+    (daily-loss budget)."""
     r = ms["all_rows"].get(ticker)
     if r is None:
         raise SystemExit(f"{ticker} is not in the morning list ({', '.join(ms['all_rows'])})")
+    if not now:
+        raise ValueError("pass the ET clock time now (--now HH:MM)")
     bars = bars5[ticker]
     day = dt.date.fromisoformat(ms["date"])
-    if now:
-        hh, mm = map(int, now.split(":"))
-        now_min = hh * 60 + mm
+    hh, mm = map(int, now.split(":"))
+    now_min = hh * 60 + mm
+    if vol_cutoff:
+        ch_, cm_ = map(int, vol_cutoff.split(":"))
+        cutoff = min(now_min, ch_ * 60 + cm_)
     else:
-        now_min = minutes_et([b for b in bars if b["date"] == day][-1]["t"]) + 5
+        cutoff = now_min
     ch = chart(bars, day, now_min)
     pmh = ch["pmh"] or r["pmh"]
     level = max(pmh, ch["hod_before"] or 0)
-    rvol_b, rvol_days = intraday_rvol(hist5.get(ticker, []), day, now_min, ch["rth_vol"]) if hist5 else (None, 0)
+    rvol_b, rvol_days = intraday_rvol(hist5.get(ticker, []), day, cutoff, bars) if hist5 else (None, 0)
 
     blocks = []
     if not sessions.is_trading_day(day) or sessions.is_half_day(day):
@@ -128,13 +148,20 @@ def run(ticker, ms, bars5, hist5, liquid_price, now=None, day_pnl=0.0, trades_to
         blocks.append("SPY below 200d and the grade isn't A+")
         eligible = []
     risk = C.RISK_APLUS if grade == "A+" else C.RISK_NORMAL
-    real, shadow_v = choose(eligible, prev_version)
+    risk_target = risk
+    if risk_cap is not None and risk_cap < risk:
+        risk = max(0.0, float(risk_cap))
 
     stops = {"A": min(pmh * 0.99, ch["lod"]), "B": ch["lod"] * 0.99}
     legs = {}
     for v in ("A", "B"):   # both computed, so either version can be simulated later
-        if stops[v] < ch["last"]:
-            legs[v] = leg_plan(v, ch["last"], stops[v], liquid_price, risk, sz_decimals, max_lev)
+        if stops[v] < ch["last"] and risk > 0:
+            try:
+                legs[v] = leg_plan(v, ch["last"], stops[v], liquid_price, risk, sz_decimals, max_lev, price_round)
+            except ValueError:
+                pass
+    eligible = [v for v in eligible if v in legs and legs[v]["quantity"] > 0]
+    real, shadow_v = choose(eligible, prev_version)
 
     st = {"kind": "trigger", "date": ms["date"], "time_et": f"{now_min // 60:02d}:{now_min % 60:02d}",
           "ticker": ticker, "liquid": r["liquid"], "group": r["group"], "chart": ch, "pmh": pmh,
@@ -143,7 +170,7 @@ def run(ticker, ms, bars5, hist5, liquid_price, now=None, day_pnl=0.0, trades_to
                              and ch["last_done_close"] > ch["ema8"]),
           "rvol_b": rvol_b, "rvol_days": rvol_days, "pm_rvol": r["pm_rvol"], "conditions": conds,
           "blocks": blocks, "eligible": eligible, "real": real, "shadow": shadow_v, "grade": grade,
-          "boxes": boxes, "risk": risk, "legs": legs, "spy_state": ms["spy"]["state"],
+          "boxes": boxes, "risk": risk, "risk_target": risk_target, "legs": legs, "spy_state": ms["spy"]["state"],
           "catalyst": catalyst_text, "catalyst_type": catalyst_type, "gap": r["gap"],
           "row": {k: r.get(k) for k in ("adr20", "ext20", "pos52", "prior_close", "pdh", "pm_vol")}}
     st["orders"] = orders(st) if real else []

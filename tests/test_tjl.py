@@ -282,3 +282,66 @@ def test_check_overnight_carry_or_close():
     day2 = {"MU": up["MU"] + series(nxt, "09:30", [106] * 30 + [(100, 101, 100.5)])}
     st = manage.run(tr, day2, "12:10", 3.0, entry, 101.0, today=nxt)
     assert st["carried"] and st["actions"][0]["do"] == "close"                          # close below 21 EMA next day
+
+
+# ---------- audit fixes (2026-11-26) ----------
+def test_c1_trigger_needs_now_and_respects_b_window():
+    t = {"MU": _today()["MU"][:12] + [m5(DAY, "10:00", 103.4, 105.0, 103.4, 104.8)]}
+    with pytest.raises(ValueError):
+        trigger.run("MU", _ms(), t, _hist(), 105.0, now=None)
+    st = trigger.run("MU", _ms(), t, _hist(), 105.0, now="10:02")
+    assert st["eligible"] == ["A"]                       # B's window opens at 10:05, not at the bar's end
+
+
+def test_c2_morning_needs_the_right_state():
+    prev = {"session": "2026-11-25", "spy": {}, "step1_pass": [], "all": {}, "top": [], "hot_groups": []}
+    with pytest.raises(ValueError):
+        morning.run(prev, {}, {}, None)
+    with pytest.raises(ValueError):
+        morning.run(prev, {}, {}, "2026-11-30")         # 11/27 after-close is missing
+    assert morning.run(dict(prev, session="2026-11-27"), {}, {}, "2026-11-30")["date"] == "2026-11-30"
+
+
+def test_i15_sessions_refuse_unknown_years():
+    with pytest.raises(ValueError):
+        sessions.is_trading_day("2028-01-17")
+    assert sessions.prev_trading_day("2026-11-30").isoformat() == "2026-11-27"
+
+
+def test_i9_rvol_needs_history():
+    bars = series(dt.date(2026, 11, 30), "08:00", [10] * 6, "PRE", v=100) + series(DAY, "08:00", [10, 11, 12], "PRE", v=400)
+    assert morning._pre_stats(bars, DAY, 9 * 60)["pm_rvol"] is None
+    few = {"MU": _hist()["MU"][-78 * 5:]}               # 5 sessions only
+    st = trigger.run("MU", _ms(), _today(), few, 105.0, now="10:33")
+    assert st["rvol_b"] is None and "B" not in st["eligible"]
+
+
+def test_i2_partials_counted_from_broker():
+    tr = trigger.run("MU", _ms(), _today(), _hist(), 105.0, now="10:33", prev_version="B")
+    up = {"MU": _today()["MU"] + series(DAY, "10:35", [(104.8, 106, 105.5)] * 10 + [(103, 104, 103)] * 3)}
+    q = round(tr["legs"]["A"]["quantity"] * 0.4, 2)
+    st = manage.run(tr, up, "11:40", q, tr["legs"]["A"]["liquid_stop"], 104.0, partials_filled=0)
+    assert not st["actions"]                             # no premature 21-EMA exit on a partly filled entry
+
+
+def test_i5_profit_factor_in_r():
+    rows = [_row(i, 500, risk=500) for i in range(2)] + [_row(i + 2, -250) for i in range(3)]
+    s = audit.stats(rows)
+    assert s["pf"] == pytest.approx(2 / 3) and s["pf_usd"] == pytest.approx(1000 / 750)
+
+
+def test_i7_shadow_real_version_only_excursions():
+    tr = trigger.run("MU", _ms(), _today(), _hist(), 105.0, now="10:33", prev_version="B")
+    bars = {"MU": _today()["MU"] + series(DAY, "10:35", [104.8] * 70)}
+    real = shadow.run(tr, bars, "A")
+    assert set(real["notion_update"]) == {"MFE R", "MAE R"}
+    sh = shadow.run(tr, bars, "B")
+    assert sh["notion_update"]["Status"] == "Shadow" and "sim_r=" in sh["notion_update"]["Notes"]
+
+
+def test_risk_cap_and_cent_rounding():
+    st = trigger.run("MU", _ms(), _today(), _hist(), 105.0, now="10:33", catalyst=True, risk_cap=120,
+                     price_round=lambda p: round(p, 2), sz_decimals=0)
+    leg = st["legs"][st["real"]]
+    assert st["risk"] == 120 and st["risk_target"] == 500 and leg["risk"] <= 120 and leg["quantity"] == int(leg["quantity"])
+    assert leg["liquid_stop"] == round(leg["liquid_stop"], 2)

@@ -24,6 +24,7 @@ PM_VOL_MIN = 20_000              # premarket shares
 RVOL_A = 1.5                     # version A: premarket RVOL > 1.5
 RVOL_B = 2.0                     # version B: intraday RVOL >= 2.0 (14-day lookback)
 RVOL_LOOKBACK = 14
+MIN_RVOL_DAYS = 10                # fewer prior sessions than this -> RVOL unknown (fails)
 # A+ boxes
 ADR_APLUS = 0.04
 DOLLAR_VOL_APLUS = 5e9

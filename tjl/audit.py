@@ -6,6 +6,7 @@ date + ticker (paired A vs B). R = P&L $ / Risk $ (net of fees and funding, as l
 """
 import datetime as dt
 import json
+import re
 
 MIN_TRADES, MIN_DAYS = 30, 61
 
@@ -28,20 +29,29 @@ def _r(row):
         return None
 
 
+def _sim_r(row):
+    m = re.search(r"sim_r=([+-]?\d+(?:\.\d+)?)", row.get("Notes") or "")
+    return float(m.group(1)) if m else None
+
+
 def stats(rows):
+    """Profit factor is in R, like every go/no-go number (audit I5); pf_usd is the same in dollars."""
     rs = [_r(x) for x in rows if _r(x) is not None]
     pnl = [x["P&L $"] for x in rows if x.get("P&L $") is not None]
     if not rs:
         return {"n": 0}
-    wins = [p for p in pnl if p > 0]
-    losses = [p for p in pnl if p < 0]
+    wins = [r for r in rs if r > 0]
+    losses = [r for r in rs if r < 0]
+    wins_usd = [p for p in pnl if p > 0]
+    losses_usd = [p for p in pnl if p < 0]
     eq = peak = dd = 0.0
     for p in pnl:
         eq += p
         peak = max(peak, eq)
         dd = min(dd, eq - peak)
     return {"n": len(rs), "win": len([r for r in rs if r > 0]) / len(rs), "exp_r": sum(rs) / len(rs),
-            "pf": (sum(wins) / -sum(losses)) if losses else None, "total": sum(pnl), "max_dd": dd,
+            "pf": (sum(wins) / -sum(losses)) if losses else None,
+            "pf_usd": (sum(wins_usd) / -sum(losses_usd)) if losses_usd else None, "total": sum(pnl), "max_dd": dd,
             "worst_r": min(rs)}
 
 
@@ -88,8 +98,10 @@ def run(rows, today=None):
     for s in shadow:
         mate = [r for r in real if r.get("Ticker") == s.get("Ticker") and r.get("date:Date:start") == s.get("date:Date:start")]
         if mate:
+            # compare like with like: the real trade's own simulation (sim_r in Notes) vs the shadow simulation
             pairs.append({"date": s["date:Date:start"], "ticker": s["Ticker"], "real": mate[0].get("Version"),
-                          "real_r": _r(mate[0]), "shadow": s.get("Version"), "shadow_r": _r(s)})
+                          "real_r": _r(mate[0]), "real_sim_r": _sim_r(mate[0]), "shadow": s.get("Version"),
+                          "shadow_r": _r(s)})
     by_version_incl_shadow = {}
     for r in real + shadow:
         by_version_incl_shadow.setdefault(r.get("Version"), []).append(r)
@@ -126,8 +138,9 @@ def report(st):
     out += [f"- {k}: {_fmt(v)}" for k, v in st["version_with_shadow"].items()]
     if st["pairs"]:
         out.append(f"**Paired setups ({len(st['pairs'])})**")
-        out += [f"- {p['date']} {p['ticker']}: real {p['real']} {p['real_r']:+.2f}R vs shadow {p['shadow']} {p['shadow_r']:+.2f}R"
-                for p in st["pairs"]]
+        out += [f"- {p['date']} {p['ticker']}: real {p['real']} {p['real_r']:+.2f}R (own sim "
+            + ("-" if p['real_sim_r'] is None else f"{p['real_sim_r']:+.2f}R")
+            + f") vs shadow {p['shadow']} sim {p['shadow_r']:+.2f}R" for p in st["pairs"]]
     out.append("**A+ boxes** (with / without)")
     out += [f"- {b}: {_fmt(v['with'])} | {_fmt(v['without'])}" for b, v in st["boxes"].items()]
     return "\n".join(out)

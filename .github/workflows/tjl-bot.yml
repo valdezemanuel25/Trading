@@ -1,0 +1,58 @@
+# Trend Join Long paper bot (docs/tjl-bot.md). Runs on GitHub's servers, weekdays, no PC needed.
+# Master switch: repository variable TJL_BOT_ENABLED = true. Secrets: ALPACA_KEY_ID, ALPACA_SECRET_KEY (paper keys).
+# Each cron line appears twice (UTC hours for summer and winter time); the job checks the New York clock and
+# does whatever is due, so a duplicate, late or queued run is harmless. Scheduled workflows run from main only.
+name: tjl-bot
+on:
+  schedule:
+    - cron: "40 12,13 * * 1-5"   # 8:40 ET: premarket scan at 9:15, then watch the flagged names until 14:15
+    - cron: "27 14,15 * * 1-5"   # 10:27 ET: backup start if the 8:40 run was dropped or failed
+    - cron: "17 18,19 * * 1-5"   # 14:17 ET: entries to 15:30, 15:45 overnight check, flat by 15:51, report
+  workflow_dispatch:
+
+concurrency:
+  group: tjl-bot              # one job at a time: never two processes managing the same positions
+  cancel-in-progress: false
+
+permissions:
+  contents: write             # push the state branch (tjl-state)
+
+jobs:
+  bot:
+    if: vars.TJL_BOT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      ALPACA_KEY_ID: ${{ secrets.ALPACA_KEY_ID }}
+      ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+      TJL_FEED: ${{ vars.TJL_FEED || 'iex' }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tests (no trading if the rules code is broken)
+        run: python -m pip install -q pytest && python -m pytest tests/ -q
+      - name: Check out the state branch
+        run: |
+          git config --global user.name "tjl-bot"
+          git config --global user.email "tjl-bot@users.noreply.github.com"
+          url="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if git ls-remote --exit-code --heads "$url" tjl-state >/dev/null; then
+            git clone -q --depth 20 --branch tjl-state "$url" state
+          else
+            mkdir state && cd state && git init -q -b tjl-state && git remote add origin "$url"
+            printf '# Trend Join bot state\nWritten by .github/workflows/tjl-bot.yml. Create a file named HALT here to stop new trades, FLATTEN to close everything.\n' > README.md
+            git add README.md && git commit -qm "start tjl-state" && git push -q origin tjl-state
+          fi
+      - name: Run the bot
+        run: python -m tjlbot auto --state state
+      - name: Save state
+        if: always()
+        run: |
+          cd state
+          git add -A
+          git diff --cached --quiet || git commit -qm "tjl-bot state (job end)"
+          git pull -q --rebase origin tjl-state || true
+          git push -q origin HEAD:tjl-state
