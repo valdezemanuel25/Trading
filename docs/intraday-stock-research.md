@@ -217,6 +217,18 @@ Draft default: TradingView alerts for the trigger (real data, phone push), Liqui
 4. If price makes a new high of day before 10:00, the trigger moves up to it (reset the alert at 10:00).
 Fallback with no app at all: the user messages Claude at fixed times (e.g. 10:00, 10:30, 11:00, then hourly) and Claude checks the levels on Liquid; free, but late on fast breakouts.
 
+**Webull connector test (2026-11-26): works, read-only.**
+- Authorization: the one account (`...9227`) is **Non-Trading**: market data, account info and watchlists only; no orders (fine: orders go through Liquid paper).
+- **No tool creates price alerts.** The trigger alerts have to be set by hand in the Webull app (the `get_financial_alert` tool is a risk-indicator lookup, not price alerts).
+- Watchlists: can list, create (max 20), add/remove symbols. A "Trend Join" watchlist could be kept in sync by Claude (not created yet).
+- **Fills the Liquid data gaps with real exchange data:**
+  - `get_stock_snapshot` (up to 100 symbols, `extend_hour_required`): price, open/high/low, real volume, market cap, 52-week high/low, pre/after-hours last price, change, volume and high/low. (MU: market cap $680B, 52-week high $1,254.61, close $601.25, after-hours $615.30.)
+  - `get_stock_bars` (up to 20 symbols, 1200 bars, M1-M240/D/W, `trading_sessions` PRE/RTH/ATH/OVN): real premarket high and 5m bars with real volume (real VWAP).
+  - `get_gainers_losers` (`rank_type` PRE_MARKET / DAY_1 / MIN_5 ..., sort incl. RELATIVE_VOLUME_10D, MARKET_VALUE): premarket gappers. The top of the list is micro caps, so screen our own list with snapshots instead of using the raw ranking.
+  - `get_market_sectors` (D1/D5/MO1/MO3): sector performance (on D5: semis -7.6%, software -2.0%, pharma +2.7%).
+  - Also: earnings calendar, macro calendar, news, unusual activity, 52-week high/low rankings, most active.
+- So the after-market screen and morning update can use **Webull for data** (real $ volume, market cap, 52-week range, premarket high/gap/RVOL, sector heat) and **Liquid for paper orders**.
+
 ## Trade-frequency estimate (2026-11-26)
 Liquid can't answer this historically (200 candles per call; daily candles run 00:00-24:00 UTC, so no 9:30 open or gap). Used Databento **EQUS.SUMMARY ohlcv-1d** (consolidated US daily bars, available from 2024-07-01, cost $0.07) for the 74 US-listed single stocks on Liquid (ETFs left out). Window with a valid 200d SMA: 2025-04-17 to 2026-11-25, 405 trading days. The ad-hoc script and data stayed in the session scratchpad (not in the repo).
 
