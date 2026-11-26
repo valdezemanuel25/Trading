@@ -337,6 +337,20 @@ Fallback with no app at all: the user messages Claude at fixed times (e.g. 10:00
   - Also: earnings calendar, macro calendar, news, unusual activity, 52-week high/low rankings, most active.
 - So the after-market screen and morning update can use **Webull for data** (real $ volume, market cap, 52-week range, premarket high/gap/RVOL, sector heat) and **Liquid for paper orders**.
 
+## Liquid checks for the paper test (2026-11-26, read-only)
+- **Paper mode:** enabled on Claude's Liquid connection. Paper account: **$10,000 equity, no positions, no margin used.** The paper account is shared by wallet (RSI(2) test uses the same one).
+- **Fees (Liquid's `help`):** Liquid charges 0.05% of notional on every fill (open and close); the exchange's maker/taker fee is added on top and varies by market. A paper fill shows one combined fee. So a round trip costs roughly 0.1% plus exchange fees (about 0.15-0.2% in total, to be confirmed from the first paper fills). With a 2-5% stop that is about 0.03-0.1R per trade.
+- **Spreads** (2026-11-26, market closed for Thanksgiving): MU 607.12 / 607.17 (0.008%), NVDA 150.21 / 150.22 (0.007%). Top-of-book depth is a few thousand dollars per level, enough for $1-10k paper positions. Recheck during US hours.
+- **Funding** (overnight holds): MU -0.0035% at the time (Hyperliquid funding is hourly; about 0.05% over a 16-hour hold at that rate). Sign and size vary; read it with `analyze_market` before carrying a position overnight.
+- **Stop and take-profit at entry: yes.** `execute_order` takes `tp` and `sl` with the entry, so one approval covers entry + stop. Caveat: if a market order only partly fills, the attached TP/SL is not placed (set it with `execute_tpsl`).
+- **Partial take-profits: yes.** A `reduceOnly` limit sell at the target with a coin quantity (e.g. 1/3 of the position). These can be placed right after entry as resting orders, so the approvals happen up front.
+- **Stop moves (breakeven at +1R):** `modify_position` (preview) -> `execute_tpsl` (needs approval each time).
+- **Trailing stop: native, but percent only.** `set_trailing_stop` trails the best price by a fixed price distance (percent / leverage), optional `activationPrice`, optional `sizePercent`. It **cannot follow an EMA or swing lows**. Options:
+  - Version A's 21-EMA trail and version B's 5m swing-low trail are done by hand: Claude recalculates at check-ins and moves the stop with `execute_tpsl` (approval each time).
+  - Approximation for version B: a trailing stop with `activationPrice` = entry + 1R and a retracement of 1R. At activation the stop sits at entry (breakeven), then trails by 1R. This replaces "breakeven at +1R, then trail" with one approval. Tag such trades `trail=native`.
+- **Order flow per trade (paper):** (1) entry with stop attached; (2) reduce-only partial(s); (3) later stop moves or a native trailing stop; (4) close by 3:51 with `close_position` (preview + approval). Every step needs the user's approval in chat.
+- **Paper capital: not decided.** The $10k paper account is shared with the RSI(2) test ($5k notional per signal, up to two markets). Trend Join risk sizing: 1% = $100, A+ 2% = $200 of risk; with a 3% stop that is about $3,300 / $6,700 notional. Version B's "max 10% of the portfolio per position" ($1,000) conflicts with that risk (it would cap risk far below 1% unless the stop is 10%+). Options: reset the paper account to a larger balance (`reset_paper_account`, affects RSI(2) too), use 2-5x leverage so margin stays small, or apply the 10% cap to margin instead of notional.
+
 ## Trade-frequency estimate (2026-11-26)
 Liquid can't answer this historically (200 candles per call; daily candles run 00:00-24:00 UTC, so no 9:30 open or gap). Used Databento **EQUS.SUMMARY ohlcv-1d** (consolidated US daily bars, available from 2024-07-01, cost $0.07) for the 74 US-listed single stocks on Liquid (ETFs left out). Window with a valid 200d SMA: 2025-04-17 to 2026-11-25, 405 trading days. The ad-hoc script and data stayed in the session scratchpad (not in the repo).
 
@@ -376,6 +390,7 @@ Closed: historical data source and backtest (not doing them); trade frequency (e
 - Combine with the RSI(2) daily check in one report, or keep separate.
 
 ### 3. Liquid checks (quick, read-only)
+Done 2026-11-26 (see "Liquid checks for the paper test"). Remaining: confirm the real round-trip fee from the first paper fill; decide the paper capital split.
 - Fees per trade, typical spread on the stock perps, funding for overnight holds.
 - Order features: stop/TP attached at entry (one approval), partial take-profits, trailing stop (fixed distance only, or can it follow an EMA/swing low?).
 - Liquid's VWAP and premarket high vs the exchange's on a few days.
