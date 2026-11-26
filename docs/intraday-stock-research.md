@@ -33,6 +33,7 @@ Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high dem
 | 6 | "Claude + IBKR API: Complete AI Trading Bot Guide" (`UgWQtQ3MEVE`, 23:27) | Automated Trend Join Long (second rule version); **bot is slightly negative on paper** |
 | 7 | "How To Find Profitable Stocks To Trade – My Secrets REVEALED" (`VDN4jp4Uf1k`, 21:07, 2023) | **Watchlist scanner filters**, daily-level long/short decision, 1-2 names |
 | 8 | "How to Find Stocks to Trade – Live Tutorial Shorting Stocks" (`1kFtbpWq7a4`, 14:14, 2022) | Short-selling logistics only (borrow, locate cost) |
+| 9 | "How to Find Stocks to Trade for FREE (Day Trading for Beginners 2026)" (`sP9u2oiwikU`, 18:02; actually uploaded 2021-10-20) | Free Finviz small-cap scan, daily breakout-ready charts, "alert = go look" |
 
 ### 1. VWAP crash course
 - Chart setup: session VWAP (bands off) + volume only; 2m and 5m intraday, daily alongside.
@@ -154,6 +155,17 @@ English captions + frames. Not a watchlist video despite the title.
 - Brokers for hard-to-borrow: TradeZero (< $30K accounts, Canada), Cobra, Centerpoint.
 - **On Liquid this doesn't apply** (perpetuals, no borrow; funding instead). Keep for later if shorts ever move to a stock broker.
 
+### 9. Free Finviz watchlist (2021, small caps)
+English captions + frames. Title says 2026, but uploaded 2021-10-20 (Finviz screen dated 2021-10-08).
+- **Finviz scan** (0:57-4:15; URL filters `cap_smallunder, sh_curvol_o5000, sh_price_u10, sh_relvol_o1.5`): any exchange; market cap small (< $2B; separate large-cap scan mentioned); relative volume > 1.5 ("ideally over 1 or even 2"); current volume > 5M (1M in general); price < $10 for small caps. No gap, float, ADR or sector filter; average volume ignored.
+- **Daily chart** (5:20-11:23): look for stocks **consolidating under resistance**, "slowly about to set up for a breakout"; rising daily volume ("increasing volume precedes the breakout, consistent volume sustains it", 7:06). A long is valid only after a break **and hold** above the most recent resistance. Examples: CEI key $2.46 (targets $3, $3.70, $4+); GROM key ~$5.50 (support $3, target ~$6.70); NXTP held $1.30 for weeks, broke $1.50.
+- Average daily volume should be at least 1-2M shares (12:44). Only shown: a 200-day SMA on the thinkorswim daily chart.
+- **Narrow to 3 names**, mark levels in thinkorswim, add to the watchlist, **set price alerts at key resistance** (shown: "CEI when mark >= 2.46").
+- **An alert is not an entry** (15:13-16:15): VYGR touched $4.60 resistance; buying the touch meant a 20 cent drawdown; she waited for higher lows and a retest, then it broke to ~$4.90.
+- "A+ setup" = the right volume, the right breakout daily chart and the right levels (16:36); no scoring.
+- No catalysts, no performance numbers. Warnings: don't be "a sheep" following scanners/chat; don't buy everything the scan returns; breakouts without volume "pop and fail"; not every name will run.
+- Small caps are outside our universe (Liquid is large caps), so only the method carries over.
+
 ## Candidate strategy (draft, not final)
 - **Core:** Trend Join Long, two exit variants to compare (video 4: thirds at +1R/+2R and a 21-EMA trail; video 6: partial at +0.75R, breakeven at +1R, trail under 5m swing lows). Add the 200d SMA filter (both versions use it).
 - **Base sizing (video 6):** risk 1% of the account per trade, max 10% of the account per position; A+ 2-3x would need that cap revisited.
@@ -219,6 +231,7 @@ Keep names that pass all of:
 - Market cap >= $1B and average volume >= 1M shares (videos 4, 7; every Liquid stock should pass).
 - Not range-bound: ADR20 >= 3% (video 5's "skip tight ranges"; the A+ bar is higher).
 Mark each name's daily levels: prior close, prior high/low, recent swing highs/lows, gap-fill areas (video 7).
+Flag **breakout-ready** daily charts: consolidating just under resistance with rising daily volume (video 9). Used as a tiebreaker when ranking.
 
 ### Step 2: morning (about 9:00-9:30 ET), the trade list
 - Gap >= 3% vs the prior close (videos 4, 6; 2% acceptable per video 7 if the list is empty), from Webull's extended-hours price.
@@ -245,7 +258,7 @@ Mark each name's daily levels: prior close, prior high/low, recent swing highs/l
 - Log each condition's tick per trade so the 2-month paper test can show which conditions matter.
 
 ### Step 4: trigger and trade
-Per the Trend Join versions (videos 4 and 6, tag each trade): after 10:00/10:05, break above both the premarket high and the high of day; optional video 5 confirmation (5m close above VWAP and the 8 EMA). Trigger price goes into a Webull price alert; the user messages Claude when it fires; Claude prepares the Liquid paper order.
+**The alert means "go look", not "buy"** (videos 7, 9): confirm the break holds before entering. Per the Trend Join versions (videos 4 and 6, tag each trade): after 10:00/10:05, break above both the premarket high and the high of day; optional video 5 confirmation (5m close above VWAP and the 8 EMA). Trigger price goes into a Webull price alert; the user messages Claude when it fires; Claude prepares the Liquid paper order.
 
 ## After-market analysis: draft defaults (chosen by Claude, 2026-11-26; change freely)
 Run once a day after the close, in the same message as the RSI(2) check (one "daily check" message from the user; no scheduled tasks).
