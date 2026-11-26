@@ -306,7 +306,7 @@ Definitions (all known before the open): gap = open / prior close - 1; prior clo
 
 ## Gaps to fill (updated 2026-11-26: no backtests, forward paper trading, all filters kept in tiers)
 
-Closed: historical data source and backtest (not doing them); trade frequency (estimated); filter level (core screens, focus grades).
+Closed: historical data source and backtest (not doing them); trade frequency (estimated); filter level (core screens, focus grades); Trend Join version (run both, tagged); long only for now; sizing (1% normal, 2% A+); A+ checklist (drafted); paper test length (>= 2 months); trigger tool (Webull price alerts) and data source (Webull read-only); after-market analysis (Claude's draft defaults).
 
 ### 1. Rules to lock before paper trading
 - **Trend Join version:** video 4 (stop = lower of PMH - 1% or LOD; thirds at +1R/+2R; 21-EMA trail) or video 6 (stop 1% under LOD; partial at +0.75R, breakeven at +1R, trail under 5m swing lows; RVOL >= 2.0). Or run both on paper and tag each trade. Read the presenter's blog rules (linked from video 4) first.
@@ -337,7 +337,7 @@ Closed: historical data source and backtest (not doing them); trade frequency (e
 - Trade log: where each trade is logged (Liquid history + Notion?), with setup, grade, size, R, time window, regime, holding period, so the after-session audit (video 3 style) can run.
 
 ### 5. Paper-test success criteria
-- How long (weeks / number of trades) before judging, and what decides go / no-go (expectancy in R after fees, A+ vs other grades, drawdown).
+- Length decided: at least 2 months. Still open: what decides go / no-go (expectancy in R after fees, A+ vs other grades, drawdown).
 
 ## Next steps (suggested order)
 1. Read the presenter's blog rules and lock section 1 (rules).
