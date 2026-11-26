@@ -11,6 +11,8 @@ Read this first in a new session that continues this work.
 - **Overnight holds allowed** (for A+ trades; see the open question below).
 - **Grade and size:** A+ = every filter passes plus a real catalyst, sized 2-3x; average setups normal or smaller.
 - **Trade frequency: at most 2 trades a day**, and only when the stock and the after-market analysis line up. Zero-trade days are fine (no forcing trades).
+- **No backtesting on stocks** (decided 2026-11-26). The strategy is validated by **forward paper trading on Liquid** instead. Don't spend a new session on historical stock backtests.
+- **Keep all filters, in tiers** so there is activity most days on paper: the core Trend Join filters are the daily screen (setups on about 65-70% of days); the focus filters (ADR >= 4-6%, $100B+ cap, high liquidity, hot sector, near highs, not extended) grade a setup A+ and size it up. Paper results by grade will show whether the focus filters matter.
 
 ## Sources reviewed (all Humbled Trader, YouTube)
 Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high demand") on every model for hours on 2026-11-26, even for plain text calls, so the summaries came from Claude Code on the user's PC (local engine: captions + frames). Timestamps refer to the videos.
@@ -200,43 +202,44 @@ Definitions (all known before the open): gap = open / prior close - 1; prior clo
 - The looser sets (A/B) have a setup most days, so the 2/day cap binds; the question becomes picking the best 1-2, not finding any.
 - Counts only, not results: nothing here says these setups make money.
 
-## Gaps to fill (reviewed 2026-11-26, after all six videos)
+## Gaps to fill (updated 2026-11-26: no backtests, forward paper trading, all filters kept in tiers)
 
-### 1. Evidence: does it work at all?
-- No independent test. All numbers are the presenter's, and their own paper bot is slightly negative. We need our own test with costs on a period the rules weren't tuned on.
-- Historical data: Liquid gives 200 candles per call, too little for a months-long 5m backtest. Needs an intraday stock-data source (Databento equities, Polygon or Alpaca).
-- Trade frequency: with ~120 Liquid stocks and a 3%+ gap rule, many days may have no candidate. Estimate it from Liquid daily candles first.
+Closed: historical data source and backtest (not doing them); trade frequency (estimated); filter level (core screens, focus grades).
 
-### 2. Rule decisions still open
-- Which Trend Join version (relative volume 1.5 vs 2.0, stop, exits). Read the presenter's blog rules.
-- The 21-EMA trail's timeframe and the bot version's partial size.
-- Entry start: 10:00 (rules) vs 9:30-10:00 (best window in video 3's data).
-- Overnight: exact rule (draft: A+ only, last third, while above the 21-EMA), overnight stop, weekends.
-- Short side: breakdown fade, parabolic-open short and first red day have no exact trigger/stop/exit.
-- A+ grading: a checkable definition of a real catalyst and of a "hot sector" (measure and cutoff).
-- Sizing: 2-3x A+ vs the 10% per-position cap.
+### 1. Rules to lock before paper trading
+- **Trend Join version:** video 4 (stop = lower of PMH - 1% or LOD; thirds at +1R/+2R; 21-EMA trail) or video 6 (stop 1% under LOD; partial at +0.75R, breakeven at +1R, trail under 5m swing lows; RVOL >= 2.0). Or run both on paper and tag each trade. Read the presenter's blog rules (linked from video 4) first.
+- 21-EMA trail timeframe (probably 5m) and the partial size in video 6's version.
+- Entry start: 10:00/10:05 (rules) vs 9:30 (best window in video 3).
+- Video 5's confirmation: require a 5m close above VWAP and the 8 EMA on the breakout, or not.
+- **Overnight rule:** which part carries (draft: A+ only, last third, while above the 21-EMA), its stop, Fridays/weekends, funding cost.
+- **Short side:** exact trigger, stop and exit for the breakdown fade, parabolic-open short and first-red-day short (videos 1 and 5), or start long only on paper and add shorts later.
+- **A+ definition:** a checkable list (which focus filters, what counts as a real catalyst, how "hot sector" is measured and its cutoff).
+- **Sizing:** base 1% risk per trade (video 6), A+ 2-3x, vs the 10% per-position cap; sized from the stop distance.
 
-### 3. Defining the after-market analysis
-- Regime rule: an exact definition of "SPY sideways".
-- Sector heat: which ETFs/groups, lookback, how many count as hot.
-- Watchlist size and ranking.
-- Output and timing: where it goes (chat, Notion, email) and when. The user doesn't want scheduled tasks from Claude sessions, so default is a manual daily message (like the RSI(2) check).
-- Relation to the RSI(2) daily check: separate or one combined report.
+### 2. The after-market analysis (define exactly)
+- SPY regime: an exact "sideways" rule (skip day) vs trend.
+- Sector heat: which ETFs/groups on Liquid (SMH, IGV, XLE, XBI, TLT, member stocks), lookback, how many count as hot.
+- Watchlist: size and ranking (top 1-2 trade, a few backups).
+- Output and timing: where it goes (chat, Notion, email) and when (after the close, plus the morning gap update). Default: a manual message per day, like the RSI(2) check (no scheduled tasks).
+- Combine with the RSI(2) daily check in one report, or keep separate.
 
-### 4. Liquid-specific unknowns
-- Do Liquid's VWAP and premarket high behave like the exchange's? Compare on a few days of candles.
-- Costs: trading fees, spreads on the stock perps, funding for overnight holds.
-- Execution: every order needs the user's approval. Can stop/TP attach at entry? Partial take-profits?
-- Trailing stops: can they follow an EMA or swing lows, or only a fixed distance?
+### 3. Liquid checks (quick, read-only)
+- Fees per trade, typical spread on the stock perps, funding for overnight holds.
+- Order features: stop/TP attached at entry (one approval), partial take-profits, trailing stop (fixed distance only, or can it follow an EMA/swing low?).
+- Liquid's VWAP and premarket high vs the exchange's on a few days.
+- **Paper account capital:** the $10k paper account is shared with the RSI(2) test ($5k notional per trade). Decide the split, or reset/raise it.
 
-### 5. Operations and risk
-- Intraday alerts: Liquid has no alerts or scheduler. Options: user check-ins by message, a TradingView alert, or a script on the user's PC (like video 6's bot).
-- Portfolio limits: max daily loss, positions at once (1-2 names per video 3), stop-trading rule after losses.
-- Trade log and audit format (video 3's dashboard), to measure whether filters and grades help.
+### 4. Operations during the session
+- Who watches the trigger from 10:00 to 3:30: user check-ins by message, a TradingView alert, or a script on the user's PC. Every Liquid order still needs the user's approval.
+- Risk limits: max daily loss, max open positions (2), stop for the day after N losses.
+- Trade log: where each trade is logged (Liquid history + Notion?), with setup, grade, size, R, time window, regime, holding period, so the after-session audit (video 3 style) can run.
+
+### 5. Paper-test success criteria
+- How long (weeks / number of trades) before judging, and what decides go / no-go (expectancy in R after fees, A+ vs other grades, drawdown).
 
 ## Next steps (suggested order)
-1. ~~Estimate trade frequency~~ Done (see "Trade-frequency estimate"): full focus filters about 1 setup day/week; core filters most days. Decide which filter level to use.
-2. Read the presenter's blog rules (linked from video 4) and reconcile with video 6's `rules.json`; then lock the rule decisions above.
-3. Check Liquid's costs and order features (stop/TP at entry, partials, trailing stops).
-4. Choose a historical stock-data source for a real backtest.
-5. Then design the after-close report, the morning update and the intraday alerts.
+1. Read the presenter's blog rules and lock section 1 (rules).
+2. Run the quick Liquid checks in section 3 (fees, order features, paper capital).
+3. Define the after-market analysis in section 2 and the session operations in section 4.
+4. Set the paper-test success criteria (section 5).
+5. Then build: after-close report, morning gap update, intraday alerts, trade log.
