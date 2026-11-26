@@ -384,7 +384,7 @@ Closed: historical data source and backtest (not doing them); trade frequency (e
 - **Overnight rule:** which part carries (draft: A+ only, last third, while above the 21-EMA), its stop, Fridays/weekends, funding cost.
 - **Short side:** exact trigger, stop and exit for the breakdown fade, parabolic-open short and first-red-day short (videos 1 and 5), or start long only on paper and add shorts later.
 - **A+ definition:** a checkable list (which focus filters, what counts as a real catalyst, how "hot sector" is measured and its cutoff).
-- **Sizing:** base 1% risk per trade (video 6), A+ 2-3x, vs the 10% per-position cap; sized from the stop distance.
+- ~~Sizing~~ Done: $250 normal / $500 A+ on a $25k sizing base, $2,500 margin cap, 2-10x leverage.
 
 ### 2. The after-market analysis (define exactly)
 - SPY regime: an exact "sideways" rule (skip day) vs trend.
