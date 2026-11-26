@@ -15,7 +15,7 @@ Read this first in a new session that continues this work.
 - **Run both Trend Join versions on paper** (video 4 and video 6 rules), each trade tagged with its version. Document everything; more documentation is better.
 - **Long only for now.** Shorts come later.
 - **Sizing:** base 1% of the account at risk per trade; **A+ setups risk 2%**. Sized from the stop distance.
-- **A+ checklist: pending** another video from the user on how the presenter picks stocks.
+- **A+ checklist:** drafted from videos 3, 4, 6 and 7 (see "Watchlist rules and A+ checklist"). Videos 7-8 give no grading system of their own.
 - **Paper test length: at least 2 months** before judging.
 - **After-market analysis definition: left to Claude** (draft defaults below, under "After-market analysis: draft defaults").
 - **Keep all filters, in tiers** so there is activity most days on paper: the core Trend Join filters are the daily screen (setups on about 65-70% of days); the focus filters (ADR >= 4-6%, $100B+ cap, high liquidity, hot sector, near highs, not extended) grade a setup A+ and size it up. Paper results by grade will show whether the focus filters matter.
@@ -31,8 +31,8 @@ Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high dem
 | 4 | "I Replaced my 6AM Premarket Trading Routine with Claude + Codex" (`PKFkJ4TprVo`, 23:29) | **Complete backtested rule set: Trend Join Long**, premarket report pipeline |
 | 5 | "Live Trading on the 5-Minute Time Frame (how I keep it simple)" (25:57; presumably `gn02_Ic9i5U`) | **5m entry trigger (close above VWAP + 8 EMA)**, 8 EMA trail, first-red-day short |
 | 6 | "Claude + IBKR API: Complete AI Trading Bot Guide" (`UgWQtQ3MEVE`, 23:27) | Automated Trend Join Long (second rule version); **bot is slightly negative on paper** |
-| 7 | `VDN4jp4Uf1k` (how the presenter builds the watchlist) | **Pending**: source for the A+ checklist; run `/watch` on the PC and paste the summary |
-| 8 | `1kFtbpWq7a4` | **Pending**: second watchlist/A+ video; run together with video 7 on the PC |
+| 7 | "How To Find Profitable Stocks To Trade – My Secrets REVEALED" (`VDN4jp4Uf1k`, 21:07, 2023) | **Watchlist scanner filters**, daily-level long/short decision, 1-2 names |
+| 8 | "How to Find Stocks to Trade – Live Tutorial Shorting Stocks" (`1kFtbpWq7a4`, 14:14, 2022) | Short-selling logistics only (borrow, locate cost) |
 
 ### 1. VWAP crash course
 - Chart setup: session VWAP (bands off) + volume only; 2m and 5m intraday, daily alongside.
@@ -136,6 +136,24 @@ Shared by both: gap > 3%, price > $3, cap > $1B, prior close above the 200d SMA,
 
 **What this means for us:** the only out-of-sample, automated evidence for Trend Join Long (her own paper bot) is flat to slightly negative. Her edge looks discretionary (stock and sector selection, manual execution), which matches video 3's finding that selection, not entries, made her year. Treat the published backtests as unproven; test both exit versions as separate variants on the same stock list.
 
+### 7. How the presenter finds stocks (2023)
+English captions + frames (scanner settings and Finviz screener read at full resolution).
+- **Trade Ideas Pro, "Mid-Big Cap Gainers"** (5:13-7:36, settings on screen): price $5-$400 ($1 OK); change from prior close >= 2%, no max; float >= 10M (5M OK); market cap >= $1B; premarket volume >= 20,000 (low on purpose: large caps get volume after the open); sorted by biggest % change. Display columns: average volume, % institutional, sector, relative volume. Not filtered on ADR or sector.
+- **Finviz (free)** (12:20-13:55): market cap > $2B (Mid+), average volume > 1M, relative volume > 1.5, float > 10M; then the Charts view to see which daily charts break out or down. Data delayed ~15 min, so evening/swing planning only unless Elite. Other free scanners named: Webull desktop, thinkorswim (10:19).
+- **Daily levels decide direction** (18:03): mark prior close, prior highs/lows and gap-fill areas. BBIO +67% premarket gapped **into** the $18 daily level and couldn't hold it -> short idea, not long (not traded). AZUL +21% on an earnings beat held above $5.30/$5.60 -> long "join the trend", targets $6.50-6.70 then $7.20; it squeezed.
+- **Ranking:** sort by gap %, look at the top ~5, then volume, average volume, institutional %, sector (7:57); work down until one fits a strategy (15:39); trade only 1-2 (20:27).
+- **When:** every morning premarket, or the evening before with Finviz (1:53, 12:48). "Most of the work happens outside market hours" (0:52).
+- No catalyst grading, no A+ system, no performance numbers.
+- Warnings: beginners stick to mid/large caps (2:06); a scanner is not a buy signal, skip names that don't follow the plan (19:45); mark levels premarket, "failing to plan is planning to fail" (20:05); don't trade the whole list (20:27).
+- Filters tightened over time: 2023 gap >= 2% / cap >= $1B; 2026 (videos 4 and 6) gap >= 3% and premarket RVOL > 1.5 / >= 2.0.
+
+### 8. Shorting logistics (2022)
+English captions + frames. Not a watchlist video despite the title.
+- Large caps are easy to borrow (ETB, "S" next to the ticker, 3:50); pumped penny stocks and overextended small floats are hard to borrow (6:23).
+- **Locate rule** (11:35-13:21): borrow cost <= 1% of the stock price (ideally 1-2 cents on a $5 stock); above 1%, require >= 1:4 reward to risk.
+- Brokers for hard-to-borrow: TradeZero (< $30K accounts, Canada), Cobra, Centerpoint.
+- **On Liquid this doesn't apply** (perpetuals, no borrow; funding instead). Keep for later if shorts ever move to a stock broker.
+
 ## Candidate strategy (draft, not final)
 - **Core:** Trend Join Long, two exit variants to compare (video 4: thirds at +1R/+2R and a 21-EMA trail; video 6: partial at +0.75R, breakeven at +1R, trail under 5m swing lows). Add the 200d SMA filter (both versions use it).
 - **Base sizing (video 6):** risk 1% of the account per trade, max 10% of the account per position; A+ 2-3x would need that cap revisited.
@@ -191,6 +209,43 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - **Working route:** run `/watch` in Claude Code on the user's Windows PC (local engine works: Python, ffmpeg, yt-dlp installed) and paste the summary. Remote Control (`claude remote-control` in `C:\Users\valde\trading-research`) starts sessions on the PC but does not attach the PC to an existing cloud session.
 - Prompt used for each video:
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
+
+## Watchlist rules and A+ checklist (draft, 2026-11-26)
+Built from videos 3 (trade-log audit), 4 and 6 (Trend Join rules) and 7 (scanner). Universe: Liquid's US-listed single stocks. Data: Webull (real quotes, extended hours, market cap, 52-week range, sectors), Liquid for orders. Long only for now.
+
+### Step 1: after the close (watch candidates)
+Keep names that pass all of:
+- Price >= $5 (video 7) and prior close above its 200-day SMA (videos 4, 6).
+- Market cap >= $1B and average volume >= 1M shares (videos 4, 7; every Liquid stock should pass).
+- Not range-bound: ADR20 >= 3% (video 5's "skip tight ranges"; the A+ bar is higher).
+Mark each name's daily levels: prior close, prior high/low, recent swing highs/lows, gap-fill areas (video 7).
+
+### Step 2: morning (about 9:00-9:30 ET), the trade list
+- Gap >= 3% vs the prior close (videos 4, 6; 2% acceptable per video 7 if the list is empty), from Webull's extended-hours price.
+- Premarket volume >= 20,000 shares and premarket relative volume >= 1.5 (video 4; video 6 uses >= 2.0, tag which one a trade met).
+- The gap **holds above** a daily level, not gapping **into** one (video 7's AZUL vs BBIO). Long only, so a gap into resistance is a skip.
+- Rank by gap %, take the top ~5 to the Webull "Trend Join" watchlist, trade at most 2 (videos 3, 7).
+- SPY regime "sideways" -> no trades that day (videos 3, 5).
+
+### Step 3: grade (A+ = every box ticked)
+| # | A+ condition | Source |
+|---|---|---|
+| 1 | Passes steps 1-2 | videos 4, 6, 7 |
+| 2 | ADR20 >= 4% (6%+ counts as top quality) | video 3 |
+| 3 | Dollar volume >= $5B/day (20-day average) | video 3 |
+| 4 | Market cap >= $100B | video 3 |
+| 5 | In a top-2 hot sector (Webull sectors D5/MO1 + our groups) | video 3 |
+| 6 | Real catalyst: earnings or company news today; not a rumor, not a denied rumor | videos 4, 7 |
+| 7 | Not extended: <= 10% above its 20-day SMA | video 3 (winners 6.1% vs losers 10.1%) |
+| 8 | In the upper part of its 52-week range (about >= 80%, or within ~15% of the 52-week high) | video 3 (winners 86.7%) |
+| 9 | SPY trending (not sideways) | video 3 |
+
+- **A+** -> risk 2% of the account; may carry the trailed last third overnight.
+- **Everything else that passes steps 1-2** -> normal, risk 1%; flat by 3:51.
+- Log each condition's tick per trade so the 2-month paper test can show which conditions matter.
+
+### Step 4: trigger and trade
+Per the Trend Join versions (videos 4 and 6, tag each trade): after 10:00/10:05, break above both the premarket high and the high of day; optional video 5 confirmation (5m close above VWAP and the 8 EMA). Trigger price goes into a Webull price alert; the user messages Claude when it fires; Claude prepares the Liquid paper order.
 
 ## After-market analysis: draft defaults (chosen by Claude, 2026-11-26; change freely)
 Run once a day after the close, in the same message as the RSI(2) check (one "daily check" message from the user; no scheduled tasks).
