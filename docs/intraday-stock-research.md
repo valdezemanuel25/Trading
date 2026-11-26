@@ -1,6 +1,6 @@
 # Intraday stock strategy: research notes (started 2026-11-26)
 
-Status: **research only, nothing built.** Goal: add an intraday stock strategy next to the after-market (after-close) analysis.
+Status: **built 2026-11-26, paper test ready to start** (routines in `docs/tjl-routines.md`, code in `tjl/`). Goal: add an intraday stock strategy next to the after-market (after-close) analysis.
 Read this first in a new session that continues this work.
 
 ## Decisions so far (from the user)
@@ -23,6 +23,9 @@ Read this first in a new session that continues this work.
   - Liquid's paper reset only restores the default $10,000 (it cannot be set to $25k), so the paper account stays at $10k and **$25k is a sizing base, tracked in the trade log** (results in $ and R). No reset was done.
   - Margin cap: 10% of $25k = **$2,500 of margin per position**; leverage 2-10x (lowest that fits; most stock perps allow 10x, MU's max is 10x). Example: $500 risk, 3% stop -> $16,667 notional at 7x ($2,381 margin). $250 risk, 3% stop -> $8,333 at 4x ($2,083 margin). Stops under ~2% would need more than 10x: size down and log the lower risk.
   - Margin check on the real $10k paper balance: 2 Trend Join positions use up to $5,000 of margin; the RSI(2) test at 1x uses $5,000 per signal. **Done:** RSI(2) now runs at 2x ($5k notional, $2.5k margin; `docs/live-setup.md` updated 2026-11-26), so max margin in use = 2 x $2,500 (Trend Join) + 2 x $2,500 (RSI(2)) = $10,000.
+- **Build: hybrid** (decided 2026-11-26). Mechanical rules in Python (`tjl/`, tested); a written routine (`docs/tjl-routines.md`) for the connector calls, report layout and approvals. Claude judges catalysts and traps in the report text.
+- **Half days (1:00 PM closes): no Trend Join trades** (decided 2026-11-26). Logged as no-trade days.
+- **Versions A and B share one Liquid position per ticker, so: alternate + shadow** (decided 2026-11-26). The real order follows one version, alternating when both qualify; the other version is logged as a **Shadow** row (new Status option in Notion) whose result is simulated from Webull 5m bars after the close. Shadow rows don't count toward the 30 trades; they give a paired A vs B comparison.
 - **Keep all filters, in tiers** so there is activity most days on paper: the core Trend Join filters are the daily screen (setups on about 65-70% of days); the focus filters (ADR >= 4-6%, $100B+ cap, high liquidity, hot sector, near highs, not extended) grade a setup A+ and size it up. Paper results by grade will show whether the focus filters matter.
 
 ## Sources reviewed (all Humbled Trader, YouTube)
@@ -312,6 +315,26 @@ Run once a day after the close, in the same message as the RSI(2) check (one "da
 5. **Output:** top 5 names (trade at most 2), each with prior-day high/low, the 200d/20d levels, ADR, sector, catalyst, planned grade (A+ or normal) and risk (2% or 1%).
 6. **Morning update (about 9:00-9:30 ET):** which watchlist names gap >= 3% vs the 4:00 PM close (Liquid price), their premarket high, Liquid volume vs normal; confirm or drop.
 
+## Build (2026-11-26)
+Routines: `docs/tjl-routines.md` (after-close check, morning check, TJ trigger). Code: `tjl/` (`python3 -m tjl after-close|morning|trigger|shadow`), tests `tests/test_tjl.py` (15 pass). Outputs per day in `runs/tjl/<date>/` (committed so a new container can continue).
+
+**Choices made while building (Claude; change freely):**
+- **Universe: 75 names** = Liquid's US-listed single stocks with Webull market cap >= $1B (`tjl/config.py`). Out: ETFs and leveraged ETFs, non-US listings (SK Hynix, Samsung, Xiaomi, ...), pre-IPO markets (SpaceX, Anthropic), STRC (preferred), QNT (Liquid/Webull mapping unverified), sub-$1B names. Liquid prefixes: `para:` for COHR, SMCI, CRDO, TER, STX, SOFI, MELI, VST, CIEN, CIFR; `io:` for IONQ; `xyz:` for the rest.
+- **SPY regime and sector heat use Webull's real SPY/ETF daily bars** (not Liquid's `xyz:SP500`, whose 00:00 UTC candles don't match the session). Same rule as the draft: trend if the close is >= 1% from the 20d SMA and the 20d SMA's 5-day change has the same sign.
+- **Sector groups** (12; median member return, 5d and 20d ranks averaged, groups with < 3 members can't be hot): Semis, Memory/storage, AI hardware/optical, AI cloud, Software, Internet, Crypto-linked, Energy/power, Health, Consumer/auto, Financials, Space/quantum/other. Webull's own sector table (D5/MO1) is reported as context only.
+- **Ranking of the screen:** hot group first, then ADR20 in 1% steps, then breakout-ready, then 52-week position. **Breakout-ready** = close within 3% of the prior 20-day high and 5-day average volume above the 20-day average.
+- **Morning:** all step-1 names are scanned for gaps (not only the top 5), since a gapper can come from anywhere on the list. Premarket RVOL = premarket volume up to now / average over the same clock window of the prior 14 sessions (Webull 5m PRE bars). Final names ranked by A+ boxes met, then gap. "Gap into resistance" is flagged when a swing high, the 52-week high or the 200d SMA sits within 1 ADR above the premarket price (Claude decides).
+- **Trigger:** trigger level = max(premarket high, high of day before the current 5m bar); the price must be above it. Version B's RVOL = RTH volume so far / average over the same clock window of the prior 14 sessions. Webull levels set the stop %; Liquid prices are mapped by the same percent from the Liquid mark (perp and stock prices differ slightly).
+- **Shadow simulation conventions** (conservative): entry at the Webull price at the trigger time, simulation from the next 5m bar, stop checked before targets inside a bar, flat at the 15:50 bar's open, fees 0.15% of notional. A's 21-EMA exit applies to the last third only after both partials; B's breakeven at +1R, then the stop trails confirmed 5m swing lows (2 bars each side).
+
+**First runs (data through Wed 2026-11-25; Thursday 11/26 is Thanksgiving, Friday 11/27 a half day):**
+- After-close (session 11/25): SPY **Trend down** (-3.2% vs the 20d SMA, below the 200d) -> A+ longs only. Hot groups: Financials and Consumer/auto (relative leaders in a selloff; semis/memory/crypto worst, -30 to -39% over 20 days). 12 of 75 pass step 1. Top 5: GME, TWST, MRNA, CRWD, NET; none can reach A+ (max 5 of the 7 after-close boxes), so no trade is likely until the regime improves. Watchlist "Trend Join" filled with these 5. Next tradable day: Mon 11/30.
+- Replay of 11/25 (after-close as of 11/24, morning with real premarket bars to 9:25): every name gapped down (TSLA -3.7%, CRWD -5.2%), so **no final names**, which is correct for a gap-down day.
+- Forced test (not a real setup): TSLA broke its premarket high at 13:45 on 11/25. The trigger, order plan and both shadow simulations were checked against the raw bars (+0.15R MFE, -0.10R MAE, flat at 15:50 for about +0.06R net). A test row "TEST (delete) 2026-11-25 TSLA A" was written to Notion to check the field mapping (all fields accepted).
+- RSI(2) (11/25 candle): S&P500 RSI 56.0, below the 200d -> EXIT signal but nothing held; NASDAQ100 RSI 39.0 -> NONE. Paper account $10,000, no positions.
+
+**Not built yet:** a "TJ check <ticker>" management helper (trail/breakeven levels at check-ins; done by hand from the 5m chart for now); a weekly audit report from the Notion rows.
+
 ## Intraday trigger: connection options (2026-11-26)
 | Option | What it gives | Status |
 |---|---|---|
@@ -437,4 +460,4 @@ Done 2026-11-26 (see "Liquid checks for the paper test"). Remaining: confirm the
 2. Run the quick Liquid checks in section 3 (fees, order features, paper capital).
 3. Define the after-market analysis in section 2 and the session operations in section 4.
 4. Set the paper-test success criteria (section 5).
-5. Then build: after-close report, morning gap update, intraday alerts, trade log.
+5. ~~Then build: after-close report, morning gap update, intraday alerts, trade log.~~ Done 2026-11-26 (see "Build"). Next: run the paper test from Mon 2026-11-30; still open: overnight rule, entry start 9:30 vs 10:00, shorts.

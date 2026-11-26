@@ -1,0 +1,4810 @@
+{
+ "kind": "after_close",
+ "session": "2026-11-25",
+ "next_session": "2026-11-27",
+ "next_session_status": "half day (no Trend Join trades)",
+ "next_full_day": "2026-11-30",
+ "spy": {
+  "date": "2026-11-25",
+  "close": 716.7,
+  "sma20": 740.33,
+  "dist20_pct": -3.19,
+  "sma20_slope5": -13.39,
+  "sma200": 730.77,
+  "above200": false,
+  "state": "Trend down"
+ },
+ "heat": [
+  {
+   "group": "Financials",
+   "n": 3,
+   "ret5": 0.02800103707544732,
+   "ret20": 0.025840459791094395,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 1,
+   "rank_ret20": 2,
+   "score": 1.5,
+   "rank": 1,
+   "hot": true
+  },
+  {
+   "group": "Consumer/auto",
+   "n": 5,
+   "ret5": 0.00888069229677968,
+   "ret20": 0.0349596221816999,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 2,
+   "rank_ret20": 1,
+   "score": 1.5,
+   "rank": 2,
+   "hot": true
+  },
+  {
+   "group": "Internet",
+   "n": 10,
+   "ret5": -0.012798091637000464,
+   "ret20": -0.08230978711417714,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 4,
+   "rank_ret20": 3,
+   "score": 3.5,
+   "rank": 3,
+   "hot": false
+  },
+  {
+   "group": "Space/quantum/other",
+   "n": 4,
+   "ret5": -0.0022269897626137625,
+   "ret20": -0.23586990725100743,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 3,
+   "rank_ret20": 7,
+   "score": 5.0,
+   "rank": 4,
+   "hot": false
+  },
+  {
+   "group": "Software",
+   "n": 9,
+   "ret5": -0.03425913149750648,
+   "ret20": -0.11669658886894074,
+   "etf": "IGV",
+   "etf_ret5": -0.01980606560759235,
+   "etf_ret20": -0.150924850326155,
+   "rank_ret5": 6,
+   "rank_ret20": 4,
+   "score": 5.0,
+   "rank": 5,
+   "hot": false
+  },
+  {
+   "group": "Health",
+   "n": 4,
+   "ret5": -0.03215795923698256,
+   "ret20": -0.17288552064785284,
+   "etf": "XBI",
+   "etf_ret5": 0.07970215113072254,
+   "etf_ret20": -0.005777410958034412,
+   "rank_ret5": 5,
+   "rank_ret20": 6,
+   "score": 5.5,
+   "rank": 6,
+   "hot": false
+  },
+  {
+   "group": "Energy/power",
+   "n": 4,
+   "ret5": -0.05401032704921105,
+   "ret20": -0.16781048658459785,
+   "etf": "XLE",
+   "etf_ret5": -0.006363191385217792,
+   "etf_ret20": -0.1102994886778671,
+   "rank_ret5": 7,
+   "rank_ret20": 5,
+   "score": 6.0,
+   "rank": 7,
+   "hot": false
+  },
+  {
+   "group": "Semis",
+   "n": 14,
+   "ret5": -0.0989259290892403,
+   "ret20": -0.29860507035633466,
+   "etf": "SMH",
+   "etf_ret5": -0.08068938503721124,
+   "etf_ret20": -0.25580002466221574,
+   "rank_ret5": 9,
+   "rank_ret20": 8,
+   "score": 8.5,
+   "rank": 8,
+   "hot": false
+  },
+  {
+   "group": "AI hardware/optical",
+   "n": 8,
+   "ret5": -0.07568346765487433,
+   "ret20": -0.3403041210751189,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 8,
+   "rank_ret20": 10,
+   "score": 9.0,
+   "rank": 9,
+   "hot": false
+  },
+  {
+   "group": "AI cloud",
+   "n": 3,
+   "ret5": -0.10997282040560319,
+   "ret20": -0.334115438761145,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 10,
+   "rank_ret20": 9,
+   "score": 9.5,
+   "rank": 10,
+   "hot": false
+  },
+  {
+   "group": "Crypto-linked",
+   "n": 7,
+   "ret5": -0.11470327723649243,
+   "ret20": -0.39047619047619053,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 11,
+   "rank_ret20": 12,
+   "score": 11.5,
+   "rank": 11,
+   "hot": false
+  },
+  {
+   "group": "Memory/storage",
+   "n": 4,
+   "ret5": -0.11597198276263077,
+   "ret20": -0.35588771620473064,
+   "etf": null,
+   "etf_ret5": null,
+   "etf_ret20": null,
+   "rank_ret5": 12,
+   "rank_ret20": 11,
+   "score": 11.5,
+   "rank": 12,
+   "hot": false
+  }
+ ],
+ "hot_groups": [
+  "Financials",
+  "Consumer/auto"
+ ],
+ "notes": [
+  "SPY below its 200-day SMA: longs only with an A+ grade.",
+  "Next session 2026-11-27 is a half day (no Trend Join trades). Plan below is for 2026-11-30."
+ ],
+ "universe": 75,
+ "step1_pass": [
+  "GME",
+  "TWST",
+  "MRNA",
+  "CRWD",
+  "NET",
+  "TTWO",
+  "BB",
+  "PANW",
+  "PLTR",
+  "LLY",
+  "EBAY",
+  "MSFT"
+ ],
+ "top": [
+  {
+   "ticker": "GME",
+   "liquid": "xyz:GME",
+   "group": "Consumer/auto",
+   "date": "2026-11-25",
+   "close": 26.97,
+   "sma20": 25.5995,
+   "sma200": 22.8847,
+   "adr20": 0.040100707514687875,
+   "avg_vol20": 6983837.15,
+   "dollar_vol20": 180020892.41500002,
+   "mcap": 13606391700.3,
+   "ext20": 0.053536201878942924,
+   "hi52": 28.3,
+   "lo52": 17.79,
+   "pos52": 0.8734538534728828,
+   "from_high": -0.04699646643109545,
+   "bars": 260,
+   "levels": {
+    "prior_close": 26.97,
+    "pdh": 27.48,
+    "pdl": 26.17,
+    "high20": 27.74,
+    "resistance": [
+     28.3
+    ],
+    "support": [
+     25.12,
+     24.85,
+     24.04
+    ]
+   },
+   "breakout_ready": true,
+   "vol5_vs_20": 1.390020928537831,
+   "step1_fails": [],
+   "step1": true,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 1
+  },
+  {
+   "ticker": "TWST",
+   "liquid": "xyz:TWST",
+   "group": "Health",
+   "date": "2026-11-25",
+   "close": 108.07,
+   "sma20": 123.603,
+   "sma200": 95.74459999999999,
+   "adr20": 0.11598944927865554,
+   "avg_vol20": 2440962.15,
+   "dollar_vol20": 299628122.359,
+   "mcap": 7368071244.44,
+   "ext20": -0.1256684708299961,
+   "hi52": 219.7126,
+   "lo52": 28.27,
+   "pos52": 0.41683512447072907,
+   "from_high": -0.5081301664082989,
+   "bars": 260,
+   "levels": {
+    "prior_close": 108.07,
+    "pdh": 110.04,
+    "pdl": 97.7604,
+    "high20": 177.99,
+    "resistance": [
+     125.16,
+     151.5,
+     153.8
+    ],
+    "support": [
+     101.0,
+     93.68
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8836135373913931,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 2
+  },
+  {
+   "ticker": "MRNA",
+   "liquid": "xyz:MRNA",
+   "group": "Health",
+   "date": "2026-11-25",
+   "close": 220.84,
+   "sma20": 227.2255,
+   "sma200": 103.09207500000001,
+   "adr20": 0.07538450078230145,
+   "avg_vol20": 9589197.7,
+   "dollar_vol20": 2213886897.2955003,
+   "mcap": 89356496119.0,
+   "ext20": -0.02810203960382973,
+   "hi52": 280.8,
+   "lo52": 23.545,
+   "pos52": 0.7669238693125499,
+   "from_high": -0.21353276353276351,
+   "bars": 260,
+   "levels": {
+    "prior_close": 220.84,
+    "pdh": 228.69,
+    "pdl": 212.55,
+    "high20": 280.8,
+    "resistance": [
+     227.46,
+     242.29,
+     254.48
+    ],
+    "support": [
+     208.92,
+     189.98,
+     183.28
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8827312633256065,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 3
+  },
+  {
+   "ticker": "CRWD",
+   "liquid": "xyz:CRWD",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 209.3,
+   "sma20": 229.74499999999998,
+   "sma200": 177.81615624999998,
+   "adr20": 0.06650650802655349,
+   "avg_vol20": 11781332.65,
+   "dollar_vol20": 2658978469.343,
+   "mcap": 215703851845.3,
+   "ext20": -0.08898996713747831,
+   "hi52": 286.9899,
+   "lo52": 85.68,
+   "pos52": 0.6140780955134348,
+   "from_high": -0.27070604226838635,
+   "bars": 260,
+   "levels": {
+    "prior_close": 209.3,
+    "pdh": 210.3,
+    "pdl": 194.7,
+    "high20": 268.6,
+    "resistance": [
+     218.31,
+     238.5,
+     250.32
+    ],
+    "support": [
+     204.27
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.6830652685118777,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": "2026-12-01 post-market",
+   "rank": 4
+  },
+  {
+   "ticker": "NET",
+   "liquid": "xyz:NET",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 283.3,
+   "sma20": 288.40749999999997,
+   "sma200": 257.9327,
+   "adr20": 0.0692628861217178,
+   "avg_vol20": 4438460.8,
+   "dollar_vol20": 1267085485.0440001,
+   "mcap": 101532525841.5,
+   "ext20": -0.01770931754548677,
+   "hi52": 370.35,
+   "lo52": 158.83,
+   "pos52": 0.5884549924357034,
+   "from_high": -0.23504792763602,
+   "bars": 260,
+   "levels": {
+    "prior_close": 283.3,
+    "pdh": 284.49,
+    "pdl": 265.74,
+    "high20": 326.5,
+    "resistance": [
+     325.0,
+     326.5,
+     334.6
+    ],
+    "support": [
+     277.19,
+     271.94,
+     271.72
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.7858116489391999,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 5
+  }
+ ],
+ "all": {
+  "PANW": {
+   "ticker": "PANW",
+   "liquid": "xyz:PANW",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 356.14,
+   "sma20": 339.72200000000004,
+   "sma200": 284.2428,
+   "adr20": 0.05643560903415172,
+   "avg_vol20": 8189926.55,
+   "dollar_vol20": 2797334273.3245,
+   "mcap": 292390940000.0,
+   "ext20": 0.048327750337040065,
+   "hi52": 432.325,
+   "lo52": 139.5706,
+   "pos52": 0.7397647994359777,
+   "from_high": -0.17622159255189962,
+   "bars": 260,
+   "levels": {
+    "prior_close": 356.14,
+    "pdh": 358.275,
+    "pdl": 337.23,
+    "high20": 390.0,
+    "resistance": [
+     370.0,
+     383.12,
+     396.3
+    ],
+    "support": [
+     356.0,
+     334.75,
+     327.05
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.3329021613753058,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 8
+  },
+  "COST": {
+   "ticker": "COST",
+   "liquid": "xyz:COST",
+   "group": "Consumer/auto",
+   "date": "2026-11-25",
+   "close": 1086.81,
+   "sma20": 1045.8555366,
+   "sma200": 951.53572121,
+   "adr20": 0.01682646992699712,
+   "avg_vol20": 2668824.0,
+   "dollar_vol20": 2795675602.5262384,
+   "mcap": 481597407786.69,
+   "ext20": 0.0391588149288189,
+   "hi52": 1098.0,
+   "lo52": 816.182491,
+   "pos52": 0.9602934535909191,
+   "from_high": -0.01019125683060118,
+   "bars": 260,
+   "levels": {
+    "prior_close": 1086.81,
+    "pdh": 1098.0,
+    "pdl": 1086.245,
+    "high20": 1098.0,
+    "resistance": [
+     1092.97
+    ],
+    "support": [
+     1053.55,
+     952.12,
+     877.78
+    ]
+   },
+   "breakout_ready": true,
+   "vol5_vs_20": 1.1125040841958855,
+   "step1_fails": [
+    "ADR20 < 3%"
+   ],
+   "step1": false,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": true,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "TSLA": {
+   "ticker": "TSLA",
+   "liquid": "xyz:TSLA",
+   "group": "Consumer/auto",
+   "date": "2026-11-25",
+   "close": 380.14,
+   "sma20": 382.1475,
+   "sma200": 381.14605000000006,
+   "adr20": 0.04661814600627129,
+   "avg_vol20": 35570150.15,
+   "dollar_vol20": 13479856567.7905,
+   "mcap": 1502601405592.44,
+   "ext20": -0.005253207204024557,
+   "hi52": 498.83,
+   "lo52": 297.38,
+   "pos52": 0.4108215438073963,
+   "from_high": -0.23793677204658903,
+   "bars": 260,
+   "levels": {
+    "prior_close": 380.14,
+    "pdh": 383.7299,
+    "pdl": 357.64,
+    "high20": 414.23,
+    "resistance": [
+     383.33,
+     386.83,
+     388.56
+    ],
+    "support": [
+     368.03,
+     365.27,
+     354.05
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.032280118165315,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 6,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "ORCL": {
+   "ticker": "ORCL",
+   "liquid": "xyz:ORCL",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 103.88,
+   "sma20": 118.80199999999999,
+   "sma200": 151.55603105,
+   "adr20": 0.06067116143692588,
+   "avg_vol20": 40600492.2,
+   "dollar_vol20": 4856701163.3915,
+   "mcap": 323059901536.96,
+   "ext20": -0.12560394606151415,
+   "hi52": 248.46346,
+   "lo52": 99.34,
+   "pos52": 0.03044457257094217,
+   "from_high": -0.5819103541422147,
+   "bars": 260,
+   "levels": {
+    "prior_close": 103.88,
+    "pdh": 105.57,
+    "pdl": 99.34,
+    "high20": 144.61,
+    "resistance": [
+     118.7,
+     129.85,
+     130.77
+    ],
+    "support": [
+     100.25
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8654287841367597,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "AAPL": {
+   "ticker": "AAPL",
+   "liquid": "xyz:AAPL",
+   "group": "Consumer/auto",
+   "date": "2026-11-25",
+   "close": 355.58,
+   "sma20": 348.5403591,
+   "sma200": 303.959072315,
+   "adr20": 0.02455755500487201,
+   "avg_vol20": 51544018.35,
+   "dollar_vol20": 17909694329.601097,
+   "mcap": 5167353275560.0,
+   "ext20": 0.020197491384291055,
+   "hi52": 360.83,
+   "lo52": 242.574906,
+   "pos52": 0.9556044494793603,
+   "from_high": -0.014549787988803575,
+   "bars": 260,
+   "levels": {
+    "prior_close": 355.58,
+    "pdh": 356.75,
+    "pdl": 345.13,
+    "high20": 360.83,
+    "resistance": [
+     360.83
+    ],
+    "support": [
+     340.77,
+     340.56,
+     338.44
+    ]
+   },
+   "breakout_ready": true,
+   "vol5_vs_20": 1.0699352430290292,
+   "step1_fails": [
+    "ADR20 < 3%"
+   ],
+   "step1": false,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": true,
+    "4": true,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 6,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "AMAT": {
+   "ticker": "AMAT",
+   "liquid": "xyz:AMAT",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 311.18,
+   "sma20": 357.3002117,
+   "sma200": 445.998150075,
+   "adr20": 0.0640461945393696,
+   "avg_vol20": 9175520.2,
+   "dollar_vol20": 3232791702.7431903,
+   "mcap": 246951652312.74,
+   "ext20": -0.12907972116938993,
+   "hi52": 737.768327,
+   "lo52": 221.734492,
+   "pos52": 0.17333264203499374,
+   "from_high": -0.5782144765344474,
+   "bars": 260,
+   "levels": {
+    "prior_close": 311.18,
+    "pdh": 311.55,
+    "pdl": 289.47,
+    "high20": 425.878244,
+    "resistance": [
+     367.63,
+     404.1,
+     425.88
+    ],
+    "support": [
+     300.62
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.177889859585291,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "MSFT": {
+   "ticker": "MSFT",
+   "liquid": "xyz:MSFT",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 489.93,
+   "sma20": 516.3774733,
+   "sma200": 443.229122145,
+   "adr20": 0.032670806121727236,
+   "avg_vol20": 30663990.75,
+   "dollar_vol20": 15861882762.241388,
+   "mcap": 3638315496861.36,
+   "ext20": -0.051217325827524696,
+   "hi52": 558.07194,
+   "lo52": 347.871862,
+   "pos52": 0.675823431426129,
+   "from_high": -0.12210243002004373,
+   "bars": 260,
+   "levels": {
+    "prior_close": 489.93,
+    "pdh": 493.437,
+    "pdl": 477.39,
+    "high20": 558.07194,
+    "resistance": [
+     508.97,
+     518.4,
+     526.49
+    ],
+    "support": [
+     486.29,
+     485.06,
+     481.03
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0228216364825247,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 12
+  },
+  "LLY": {
+   "ticker": "LLY",
+   "liquid": "xyz:LLY",
+   "group": "Health",
+   "date": "2026-11-25",
+   "close": 1392.22,
+   "sma20": 1398.7257233,
+   "sma200": 1120.29373969,
+   "adr20": 0.03196850267198507,
+   "avg_vol20": 3320480.85,
+   "dollar_vol20": 4634331141.804476,
+   "mcap": 1309724047058.82,
+   "ext20": -0.004651178706180592,
+   "hi52": 1475.25,
+   "lo52": 846.805822,
+   "pos52": 0.8678800712829581,
+   "from_high": -0.05628198610405011,
+   "bars": 260,
+   "levels": {
+    "prior_close": 1392.22,
+    "pdh": 1412.99,
+    "pdl": 1370.76,
+    "high20": 1475.25,
+    "resistance": [
+     1447.92,
+     1451.24,
+     1475.25
+    ],
+    "support": [
+     1341.46,
+     1331.6,
+     1258.81
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9453485027627851,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 10
+  },
+  "CVX": {
+   "ticker": "CVX",
+   "liquid": "xyz:CVX",
+   "group": "Energy/power",
+   "date": "2026-11-25",
+   "close": 210.95,
+   "sma20": 214.4324148,
+   "sma200": 193.79950309,
+   "adr20": 0.021946768546952555,
+   "avg_vol20": 8714711.45,
+   "dollar_vol20": 1866801793.6088634,
+   "mcap": 414605704661.7,
+   "ext20": -0.016240151020301852,
+   "hi52": 234.532402,
+   "lo52": 141.336786,
+   "pos52": 0.7469580328757095,
+   "from_high": -0.10055072049277014,
+   "bars": 260,
+   "levels": {
+    "prior_close": 210.95,
+    "pdh": 211.92,
+    "pdl": 207.19,
+    "high20": 234.532402,
+    "resistance": [
+     215.99,
+     218.22,
+     232.15
+    ],
+    "support": [
+     205.41,
+     205.34,
+     204.31
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0064878740190533,
+   "step1_fails": [
+    "ADR20 < 3%"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "AMD": {
+   "ticker": "AMD",
+   "liquid": "xyz:AMD",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 406.03,
+   "sma20": 489.21999999999997,
+   "sma200": 432.95972500000005,
+   "adr20": 0.08736431602060561,
+   "avg_vol20": 47124337.55,
+   "dollar_vol20": 22752117749.559,
+   "mcap": 665924626523.53,
+   "ext20": -0.17004619598544624,
+   "hi52": 658.52,
+   "lo52": 188.22,
+   "pos52": 0.4631299170742079,
+   "from_high": -0.38342039725444943,
+   "bars": 260,
+   "levels": {
+    "prior_close": 406.03,
+    "pdh": 407.77,
+    "pdl": 370.4,
+    "high20": 594.0,
+    "resistance": [
+     514.61,
+     526.79,
+     555.01
+    ],
+    "support": [
+     402.1
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.247792373476028,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "AVGO": {
+   "ticker": "AVGO",
+   "liquid": "xyz:AVGO",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 300.86,
+   "sma20": 326.9895,
+   "sma200": 366.43476034500003,
+   "adr20": 0.054935729358313215,
+   "avg_vol20": 32387515.65,
+   "dollar_vol20": 10497747041.998,
+   "mcap": 1436194281183.9,
+   "ext20": -0.07990929372349875,
+   "hi52": 493.319518,
+   "lo52": 278.0,
+   "pos52": 0.10616780221475329,
+   "from_high": -0.3901315698601652,
+   "bars": 260,
+   "levels": {
+    "prior_close": 300.86,
+    "pdh": 301.27,
+    "pdl": 278.0,
+    "high20": 369.82,
+    "resistance": [
+     335.74,
+     341.1,
+     352.4
+    ],
+    "support": [
+     289.77
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.1912771024782198,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "NVDA": {
+   "ticker": "NVDA",
+   "liquid": "xyz:NVDA",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 149.3,
+   "sma20": 172.4775,
+   "sma200": 202.620626575,
+   "adr20": 0.06276625021820441,
+   "avg_vol20": 351030242.15,
+   "dollar_vol20": 57503491458.519,
+   "mcap": 3598130000000.0,
+   "ext20": -0.13437984664666391,
+   "hi52": 243.37,
+   "lo52": 124.5,
+   "pos52": 0.208631277866577,
+   "from_high": -0.38653079672925994,
+   "bars": 260,
+   "levels": {
+    "prior_close": 149.3,
+    "pdh": 150.37,
+    "pdl": 141.17,
+    "high20": 215.33,
+    "resistance": [
+     171.5,
+     219.99,
+     222.19
+    ],
+    "support": [
+     148.8,
+     124.5
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.4196767399517918,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "META": {
+   "ticker": "META",
+   "liquid": "xyz:META",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 609.89,
+   "sma20": 615.268,
+   "sma200": 626.85776546,
+   "adr20": 0.035422538138696044,
+   "avg_vol20": 18298409.45,
+   "dollar_vol20": 11237762593.729,
+   "mcap": 1559025977792.17,
+   "ext20": -0.008740906401763171,
+   "hi52": 779.8192,
+   "lo52": 519.368372,
+   "pos52": 0.34755745909934277,
+   "from_high": -0.217908458781215,
+   "bars": 260,
+   "levels": {
+    "prior_close": 609.89,
+    "pdh": 611.055,
+    "pdl": 567.75,
+    "high20": 648.4499,
+    "resistance": [
+     630.06,
+     634.68,
+     643.09
+    ],
+    "support": [
+     609.0,
+     606.41,
+     583.8
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9946487343466894,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "PLTR": {
+   "ticker": "PLTR",
+   "liquid": "xyz:PLTR",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 163.59,
+   "sma20": 166.3125,
+   "sma200": 154.296925,
+   "adr20": 0.055737503516002554,
+   "avg_vol20": 25842429.05,
+   "dollar_vol20": 4292159417.7445,
+   "mcap": 394169691771.66,
+   "ext20": -0.016369785794813962,
+   "hi52": 212.9399,
+   "lo52": 106.37,
+   "pos52": 0.5369245912776497,
+   "from_high": -0.23175506328311413,
+   "bars": 260,
+   "levels": {
+    "prior_close": 163.59,
+    "pdh": 164.75,
+    "pdl": 151.51,
+    "high20": 198.51,
+    "resistance": [
+     167.13,
+     175.41,
+     194.68
+    ],
+    "support": [
+     152.6,
+     142.28
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0236948294920443,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 9
+  },
+  "INTC": {
+   "ticker": "INTC",
+   "liquid": "xyz:INTC",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 54.47,
+   "sma20": 59.3625,
+   "sma200": 87.65872499999999,
+   "adr20": 0.06942817225368142,
+   "avg_vol20": 161499546.65,
+   "dollar_vol20": 9628525945.367,
+   "mcap": 289508050000.0,
+   "ext20": -0.08241735102126757,
+   "hi52": 142.35,
+   "lo52": 34.68,
+   "pos52": 0.18380235906009104,
+   "from_high": -0.617351598173516,
+   "bars": 260,
+   "levels": {
+    "prior_close": 54.47,
+    "pdh": 55.0,
+    "pdl": 49.155,
+    "high20": 93.5,
+    "resistance": [
+     59.77,
+     64.06,
+     95.68
+    ],
+    "support": [
+     52.42,
+     51.51,
+     51.1
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9534102689074018,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "ASML": {
+   "ticker": "ASML",
+   "liquid": "xyz:ASML",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 1303.08,
+   "sma20": 1448.7942500000001,
+   "sma200": 1596.51819596,
+   "adr20": 0.03985910262150651,
+   "avg_vol20": 1949634.85,
+   "dollar_vol20": 2790331435.2325,
+   "mcap": 500513028000.0,
+   "ext20": -0.10057622053649107,
+   "hi52": 1994.745766,
+   "lo52": 967.797896,
+   "pos52": 0.32648405415164833,
+   "from_high": -0.34674381958307166,
+   "bars": 260,
+   "levels": {
+    "prior_close": 1303.08,
+    "pdh": 1307.47,
+    "pdl": 1235.1,
+    "high20": 1690.1,
+    "resistance": [
+     1443.72,
+     1563.46,
+     1685.59
+    ],
+    "support": [
+     1258.53
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.1122364785385324,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "TSM": {
+   "ticker": "TSM",
+   "liquid": "xyz:TSM",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 342.34,
+   "sma20": 379.50149999999996,
+   "sma200": 402.24871787000006,
+   "adr20": 0.046411811712355665,
+   "avg_vol20": 19265910.85,
+   "dollar_vol20": 7133545982.0255,
+   "mcap": 1775537166820.0,
+   "ext20": -0.09792187909665706,
+   "hi52": 487.47,
+   "lo52": 270.285661,
+   "pos52": 0.33176581392454807,
+   "from_high": -0.2977208853878188,
+   "bars": 260,
+   "levels": {
+    "prior_close": 342.34,
+    "pdh": 343.165,
+    "pdl": 321.1,
+    "high20": 436.24,
+    "resistance": [
+     386.9,
+     416.8,
+     435.16
+    ],
+    "support": [
+     318.48
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.3197786285822035,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "AMZN": {
+   "ticker": "AMZN",
+   "liquid": "xyz:AMZN",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 244.43,
+   "sma20": 257.1875,
+   "sma200": 245.7811,
+   "adr20": 0.037553209473079496,
+   "avg_vol20": 55363713.5,
+   "dollar_vol20": 14140714015.8345,
+   "mcap": 2643055396135.58,
+   "ext20": -0.049603888213851755,
+   "hi52": 287.2,
+   "lo52": 196.0,
+   "pos52": 0.5310307017543862,
+   "from_high": -0.14892061281337043,
+   "bars": 260,
+   "levels": {
+    "prior_close": 244.43,
+    "pdh": 246.56,
+    "pdl": 235.96,
+    "high20": 275.34,
+    "resistance": [
+     255.36,
+     257.59,
+     259.49
+    ],
+    "support": [
+     244.3,
+     229.36
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.001226812576436,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "GOOGL": {
+   "ticker": "GOOGL",
+   "liquid": "xyz:GOOGL",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 273.1,
+   "sma20": 283.0485,
+   "sma200": 336.06114660500003,
+   "adr20": 0.03524638746594361,
+   "avg_vol20": 45488708.95,
+   "dollar_vol20": 12837410139.881,
+   "mcap": 3357491400000.0,
+   "ext20": -0.0351476867038687,
+   "hi52": 408.10375,
+   "lo52": 262.73,
+   "pos52": 0.07133337345978903,
+   "from_high": -0.3308074233574182,
+   "bars": 260,
+   "levels": {
+    "prior_close": 273.1,
+    "pdh": 273.62,
+    "pdl": 262.73,
+    "high20": 304.9699,
+    "resistance": [
+     295.43,
+     296.33,
+     296.49
+    ],
+    "support": [
+     264.22
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.000831464573804,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "MU": {
+   "ticker": "MU",
+   "liquid": "xyz:MU",
+   "group": "Memory/storage",
+   "date": "2026-11-25",
+   "close": 601.25,
+   "sma20": 742.8015,
+   "sma200": 776.301097565,
+   "adr20": 0.0781630936152446,
+   "avg_vol20": 37059336.8,
+   "dollar_vol20": 26715895365.8625,
+   "mcap": 680268206215.0,
+   "ext20": -0.1905643701581109,
+   "hi52": 1254.60957,
+   "lo52": 212.119101,
+   "pos52": 0.373270462005538,
+   "from_high": -0.5207672455423722,
+   "bars": 260,
+   "levels": {
+    "prior_close": 601.25,
+    "pdh": 604.945,
+    "pdl": 548.13,
+    "high20": 971.01,
+    "resistance": [
+     760.01,
+     827.58,
+     928.45
+    ],
+    "support": [
+     585.25
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.2786434375695575,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "BX": {
+   "ticker": "BX",
+   "liquid": "xyz:BX",
+   "group": "Financials",
+   "date": "2026-11-25",
+   "close": 118.95,
+   "sma20": 118.87701239999998,
+   "sma200": 119.785322495,
+   "adr20": 0.034345599338530784,
+   "avg_vol20": 4904189.6,
+   "dollar_vol20": 582517968.7144024,
+   "mcap": 90419501827.2,
+   "ext20": 0.000613975726059035,
+   "hi52": 158.597589,
+   "lo52": 98.835238,
+   "pos52": 0.3365791616865943,
+   "from_high": -0.24998859850259136,
+   "bars": 260,
+   "levels": {
+    "prior_close": 118.95,
+    "pdh": 119.96,
+    "pdl": 114.15,
+    "high20": 127.67,
+    "resistance": [
+     119.39,
+     126.54,
+     127.67
+    ],
+    "support": [
+     118.05,
+     115.04,
+     110.45
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.1348690107739718,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "DELL": {
+   "ticker": "DELL",
+   "liquid": "xyz:DELL",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 297.06,
+   "sma20": 348.156,
+   "sma200": 350.231387735,
+   "adr20": 0.09022464851510975,
+   "avg_vol20": 10328517.3,
+   "dollar_vol20": 3458523298.6214995,
+   "mcap": 188874535515.0,
+   "ext20": -0.14676179643608034,
+   "hi52": 594.686244,
+   "lo52": 109.546998,
+   "pos52": 0.3865137762942395,
+   "from_high": -0.5004760863444488,
+   "bars": 260,
+   "levels": {
+    "prior_close": 297.06,
+    "pdh": 297.89,
+    "pdl": 265.0,
+    "high20": 493.4979,
+    "resistance": [
+     379.03,
+     384.69,
+     502.0
+    ],
+    "support": [
+     274.35
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.631447526355017,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "GLW": {
+   "ticker": "GLW",
+   "liquid": "xyz:GLW",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 100.24,
+   "sma20": 112.12594485,
+   "sma200": 155.430687115,
+   "adr20": 0.06636802315835616,
+   "avg_vol20": 10408041.5,
+   "dollar_vol20": 1157653221.6302524,
+   "mcap": 86346846865.44,
+   "ext20": -0.10600530382063489,
+   "hi52": 270.633594,
+   "lo52": 79.412309,
+   "pos52": 0.1089193130356801,
+   "from_high": -0.629609914576976,
+   "bars": 260,
+   "levels": {
+    "prior_close": 100.24,
+    "pdh": 100.77,
+    "pdl": 92.78,
+    "high20": 132.269352,
+    "resistance": [
+     114.02,
+     123.58,
+     129.55
+    ],
+    "support": [
+     93.49
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0614740342839717,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "MELI": {
+   "ticker": "MELI",
+   "liquid": "para:MELI",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 1467.3,
+   "sma20": 1514.0265,
+   "sma200": 1757.9775750000001,
+   "adr20": 0.036258883551288465,
+   "avg_vol20": 729078.6,
+   "dollar_vol20": 1097678408.4505,
+   "mcap": 74387417574.6,
+   "ext20": -0.03086240564481535,
+   "hi52": 2342.0,
+   "lo52": 1333.54,
+   "pos52": 0.1326378835055431,
+   "from_high": -0.3734842015371478,
+   "bars": 260,
+   "levels": {
+    "prior_close": 1467.3,
+    "pdh": 1485.35,
+    "pdl": 1402.417,
+    "high20": 1767.98,
+    "resistance": [
+     1739.88,
+     1767.98,
+     1842.49
+    ],
+    "support": [
+     1333.54
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.1680748824612326,
+   "step1_fails": [
+    "below 200d",
+    "avg vol < 1M"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 2,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "GEV": {
+   "ticker": "GEV",
+   "liquid": "xyz:GEV",
+   "group": "Energy/power",
+   "date": "2026-11-25",
+   "close": 715.0,
+   "sma20": 796.1765,
+   "sma200": 950.25192352,
+   "adr20": 0.06337923557784275,
+   "avg_vol20": 4529662.65,
+   "dollar_vol20": 3580685563.4269996,
+   "mcap": 189244102190.0,
+   "ext20": -0.10195792013454308,
+   "hi52": 1195.240718,
+   "lo52": 551.903778,
+   "pos52": 0.253516022257326,
+   "from_high": -0.4017941413538758,
+   "bars": 260,
+   "levels": {
+    "prior_close": 715.0,
+    "pdh": 719.74,
+    "pdl": 671.79,
+    "high20": 929.77,
+    "resistance": [
+     806.49,
+     845.0,
+     914.88
+    ],
+    "support": [
+     691.72
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0078471517078649,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "CRWD": {
+   "ticker": "CRWD",
+   "liquid": "xyz:CRWD",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 209.3,
+   "sma20": 229.74499999999998,
+   "sma200": 177.81615624999998,
+   "adr20": 0.06650650802655349,
+   "avg_vol20": 11781332.65,
+   "dollar_vol20": 2658978469.343,
+   "mcap": 215703851845.3,
+   "ext20": -0.08898996713747831,
+   "hi52": 286.9899,
+   "lo52": 85.68,
+   "pos52": 0.6140780955134348,
+   "from_high": -0.27070604226838635,
+   "bars": 260,
+   "levels": {
+    "prior_close": 209.3,
+    "pdh": 210.3,
+    "pdl": 194.7,
+    "high20": 268.6,
+    "resistance": [
+     218.31,
+     238.5,
+     250.32
+    ],
+    "support": [
+     204.27
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.6830652685118777,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": "2026-12-01 post-market",
+   "rank": 4
+  },
+  "ARM": {
+   "ticker": "ARM",
+   "liquid": "xyz:ARM",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 161.51,
+   "sma20": 184.9465,
+   "sma200": 235.136475,
+   "adr20": 0.0756189638624127,
+   "avg_vol20": 6737352.8,
+   "dollar_vol20": 1228234584.4995,
+   "mcap": 172815700000.0,
+   "ext20": -0.12672042996217825,
+   "hi52": 452.7,
+   "lo52": 100.02,
+   "pos52": 0.17435068617443572,
+   "from_high": -0.6432295118179809,
+   "bars": 260,
+   "levels": {
+    "prior_close": 161.51,
+    "pdh": 163.285,
+    "pdl": 143.55,
+    "high20": 231.99,
+    "resistance": [
+     191.65,
+     207.44,
+     209.5
+    ],
+    "support": [
+     150.37
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0811725637998355,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "NFLX": {
+   "ticker": "NFLX",
+   "liquid": "xyz:NFLX",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 59.41,
+   "sma20": 61.68300000000001,
+   "sma200": 79.591425,
+   "adr20": 0.029718270687543458,
+   "avg_vol20": 40465133.9,
+   "dollar_vol20": 2489609109.1195,
+   "mcap": 243956821897.23,
+   "ext20": -0.03684969926884252,
+   "hi52": 109.73,
+   "lo52": 56.56,
+   "pos52": 0.05360165506864763,
+   "from_high": -0.4585801512804156,
+   "bars": 260,
+   "levels": {
+    "prior_close": 59.41,
+    "pdh": 59.57,
+    "pdl": 57.025,
+    "high20": 67.49,
+    "resistance": [
+     64.56,
+     67.49,
+     67.82
+    ],
+    "support": [
+     56.56
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.1832657249652645,
+   "step1_fails": [
+    "below 200d",
+    "ADR20 < 3%"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "MRNA": {
+   "ticker": "MRNA",
+   "liquid": "xyz:MRNA",
+   "group": "Health",
+   "date": "2026-11-25",
+   "close": 220.84,
+   "sma20": 227.2255,
+   "sma200": 103.09207500000001,
+   "adr20": 0.07538450078230145,
+   "avg_vol20": 9589197.7,
+   "dollar_vol20": 2213886897.2955003,
+   "mcap": 89356496119.0,
+   "ext20": -0.02810203960382973,
+   "hi52": 280.8,
+   "lo52": 23.545,
+   "pos52": 0.7669238693125499,
+   "from_high": -0.21353276353276351,
+   "bars": 260,
+   "levels": {
+    "prior_close": 220.84,
+    "pdh": 228.69,
+    "pdl": 212.55,
+    "high20": 280.8,
+    "resistance": [
+     227.46,
+     242.29,
+     254.48
+    ],
+    "support": [
+     208.92,
+     189.98,
+     183.28
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8827312633256065,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 3
+  },
+  "STX": {
+   "ticker": "STX",
+   "liquid": "para:STX",
+   "group": "Memory/storage",
+   "date": "2026-11-25",
+   "close": 472.33,
+   "sma20": 531.7645,
+   "sma200": 703.3587377700001,
+   "adr20": 0.0807346343995644,
+   "avg_vol20": 5435380.3,
+   "dollar_vol20": 2880888001.1905,
+   "mcap": 108428598613.97,
+   "ext20": -0.11176846141478047,
+   "hi52": 1143.267705,
+   "lo52": 241.486594,
+   "pos52": 0.25598607376463445,
+   "from_high": -0.5868596673077545,
+   "bars": 260,
+   "levels": {
+    "prior_close": 472.33,
+    "pdh": 473.6213,
+    "pdl": 432.0401,
+    "high20": 718.65,
+    "resistance": [
+     568.31,
+     568.89,
+     715.63
+    ],
+    "support": [
+     453.63,
+     449.28
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8655594531260306,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "BABA": {
+   "ticker": "BABA",
+   "liquid": "xyz:BABA",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 86.26,
+   "sma20": 95.19,
+   "sma200": 119.14985182000001,
+   "adr20": 0.0313206152883249,
+   "avg_vol20": 13640987.95,
+   "dollar_vol20": 1278373788.4715,
+   "mcap": 214592878438.14,
+   "ext20": -0.09381237524950092,
+   "hi52": 179.451924,
+   "lo52": 80.96,
+   "pos52": 0.05381151859720003,
+   "from_high": -0.5193141534665295,
+   "bars": 260,
+   "levels": {
+    "prior_close": 86.26,
+    "pdh": 86.31,
+    "pdl": 81.06,
+    "high20": 111.17,
+    "resistance": [
+     101.29,
+     111.17,
+     111.25
+    ],
+    "support": [
+     80.96
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.205669329837653,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "MRVL": {
+   "ticker": "MRVL",
+   "liquid": "xyz:MRVL",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 130.93,
+   "sma20": 154.965,
+   "sma200": 189.34428501,
+   "adr20": 0.08915767293909124,
+   "avg_vol20": 35249482.35,
+   "dollar_vol20": 5514404279.1595,
+   "mcap": 114954953390.26,
+   "ext20": -0.15509953860549153,
+   "hi52": 329.726593,
+   "lo52": 70.616782,
+   "pos52": 0.23277087720927717,
+   "from_high": -0.6029134356172479,
+   "bars": 260,
+   "levels": {
+    "prior_close": 130.93,
+    "pdh": 131.14,
+    "pdl": 117.7975,
+    "high20": 225.68,
+    "resistance": [
+     154.51,
+     174.53,
+     241.83
+    ],
+    "support": [
+     120.56
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.932395360410165,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": "2026-12-01 post-market"
+  },
+  "NOW": {
+   "ticker": "NOW",
+   "liquid": "xyz:NOW",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 92.16,
+   "sma20": 99.30499999999999,
+   "sma200": 113.06909999999999,
+   "adr20": 0.05110110267125584,
+   "avg_vol20": 20915894.15,
+   "dollar_vol20": 2109681342.9529998,
+   "mcap": 95654430720.0,
+   "ext20": -0.07195005286742862,
+   "hi52": 175.0,
+   "lo52": 81.24,
+   "pos52": 0.11646757679180889,
+   "from_high": -0.47337142857142855,
+   "bars": 260,
+   "levels": {
+    "prior_close": 92.16,
+    "pdh": 92.81,
+    "pdl": 86.85,
+    "high20": 121.5,
+    "resistance": [
+     112.35,
+     140.8,
+     142.1
+    ],
+    "support": [
+     87.33
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8091107976849272,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "WDC": {
+   "ticker": "WDC",
+   "liquid": "xyz:WDC",
+   "group": "Memory/storage",
+   "date": "2026-11-25",
+   "close": 272.45,
+   "sma20": 302.79200000000003,
+   "sma200": 422.24815066,
+   "adr20": 0.07885578457805628,
+   "avg_vol20": 7862728.25,
+   "dollar_vol20": 2342531224.501,
+   "mcap": 101984374639.05,
+   "ext20": -0.10020740310179943,
+   "hi52": 799.613335,
+   "lo52": 142.279569,
+   "pos52": 0.1980279087017112,
+   "from_high": -0.6592728159042021,
+   "bars": 260,
+   "levels": {
+    "prior_close": 272.45,
+    "pdh": 272.96,
+    "pdl": 244.7702,
+    "high20": 402.23,
+    "resistance": [
+     316.11,
+     319.0,
+     381.88
+    ],
+    "support": [
+     271.83,
+     258.61,
+     256.88
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0940737268899,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "LRCX": {
+   "ticker": "LRCX",
+   "liquid": "xyz:LRCX",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 185.01,
+   "sma20": 215.45999999999998,
+   "sma200": 282.534584575,
+   "adr20": 0.06655474005976761,
+   "avg_vol20": 14738770.1,
+   "dollar_vol20": 3105046588.575,
+   "mcap": 231109126710.0,
+   "ext20": -0.14132553606237808,
+   "hi52": 438.034651,
+   "lo52": 143.76595,
+   "pos52": 0.1401577872870686,
+   "from_high": -0.5776361537206334,
+   "bars": 260,
+   "levels": {
+    "prior_close": 185.01,
+    "pdh": 185.18,
+    "pdl": 171.53,
+    "high20": 260.584,
+    "resistance": [
+     221.96,
+     241.6,
+     260.58
+    ],
+    "support": [
+     184.24,
+     181.77
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.2158841666171318,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "QCOM": {
+   "ticker": "QCOM",
+   "liquid": "xyz:QCOM",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 168.66,
+   "sma20": 167.4595,
+   "sma200": 170.025852415,
+   "adr20": 0.05744182992707678,
+   "avg_vol20": 15630091.55,
+   "dollar_vol20": 2589985132.3345003,
+   "mcap": 180466200000.0,
+   "ext20": 0.0071688975543340305,
+   "hi52": 257.561753,
+   "lo52": 120.883188,
+   "pos52": 0.34955599658219993,
+   "from_high": -0.34516674919509505,
+   "bars": 260,
+   "levels": {
+    "prior_close": 168.66,
+    "pdh": 168.95,
+    "pdl": 155.38,
+    "high20": 185.59,
+    "resistance": [
+     174.0,
+     178.99,
+     180.78
+    ],
+    "support": [
+     149.13,
+     148.25
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0704996670348996,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "NET": {
+   "ticker": "NET",
+   "liquid": "xyz:NET",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 283.3,
+   "sma20": 288.40749999999997,
+   "sma200": 257.9327,
+   "adr20": 0.0692628861217178,
+   "avg_vol20": 4438460.8,
+   "dollar_vol20": 1267085485.0440001,
+   "mcap": 101532525841.5,
+   "ext20": -0.01770931754548677,
+   "hi52": 370.35,
+   "lo52": 158.83,
+   "pos52": 0.5884549924357034,
+   "from_high": -0.23504792763602,
+   "bars": 260,
+   "levels": {
+    "prior_close": 283.3,
+    "pdh": 284.49,
+    "pdl": 265.74,
+    "high20": 326.5,
+    "resistance": [
+     325.0,
+     326.5,
+     334.6
+    ],
+    "support": [
+     277.19,
+     271.94,
+     271.72
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.7858116489391999,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 5
+  },
+  "ICE": {
+   "ticker": "ICE",
+   "liquid": "xyz:ICE",
+   "group": "Financials",
+   "date": "2026-11-25",
+   "close": 177.81,
+   "sma20": 173.5865,
+   "sma200": 154.10695674500002,
+   "adr20": 0.023617102451033677,
+   "avg_vol20": 3375300.8,
+   "dollar_vol20": 583960527.2405,
+   "mcap": 99370614237.72,
+   "ext20": 0.024330809135503007,
+   "hi52": 181.38,
+   "lo52": 121.386362,
+   "pos52": 0.9404936903476333,
+   "from_high": -0.01968243466754871,
+   "bars": 260,
+   "levels": {
+    "prior_close": 177.81,
+    "pdh": 178.165,
+    "pdl": 174.3603,
+    "high20": 181.38,
+    "resistance": [
+     177.94,
+     181.38
+    ],
+    "support": [
+     169.2,
+     168.7,
+     156.43
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.967734846032093,
+   "step1_fails": [
+    "ADR20 < 3%"
+   ],
+   "step1": false,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "IBM": {
+   "ticker": "IBM",
+   "liquid": "xyz:IBM",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 243.47,
+   "sma20": 242.22297654999997,
+   "sma200": 240.90983315000003,
+   "adr20": 0.02869022464241494,
+   "avg_vol20": 4335720.3,
+   "dollar_vol20": 1047516048.1349787,
+   "mcap": 230108562393.35,
+   "ext20": 0.005148245916888117,
+   "hi52": 327.825399,
+   "lo52": 196.413226,
+   "pos52": 0.358085350281819,
+   "from_high": -0.25731807009865026,
+   "bars": 260,
+   "levels": {
+    "prior_close": 243.47,
+    "pdh": 246.24,
+    "pdl": 232.17,
+    "high20": 258.085512,
+    "resistance": [
+     249.31,
+     250.09,
+     254.54
+    ],
+    "support": [
+     242.93,
+     238.7,
+     228.62
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.1320485779490896,
+   "step1_fails": [
+    "ADR20 < 3%"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": true,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "SNDK": {
+   "ticker": "SNDK",
+   "liquid": "xyz:SNDK",
+   "group": "Memory/storage",
+   "date": "2026-11-25",
+   "close": 73.61,
+   "sma20": 109.961875,
+   "sma200": 160.844903125,
+   "adr20": 0.10419341113159955,
+   "avg_vol20": 115773414.5,
+   "dollar_vol20": 12441665941.011,
+   "mcap": 83791361261.2,
+   "ext20": -0.33058616906996174,
+   "hi52": 294.298738,
+   "lo52": 23.4625,
+   "pos52": 0.18515801419454067,
+   "from_high": -0.7498800011843748,
+   "bars": 260,
+   "levels": {
+    "prior_close": 73.61,
+    "pdh": 73.77,
+    "pdl": 67.02,
+    "high20": 173.225,
+    "resistance": [
+     105.84,
+     126.38,
+     176.06
+    ],
+    "support": []
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0141525574509165,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": true,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "HOOD": {
+   "ticker": "HOOD",
+   "liquid": "xyz:HOOD",
+   "group": "Crypto-linked",
+   "date": "2026-11-25",
+   "close": 65.78,
+   "sma20": 77.0645,
+   "sma200": 90.685725,
+   "adr20": 0.059564359552342315,
+   "avg_vol20": 19920992.6,
+   "dollar_vol20": 1519815319.3585,
+   "mcap": 59234316201.06,
+   "ext20": -0.14642928975079306,
+   "hi52": 139.75,
+   "lo52": 61.26,
+   "pos52": 0.05758695375207036,
+   "from_high": -0.5293023255813953,
+   "bars": 260,
+   "levels": {
+    "prior_close": 65.78,
+    "pdh": 66.24,
+    "pdl": 61.26,
+    "high20": 92.435,
+    "resistance": [
+     74.04,
+     86.15,
+     88.79
+    ],
+    "support": [
+     61.75
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.093975156639534,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "NOK": {
+   "ticker": "NOK",
+   "liquid": "xyz:NOK",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 7.3,
+   "sma20": 7.934,
+   "sma200": 10.32752686,
+   "adr20": 0.04291137324396972,
+   "avg_vol20": 68599156.05,
+   "dollar_vol20": 545493176.201,
+   "mcap": 41310230018.7,
+   "ext20": -0.0799092513234182,
+   "hi52": 17.29559,
+   "lo52": 5.802424,
+   "pos52": 0.13030143304290562,
+   "from_high": -0.5779270900848136,
+   "bars": 260,
+   "levels": {
+    "prior_close": 7.3,
+    "pdh": 7.335,
+    "pdl": 6.81,
+    "high20": 9.39,
+    "resistance": [
+     7.85,
+     8.56,
+     9.39
+    ],
+    "support": [
+     6.81
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0536434376440116,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "ZM": {
+   "ticker": "ZM",
+   "liquid": "xyz:ZM",
+   "group": "Software",
+   "date": "2026-11-25",
+   "close": 88.56,
+   "sma20": 91.7085,
+   "sma200": 92.274525,
+   "adr20": 0.05029295718366774,
+   "avg_vol20": 3770271.2,
+   "dollar_vol20": 341980003.8545,
+   "mcap": 25840365446.16,
+   "ext20": -0.03433160503115851,
+   "hi52": 114.74,
+   "lo52": 70.7,
+   "pos52": 0.40554041780199823,
+   "from_high": -0.22816803207251168,
+   "bars": 260,
+   "levels": {
+    "prior_close": 88.56,
+    "pdh": 90.3895,
+    "pdl": 85.26,
+    "high20": 100.32,
+    "resistance": [
+     93.33,
+     95.17,
+     97.0
+    ],
+    "support": [
+     87.81,
+     87.73,
+     85.38
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.6668532491774066,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "COIN": {
+   "ticker": "COIN",
+   "liquid": "xyz:COIN",
+   "group": "Crypto-linked",
+   "date": "2026-11-25",
+   "close": 103.72,
+   "sma20": 127.218,
+   "sma200": 171.54815,
+   "adr20": 0.06565741489776376,
+   "avg_vol20": 9716704.45,
+   "dollar_vol20": 1237238884.0757499,
+   "mcap": 27461261714.96,
+   "ext20": -0.18470656668081564,
+   "hi52": 284.74,
+   "lo52": 94.875,
+   "pos52": 0.04658573196745055,
+   "from_high": -0.6357378661234812,
+   "bars": 260,
+   "levels": {
+    "prior_close": 103.72,
+    "pdh": 104.31,
+    "pdl": 94.875,
+    "high20": 163.6,
+    "resistance": [
+     153.33,
+     163.6,
+     180.6
+    ],
+    "support": [
+     101.71
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0365544667770563,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "MSTR": {
+   "ticker": "MSTR",
+   "liquid": "xyz:MSTR",
+   "group": "Crypto-linked",
+   "date": "2026-11-25",
+   "close": 79.96,
+   "sma20": 111.501,
+   "sma200": 130.936675,
+   "adr20": 0.07382467293960508,
+   "avg_vol20": 21276600.55,
+   "dollar_vol20": 2275414272.8335,
+   "mcap": 33771474375.72,
+   "ext20": -0.2828763867588633,
+   "hi52": 198.3999,
+   "lo52": 70.37,
+   "pos52": 0.07490437780549691,
+   "from_high": -0.5969756033143162,
+   "bars": 260,
+   "levels": {
+    "prior_close": 79.96,
+    "pdh": 81.02,
+    "pdl": 70.37,
+    "high20": 146.07,
+    "resistance": [
+     145.3,
+     146.07,
+     155.69
+    ],
+    "support": []
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.3237091486402888,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "RKLB": {
+   "ticker": "RKLB",
+   "liquid": "xyz:RKLB",
+   "group": "Space/quantum/other",
+   "date": "2026-11-25",
+   "close": 47.02,
+   "sma20": 54.48049999999999,
+   "sma200": 77.3285,
+   "adr20": 0.0986475206352275,
+   "avg_vol20": 19387150.9,
+   "dollar_vol20": 1054616195.1274999,
+   "mcap": 29717623423.3,
+   "ext20": -0.13693890474573456,
+   "hi52": 150.9999,
+   "lo52": 39.3,
+   "pos52": 0.0691137592782089,
+   "from_high": -0.6886090653040167,
+   "bars": 260,
+   "levels": {
+    "prior_close": 47.02,
+    "pdh": 48.16,
+    "pdl": 42.1201,
+    "high20": 68.2599,
+    "resistance": [
+     53.9,
+     55.31,
+     61.13
+    ],
+    "support": [
+     43.89
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9424641554732006,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "CIEN": {
+   "ticker": "CIEN",
+   "liquid": "para:CIEN",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 242.79,
+   "sma20": 272.288,
+   "sma200": 405.9881,
+   "adr20": 0.08558859683717004,
+   "avg_vol20": 3298824.4,
+   "dollar_vol20": 887535832.267,
+   "mcap": 34429691784.75,
+   "ext20": -0.10833382301092964,
+   "hi52": 637.51,
+   "lo52": 182.175,
+   "pos52": 0.13312176748987006,
+   "from_high": -0.619158915154272,
+   "bars": 260,
+   "levels": {
+    "prior_close": 242.79,
+    "pdh": 244.17,
+    "pdl": 216.87,
+    "high20": 361.96,
+    "resistance": [
+     286.99,
+     305.29,
+     355.19
+    ],
+    "support": [
+     230.34,
+     225.57
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9817355540355529,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "CRWV": {
+   "ticker": "CRWV",
+   "liquid": "xyz:CRWV",
+   "group": "AI cloud",
+   "date": "2026-11-25",
+   "close": 42.57,
+   "sma20": 49.585750000000004,
+   "sma200": 87.259125,
+   "adr20": 0.11557353444301621,
+   "avg_vol20": 72662642.2,
+   "dollar_vol20": 3636326346.93625,
+   "mcap": 23674272070.68,
+   "ext20": -0.14148722163121463,
+   "hi52": 138.25,
+   "lo52": 37.4,
+   "pos52": 0.05126425384234013,
+   "from_high": -0.6920795660036166,
+   "bars": 260,
+   "levels": {
+    "prior_close": 42.57,
+    "pdh": 43.02,
+    "pdl": 37.4,
+    "high20": 64.39,
+    "resistance": [
+     52.86,
+     62.02,
+     64.39
+    ],
+    "support": [
+     40.58,
+     39.28
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0863641894926854,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "NBIS": {
+   "ticker": "NBIS",
+   "liquid": "xyz:NBIS",
+   "group": "AI cloud",
+   "date": "2026-11-25",
+   "close": 84.99,
+   "sma20": 122.68274999999998,
+   "sma200": 179.744125,
+   "adr20": 0.1159177546571454,
+   "avg_vol20": 33475730.5,
+   "dollar_vol20": 3935743174.738,
+   "mcap": 24893775400.95,
+   "ext20": -0.3072375700740324,
+   "hi52": 299.86,
+   "lo52": 73.52,
+   "pos52": 0.05067597419810903,
+   "from_high": -0.7165677316080838,
+   "bars": 260,
+   "levels": {
+    "prior_close": 84.99,
+    "pdh": 87.2613,
+    "pdl": 75.6001,
+    "high20": 178.33,
+    "resistance": [
+     115.18,
+     160.21,
+     178.85
+    ],
+    "support": [
+     80.67
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.2523079966843442,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "VST": {
+   "ticker": "VST",
+   "liquid": "para:VST",
+   "group": "Energy/power",
+   "date": "2026-11-25",
+   "close": 121.32,
+   "sma20": 128.2885,
+   "sma200": 150.473695655,
+   "adr20": 0.04921758282929626,
+   "avg_vol20": 6642680.5,
+   "dollar_vol20": 835085728.9255,
+   "mcap": 41175362941.56,
+   "ext20": -0.05431897636966687,
+   "hi52": 181.758682,
+   "lo52": 110.89,
+   "pos52": 0.1471736133035463,
+   "from_high": -0.3325215683507212,
+   "bars": 260,
+   "levels": {
+    "prior_close": 121.32,
+    "pdh": 121.87,
+    "pdl": 115.51,
+    "high20": 144.67,
+    "resistance": [
+     136.73,
+     142.4,
+     143.51
+    ],
+    "support": [
+     114.85,
+     110.89
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.834530939731333,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "EBAY": {
+   "ticker": "EBAY",
+   "liquid": "xyz:EBAY",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 115.54,
+   "sma20": 120.0885,
+   "sma200": 106.18682269499999,
+   "adr20": 0.03341906581352043,
+   "avg_vol20": 4398722.45,
+   "dollar_vol20": 527712859.35,
+   "mcap": 50722060000.0,
+   "ext20": -0.03787623294486975,
+   "hi52": 127.74,
+   "lo52": 77.319921,
+   "pos52": 0.7580329058984618,
+   "from_high": -0.09550649757319551,
+   "bars": 260,
+   "levels": {
+    "prior_close": 115.54,
+    "pdh": 116.03,
+    "pdl": 112.7201,
+    "high20": 127.74,
+    "resistance": [
+     118.81,
+     122.38,
+     123.75
+    ],
+    "support": [
+     106.44,
+     106.06,
+     104.71
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.061111459760322,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 11
+  },
+  "CRDO": {
+   "ticker": "CRDO",
+   "liquid": "para:CRDO",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 106.795,
+   "sma20": 128.64525,
+   "sma200": 180.86032500000002,
+   "adr20": 0.10524960227257904,
+   "avg_vol20": 8571639.65,
+   "dollar_vol20": 1090475258.638,
+   "mcap": 20072325082.81,
+   "ext20": -0.16984886733089644,
+   "hi52": 308.6699,
+   "lo52": 86.485,
+   "pos52": 0.09141035236868034,
+   "from_high": -0.654015503293324,
+   "bars": 260,
+   "levels": {
+    "prior_close": 106.795,
+    "pdh": 106.8,
+    "pdl": 93.28,
+    "high20": 169.77,
+    "resistance": [
+     131.15,
+     148.19,
+     175.5
+    ],
+    "support": [
+     97.92
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0756114788376574,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "TER": {
+   "ticker": "TER",
+   "liquid": "para:TER",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 212.15,
+   "sma20": 242.15509945,
+   "sma200": 347.67641048999997,
+   "adr20": 0.08169726478549817,
+   "avg_vol20": 4528397.2,
+   "dollar_vol20": 1089854428.9742446,
+   "mcap": 33121865924.65,
+   "ext20": -0.12390860038937734,
+   "hi52": 487.413042,
+   "lo52": 159.210814,
+   "pos52": 0.16130050768576748,
+   "from_high": -0.5647428736631959,
+   "bars": 260,
+   "levels": {
+    "prior_close": 212.15,
+    "pdh": 213.25,
+    "pdl": 190.91,
+    "high20": 304.586513,
+    "resistance": [
+     248.84,
+     273.05,
+     328.62
+    ],
+    "support": [
+     211.5,
+     201.74
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9621042518090065,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "BE": {
+   "ticker": "BE",
+   "liquid": "xyz:BE",
+   "group": "Energy/power",
+   "date": "2026-11-25",
+   "close": 152.89,
+   "sma20": 183.4625,
+   "sma200": 224.04305,
+   "adr20": 0.10159788828568148,
+   "avg_vol20": 18024965.35,
+   "dollar_vol20": 3252852016.5805,
+   "mcap": 45202951181.21,
+   "ext20": -0.16664168426790227,
+   "hi52": 351.28,
+   "lo52": 75.7,
+   "pos52": 0.2801001524058349,
+   "from_high": -0.564763151901617,
+   "bars": 260,
+   "levels": {
+    "prior_close": 152.89,
+    "pdh": 155.545,
+    "pdl": 136.88,
+    "high20": 229.5,
+    "resistance": [
+     187.0,
+     217.84,
+     220.5
+    ],
+    "support": [
+     140.69
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.112597045852296,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "COHR": {
+   "ticker": "COHR",
+   "liquid": "para:COHR",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 196.19,
+   "sma20": 208.738,
+   "sma200": 296.08855,
+   "adr20": 0.11024776081533649,
+   "avg_vol20": 10730718.6,
+   "dollar_vol20": 2219517508.7825003,
+   "mcap": 38641321271.11,
+   "ext20": -0.06011363527484215,
+   "hi52": 440.0,
+   "lo52": 142.46,
+   "pos52": 0.18058076225045372,
+   "from_high": -0.5541136363636363,
+   "bars": 260,
+   "levels": {
+    "prior_close": 196.19,
+    "pdh": 199.92,
+    "pdl": 174.9601,
+    "high20": 246.9,
+    "resistance": [
+     240.77,
+     245.73,
+     246.9
+    ],
+    "support": [
+     196.12,
+     180.43,
+     160.23
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0165452293194979,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "RDDT": {
+   "ticker": "RDDT",
+   "liquid": "xyz:RDDT",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 91.51,
+   "sma20": 96.48150000000001,
+   "sma200": 151.0121,
+   "adr20": 0.06436809357007717,
+   "avg_vol20": 7868361.6,
+   "dollar_vol20": 772424891.0665,
+   "mcap": 17670007323.81,
+   "ext20": -0.05152801314241595,
+   "hi52": 263.4999,
+   "lo52": 84.595,
+   "pos52": 0.03865182004517487,
+   "from_high": -0.6527133406881749,
+   "bars": 260,
+   "levels": {
+    "prior_close": 91.51,
+    "pdh": 92.3,
+    "pdl": 84.6,
+    "high20": 131.89,
+    "resistance": [
+     104.55,
+     106.38,
+     151.89
+    ],
+    "support": [
+     91.2,
+     89.28,
+     84.59
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.5992116071533875,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "TTWO": {
+   "ticker": "TTWO",
+   "liquid": "xyz:TTWO",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 227.34,
+   "sma20": 211.7835,
+   "sma200": 218.669925,
+   "adr20": 0.060589649645370225,
+   "avg_vol20": 5584714.35,
+   "dollar_vol20": 1190980683.2265,
+   "mcap": 42561114361.92,
+   "ext20": 0.07345473089263321,
+   "hi52": 265.94,
+   "lo52": 183.86,
+   "pos52": 0.5297270955165692,
+   "from_high": -0.1451455215462134,
+   "bars": 260,
+   "levels": {
+    "prior_close": 227.34,
+    "pdh": 227.985,
+    "pdl": 214.1484,
+    "high20": 237.41,
+    "resistance": [
+     235.94,
+     237.41
+    ],
+    "support": [
+     208.52,
+     206.36,
+     201.66
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.3070093370129128,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 6
+  },
+  "CBRS": {
+   "ticker": "CBRS",
+   "liquid": "xyz:CBRS",
+   "group": "AI cloud",
+   "date": "2026-11-25",
+   "close": 89.68,
+   "sma20": 96.2795,
+   "sma200": null,
+   "adr20": 0.10569393782068306,
+   "avg_vol20": 13400482.0,
+   "dollar_vol20": 1295228855.9120002,
+   "mcap": 21792541683.52,
+   "ext20": -0.0685452250998394,
+   "hi52": 386.34,
+   "lo52": 77.8411,
+   "pos52": 0.03837582565124222,
+   "from_high": -0.7678728581042604,
+   "bars": 136,
+   "levels": {
+    "prior_close": 89.68,
+    "pdh": 90.3099,
+    "pdl": 80.86,
+    "high20": 120.44,
+    "resistance": [
+     100.59,
+     120.44,
+     120.6
+    ],
+    "support": [
+     82.28,
+     77.84
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.030976527560725,
+   "step1_fails": [
+    "no 200d SMA (136 bars)"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "UMC": {
+   "ticker": "UMC",
+   "liquid": "xyz:UMC",
+   "group": "Semis",
+   "date": "2026-11-25",
+   "close": 13.19,
+   "sma20": 14.8415,
+   "sma200": 17.300795869999998,
+   "adr20": 0.05313966910144533,
+   "avg_vol20": 17138431.55,
+   "dollar_vol20": 249197724.815,
+   "mcap": 33077801488.24,
+   "ext20": -0.1112758144392414,
+   "hi52": 28.472873,
+   "lo52": 7.029732,
+   "pos52": 0.28728384521651934,
+   "from_high": -0.5367520516809104,
+   "bars": 260,
+   "levels": {
+    "prior_close": 13.19,
+    "pdh": 13.25,
+    "pdl": 12.08,
+    "high20": 18.305,
+    "resistance": [
+     14.93,
+     16.18,
+     19.49
+    ],
+    "support": [
+     11.96
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.3484000290563345,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "LITE": {
+   "ticker": "LITE",
+   "liquid": "xyz:LITE",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 476.58,
+   "sma20": 600.585,
+   "sma200": 815.1278500000001,
+   "adr20": 0.09947628641020426,
+   "avg_vol20": 6368181.25,
+   "dollar_vol20": 3930932322.8894997,
+   "mcap": 43225806000.0,
+   "ext20": -0.20647368815404987,
+   "hi52": 1143.0,
+   "lo52": 266.005,
+   "pos52": 0.2401096927576554,
+   "from_high": -0.5830446194225722,
+   "bars": 260,
+   "levels": {
+    "prior_close": 476.58,
+    "pdh": 479.98,
+    "pdl": 430.2425,
+    "high20": 978.3999,
+    "resistance": [
+     587.69,
+     678.67,
+     878.9
+    ],
+    "support": [
+     456.09
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8303008649447596,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "TWST": {
+   "ticker": "TWST",
+   "liquid": "xyz:TWST",
+   "group": "Health",
+   "date": "2026-11-25",
+   "close": 108.07,
+   "sma20": 123.603,
+   "sma200": 95.74459999999999,
+   "adr20": 0.11598944927865554,
+   "avg_vol20": 2440962.15,
+   "dollar_vol20": 299628122.359,
+   "mcap": 7368071244.44,
+   "ext20": -0.1256684708299961,
+   "hi52": 219.7126,
+   "lo52": 28.27,
+   "pos52": 0.41683512447072907,
+   "from_high": -0.5081301664082989,
+   "bars": 260,
+   "levels": {
+    "prior_close": 108.07,
+    "pdh": 110.04,
+    "pdl": 97.7604,
+    "high20": 177.99,
+    "resistance": [
+     125.16,
+     151.5,
+     153.8
+    ],
+    "support": [
+     101.0,
+     93.68
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8836135373913931,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 2
+  },
+  "GME": {
+   "ticker": "GME",
+   "liquid": "xyz:GME",
+   "group": "Consumer/auto",
+   "date": "2026-11-25",
+   "close": 26.97,
+   "sma20": 25.5995,
+   "sma200": 22.8847,
+   "adr20": 0.040100707514687875,
+   "avg_vol20": 6983837.15,
+   "dollar_vol20": 180020892.41500002,
+   "mcap": 13606391700.3,
+   "ext20": 0.053536201878942924,
+   "hi52": 28.3,
+   "lo52": 17.79,
+   "pos52": 0.8734538534728828,
+   "from_high": -0.04699646643109545,
+   "bars": 260,
+   "levels": {
+    "prior_close": 26.97,
+    "pdh": 27.48,
+    "pdl": 26.17,
+    "high20": 27.74,
+    "resistance": [
+     28.3
+    ],
+    "support": [
+     25.12,
+     24.85,
+     24.04
+    ]
+   },
+   "breakout_ready": true,
+   "vol5_vs_20": 1.390020928537831,
+   "step1_fails": [],
+   "step1": true,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": true,
+    "9": true
+   },
+   "mech_boxes": 5,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 1
+  },
+  "IONQ": {
+   "ticker": "IONQ",
+   "liquid": "io:IONQ",
+   "group": "Space/quantum/other",
+   "date": "2026-11-25",
+   "close": 23.54,
+   "sma20": 28.006,
+   "sma200": 40.72985,
+   "adr20": 0.09773669756822675,
+   "avg_vol20": 24119933.65,
+   "dollar_vol20": 672001044.015,
+   "mcap": 10896239831.84,
+   "ext20": -0.15946582875098192,
+   "hi52": 73.65,
+   "lo52": 20.28,
+   "pos52": 0.06108300543376424,
+   "from_high": -0.6803801765105228,
+   "bars": 260,
+   "levels": {
+    "prior_close": 23.54,
+    "pdh": 23.895,
+    "pdl": 20.28,
+    "high20": 36.35,
+    "resistance": [
+     32.52,
+     33.31,
+     36.35
+    ],
+    "support": [
+     20.51
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0353049457911756,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "HIMS": {
+   "ticker": "HIMS",
+   "liquid": "xyz:HIMS",
+   "group": "Health",
+   "date": "2026-11-25",
+   "close": 14.65,
+   "sma20": 20.779,
+   "sma200": 26.385450000000002,
+   "adr20": 0.08868801619973263,
+   "avg_vol20": 16625800.25,
+   "dollar_vol20": 342730192.8225,
+   "mcap": 3434141982.3,
+   "ext20": -0.29496125896337644,
+   "hi52": 40.99,
+   "lo52": 13.46,
+   "pos52": 0.04322557210316017,
+   "from_high": -0.6425957550622103,
+   "bars": 260,
+   "levels": {
+    "prior_close": 14.65,
+    "pdh": 14.94,
+    "pdl": 13.46,
+    "high20": 30.13,
+    "resistance": [
+     28.66,
+     29.44,
+     30.02
+    ],
+    "support": [
+     14.51
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.7491476387730569,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "DKNG": {
+   "ticker": "DKNG",
+   "liquid": "xyz:DKNG",
+   "group": "Internet",
+   "date": "2026-11-25",
+   "close": 17.65,
+   "sma20": 19.134999999999998,
+   "sma200": 23.304299999999998,
+   "adr20": 0.06488472504603869,
+   "avg_vol20": 19178449.5,
+   "dollar_vol20": 364674411.979,
+   "mcap": 8794837738.5,
+   "ext20": -0.07760648027175332,
+   "hi52": 36.98,
+   "lo52": 15.425,
+   "pos52": 0.10322430990489438,
+   "from_high": -0.5227149810708491,
+   "bars": 260,
+   "levels": {
+    "prior_close": 17.65,
+    "pdh": 17.69,
+    "pdl": 15.64,
+    "high20": 23.885,
+    "resistance": [
+     19.9,
+     20.09,
+     20.35
+    ],
+    "support": [
+     16.55,
+     15.43
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.927882204450365,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "IREN": {
+   "ticker": "IREN",
+   "liquid": "xyz:IREN",
+   "group": "Crypto-linked",
+   "date": "2026-11-25",
+   "close": 12.85,
+   "sma20": 18.589750000000002,
+   "sma200": 41.275425,
+   "adr20": 0.1206828768987672,
+   "avg_vol20": 85894428.35,
+   "dollar_vol20": 1530979405.6360002,
+   "mcap": 5452992345.85,
+   "ext20": -0.3087588590486694,
+   "hi52": 70.7066,
+   "lo52": 11.3429,
+   "pos52": 0.02538756849724663,
+   "from_high": -0.8182630758656193,
+   "bars": 260,
+   "levels": {
+    "prior_close": 12.85,
+    "pdh": 13.11,
+    "pdl": 11.3429,
+    "high20": 27.835,
+    "resistance": [
+     16.66,
+     28.88,
+     43.91
+    ],
+    "support": [
+     11.75
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.2668618802211284,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "BMNR": {
+   "ticker": "BMNR",
+   "liquid": "xyz:BMNR",
+   "group": "Crypto-linked",
+   "date": "2026-11-25",
+   "close": 13.44,
+   "sma20": 17.502000000000002,
+   "sma200": 20.177599999999998,
+   "adr20": 0.08465858171662212,
+   "avg_vol20": 34186503.6,
+   "dollar_vol20": 582451395.08,
+   "mcap": 8419501722.24,
+   "ext20": -0.23208776139869747,
+   "hi52": 42.085,
+   "lo52": 11.73,
+   "pos52": 0.05633338823916979,
+   "from_high": -0.6806463110371866,
+   "bars": 260,
+   "levels": {
+    "prior_close": 13.44,
+    "pdh": 13.61,
+    "pdl": 11.73,
+    "high20": 22.39,
+    "resistance": [
+     19.47,
+     22.38,
+     22.39
+    ],
+    "support": [
+     12.87
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.3358458102161697,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "USAR": {
+   "ticker": "USAR",
+   "liquid": "xyz:USAR",
+   "group": "Space/quantum/other",
+   "date": "2026-11-25",
+   "close": 6.59,
+   "sma20": 7.824,
+   "sma200": 17.568425,
+   "adr20": 0.10786631198830002,
+   "avg_vol20": 18644552.8,
+   "dollar_vol20": 142618842.0445,
+   "mcap": 2473358338.7,
+   "ext20": -0.157719836400818,
+   "hi52": 32.8,
+   "lo52": 6.01,
+   "pos52": 0.02164986935423666,
+   "from_high": -0.7990853658536585,
+   "bars": 260,
+   "levels": {
+    "prior_close": 6.59,
+    "pdh": 6.65,
+    "pdl": 6.01,
+    "high20": 10.885,
+    "resistance": [
+     9.14,
+     10.88,
+     11.22
+    ],
+    "support": [
+     6.18
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0959250897130661,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "SMCI": {
+   "ticker": "SMCI",
+   "liquid": "para:SMCI",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 23.31,
+   "sma20": 27.240499999999997,
+   "sma200": 32.217125,
+   "adr20": 0.07993013742032232,
+   "avg_vol20": 49573049.8,
+   "dollar_vol20": 1350514844.02225,
+   "mcap": 15366589924.77,
+   "ext20": -0.14428883463959907,
+   "hi52": 51.4,
+   "lo52": 19.48,
+   "pos52": 0.11998746867167916,
+   "from_high": -0.5464980544747082,
+   "bars": 260,
+   "levels": {
+    "prior_close": 23.31,
+    "pdh": 23.35,
+    "pdl": 21.02,
+    "high20": 35.85,
+    "resistance": [
+     26.37,
+     31.19,
+     36.4
+    ],
+    "support": [
+     23.29,
+     21.46
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9278304236992899,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "CIFR": {
+   "ticker": "CIFR",
+   "liquid": "para:CIFR",
+   "group": "Crypto-linked",
+   "date": "2026-11-25",
+   "close": 5.51,
+   "sma20": 6.6049999999999995,
+   "sma200": 16.818825,
+   "adr20": 0.13834564348849976,
+   "avg_vol20": 55238597.6,
+   "dollar_vol20": 363366229.382,
+   "mcap": 2514571772.63,
+   "ext20": -0.16578349735049203,
+   "hi52": 30.14,
+   "lo52": 4.89,
+   "pos52": 0.02455445544554456,
+   "from_high": -0.8171864631718646,
+   "bars": 260,
+   "levels": {
+    "prior_close": 5.51,
+    "pdh": 5.6495,
+    "pdl": 4.89,
+    "high20": 8.705,
+    "resistance": [
+     7.22,
+     7.42,
+     8.15
+    ],
+    "support": [
+     5.07
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9261680387048783,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "BB": {
+   "ticker": "BB",
+   "liquid": "xyz:BB",
+   "group": "Space/quantum/other",
+   "date": "2026-11-25",
+   "close": 8.5,
+   "sma20": 8.616499999999998,
+   "sma200": 7.3083,
+   "adr20": 0.06380239078223436,
+   "avg_vol20": 12673449.35,
+   "dollar_vol20": 109162729.5835,
+   "mcap": 4989774371.5,
+   "ext20": -0.013520570997504588,
+   "hi52": 13.59,
+   "lo52": 3.1201,
+   "pos52": 0.5138444493261636,
+   "from_high": -0.3745401030169242,
+   "bars": 260,
+   "levels": {
+    "prior_close": 8.5,
+    "pdh": 8.55,
+    "pdl": 7.925,
+    "high20": 9.8571,
+    "resistance": [
+     8.74,
+     9.22,
+     9.52
+    ],
+    "support": [
+     8.4,
+     8.07,
+     7.99
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.8661839327901681,
+   "step1_fails": [],
+   "step1": true,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null,
+   "rank": 7
+  },
+  "AAOI": {
+   "ticker": "AAOI",
+   "liquid": "xyz:AAOI",
+   "group": "AI hardware/optical",
+   "date": "2026-11-25",
+   "close": 37.02,
+   "sma20": 50.385000000000005,
+   "sma200": 114.8023,
+   "adr20": 0.12441860877688282,
+   "avg_vol20": 15506983.5,
+   "dollar_vol20": 768344838.94,
+   "mcap": 3360361152.12,
+   "ext20": -0.2652575171181899,
+   "hi52": 233.67,
+   "lo52": 20.63,
+   "pos52": 0.07693390912504697,
+   "from_high": -0.8415714469123122,
+   "bars": 260,
+   "levels": {
+    "prior_close": 37.02,
+    "pdh": 37.3999,
+    "pdl": 32.6,
+    "high20": 83.31,
+    "resistance": [
+     57.94,
+     81.32,
+     83.31
+    ],
+    "support": [
+     32.62
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9609018801109835,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "RIVN": {
+   "ticker": "RIVN",
+   "liquid": "xyz:RIVN",
+   "group": "Consumer/auto",
+   "date": "2026-11-25",
+   "close": 11.71,
+   "sma20": 12.448,
+   "sma200": 15.208350000000001,
+   "adr20": 0.05520722256426551,
+   "avg_vol20": 33963396.4,
+   "dollar_vol20": 421327122.876,
+   "mcap": 17095272273.36,
+   "ext20": -0.0592866323907455,
+   "hi52": 22.69,
+   "lo52": 10.2842,
+   "pos52": 0.1149301133340857,
+   "from_high": -0.4839136183340679,
+   "bars": 260,
+   "levels": {
+    "prior_close": 11.71,
+    "pdh": 11.86,
+    "pdl": 10.73,
+    "high20": 14.31,
+    "resistance": [
+     12.09,
+     12.74,
+     14.28
+    ],
+    "support": [
+     11.42,
+     11.38,
+     10.28
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 0.9803359242363642,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "CRCL": {
+   "ticker": "CRCL",
+   "liquid": "xyz:CRCL",
+   "group": "Crypto-linked",
+   "date": "2026-11-25",
+   "close": 48.27,
+   "sma20": 62.565,
+   "sma200": 85.62889999999999,
+   "adr20": 0.07228880438830348,
+   "avg_vol20": 10476919.1,
+   "dollar_vol20": 652622692.4365,
+   "mcap": 12383818330.08,
+   "ext20": -0.22848237832654028,
+   "hi52": 140.0,
+   "lo52": 43.11,
+   "pos52": 0.05325626999690374,
+   "from_high": -0.6552142857142857,
+   "bars": 260,
+   "levels": {
+    "prior_close": 48.27,
+    "pdh": 48.5199,
+    "pdl": 43.11,
+    "high20": 81.2,
+    "resistance": [
+     77.59,
+     87.6,
+     87.76
+    ],
+    "support": []
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.1292140453771375,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": false,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 3,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  },
+  "SOFI": {
+   "ticker": "SOFI",
+   "liquid": "para:SOFI",
+   "group": "Financials",
+   "date": "2026-11-25",
+   "close": 13.07,
+   "sma20": 15.303999999999998,
+   "sma200": 17.0137,
+   "adr20": 0.05475635474283371,
+   "avg_vol20": 52838546.35,
+   "dollar_vol20": 807717192.113,
+   "mcap": 16962774642.29,
+   "ext20": -0.1459749085206481,
+   "hi52": 30.42,
+   "lo52": 11.95,
+   "pos52": 0.0606388738494857,
+   "from_high": -0.5703484549638396,
+   "bars": 260,
+   "levels": {
+    "prior_close": 13.07,
+    "pdh": 13.19,
+    "pdl": 11.95,
+    "high20": 17.74,
+    "resistance": [
+     15.11,
+     15.54,
+     15.85
+    ],
+    "support": [
+     12.41
+    ]
+   },
+   "breakout_ready": false,
+   "vol5_vs_20": 1.0853523149582256,
+   "step1_fails": [
+    "below 200d"
+   ],
+   "step1": false,
+   "hot": true,
+   "boxes": {
+    "1": null,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": true,
+    "6": null,
+    "7": true,
+    "8": false,
+    "9": true
+   },
+   "mech_boxes": 4,
+   "aplus_candidate": false,
+   "planned_grade": "Normal",
+   "planned_risk": 250,
+   "extended": false,
+   "earnings": null
+  }
+ }
+}
