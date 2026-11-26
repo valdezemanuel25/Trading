@@ -2,6 +2,8 @@
 
 Read this first in a new session. Research history: `docs/strategy-search.md` and `docs/backtest-log.md`.
 
+**New work in progress (2026-11-26):** intraday **stock** strategy research (VWAP / Trend Join Long, Liquid stock perps), research only, nothing built: `docs/intraday-stock-research.md`.
+
 ## What runs
 Two forward tests. Neither is proven for real size.
 
