@@ -181,8 +181,43 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - Prompt used for each video:
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
 
-## Next steps
-1. All six videos are logged.
-2. Confirm the Trend Join rules in the blog post linked from video 4 (and reconcile with video 6's `rules.json`).
-3. Decide the overnight rule and the short-side rules.
-4. Only then design the after-close screen, the morning update and the intraday alerts.
+## Gaps to fill (reviewed 2026-11-26, after all six videos)
+
+### 1. Evidence: does it work at all?
+- No independent test. All numbers are the presenter's, and their own paper bot is slightly negative. We need our own test with costs on a period the rules weren't tuned on.
+- Historical data: Liquid gives 200 candles per call, too little for a months-long 5m backtest. Needs an intraday stock-data source (Databento equities, Polygon or Alpaca).
+- Trade frequency: with ~120 Liquid stocks and a 3%+ gap rule, many days may have no candidate. Estimate it from Liquid daily candles first.
+
+### 2. Rule decisions still open
+- Which Trend Join version (relative volume 1.5 vs 2.0, stop, exits). Read the presenter's blog rules.
+- The 21-EMA trail's timeframe and the bot version's partial size.
+- Entry start: 10:00 (rules) vs 9:30-10:00 (best window in video 3's data).
+- Overnight: exact rule (draft: A+ only, last third, while above the 21-EMA), overnight stop, weekends.
+- Short side: breakdown fade, parabolic-open short and first red day have no exact trigger/stop/exit.
+- A+ grading: a checkable definition of a real catalyst and of a "hot sector" (measure and cutoff).
+- Sizing: 2-3x A+ vs the 10% per-position cap.
+
+### 3. Defining the after-market analysis
+- Regime rule: an exact definition of "SPY sideways".
+- Sector heat: which ETFs/groups, lookback, how many count as hot.
+- Watchlist size and ranking.
+- Output and timing: where it goes (chat, Notion, email) and when. The user doesn't want scheduled tasks from Claude sessions, so default is a manual daily message (like the RSI(2) check).
+- Relation to the RSI(2) daily check: separate or one combined report.
+
+### 4. Liquid-specific unknowns
+- Do Liquid's VWAP and premarket high behave like the exchange's? Compare on a few days of candles.
+- Costs: trading fees, spreads on the stock perps, funding for overnight holds.
+- Execution: every order needs the user's approval. Can stop/TP attach at entry? Partial take-profits?
+- Trailing stops: can they follow an EMA or swing lows, or only a fixed distance?
+
+### 5. Operations and risk
+- Intraday alerts: Liquid has no alerts or scheduler. Options: user check-ins by message, a TradingView alert, or a script on the user's PC (like video 6's bot).
+- Portfolio limits: max daily loss, positions at once (1-2 names per video 3), stop-trading rule after losses.
+- Trade log and audit format (video 3's dashboard), to measure whether filters and grades help.
+
+## Next steps (suggested order)
+1. Estimate trade frequency from Liquid daily candles (quick, no new data).
+2. Read the presenter's blog rules (linked from video 4) and reconcile with video 6's `rules.json`; then lock the rule decisions above.
+3. Check Liquid's costs and order features (stop/TP at entry, partials, trailing stops).
+4. Choose a historical stock-data source for a real backtest.
+5. Then design the after-close report, the morning update and the intraday alerts.
