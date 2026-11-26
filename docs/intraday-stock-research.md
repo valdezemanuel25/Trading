@@ -21,6 +21,7 @@ Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high dem
 | 3 | "I'm a Verified 7 Figure Trader, Here's how I use AI for Trading" (`zU0i9rBbEkI`, 12:32) | Stock-selection filters, regime and time-of-day data from a real trade log |
 | 4 | "I Replaced my 6AM Premarket Trading Routine with Claude + Codex" (`PKFkJ4TprVo`, 23:29) | **Complete backtested rule set: Trend Join Long**, premarket report pipeline |
 | 5 | `gn02_Ic9i5U` | **Pending**: not watched yet (Gemini down); user to run `/watch` on their PC and paste the summary |
+| 6 | `UgWQtQ3MEVE` | **Pending**: same as video 5 |
 
 ### 1. VWAP crash course
 - Chart setup: session VWAP (bands off) + volume only; 2m and 5m intraday, daily alongside.
@@ -133,7 +134,7 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
 
 ## Next steps
-1. Add video 5 (`gn02_Ic9i5U`) when the summary arrives.
+1. Add videos 5 (`gn02_Ic9i5U`) and 6 (`UgWQtQ3MEVE`) when the summaries arrive.
 2. Confirm the Trend Join rules in the blog post linked from video 4.
 3. Decide the overnight rule and the short-side rules.
 4. Only then design the after-close screen, the morning update and the intraday alerts.
