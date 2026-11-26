@@ -27,7 +27,7 @@ Decision 2026-11-25: Liquid only for this strategy. **No ToS and no Zapier.**
 | Markets | Liquid **paper**: `xyz:SP500` and `xyz:XYZ100` (no Russell or Dow on Liquid) |
 | Data | Liquid `show_chart` (1d, limit 30) for the candles and `get_technical_indicators` (1d, sma) for the SMA200. Compute with `liquid/rsi2_signal.py`: completed **weekday** candles only, 00:00 UTC closes |
 | Daily check | The user sends one message, e.g. **"RSI2 check"**, any time after the daily candle closes (00:00 UTC = 7 PM ET winter / 8 PM summer). Claude fetches both markets, computes the signal and reports LONG SETUP / EXIT / NONE |
-| Orders | On LONG SETUP, or EXIT while holding: Claude prepares the paper order ($5,000 notional, 1x), the user approves the exact order, Claude executes it. Liquid requires this approval for every order |
+| Orders | On LONG SETUP, or EXIT while holding: Claude prepares the paper order ($5,000 notional, **2x** = $2,500 margin; changed from 1x on 2026-11-26 so it fits next to the intraday stock paper test on the shared $10k paper account), the user approves the exact order, Claude executes it. Liquid requires this approval for every order |
 | Log | Liquid's own history (`get_position_history`, `get_portfolio`) is the trade log. The Notion RSI2 Signals page is optional |
 | Backtest (00:00 UTC closes, 1 micro each, ES+NQ part of research/multi.py) | Positive in every period. Worst single trade -$4,990 (MNQ); no stop |
 

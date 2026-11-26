@@ -18,10 +18,11 @@ Read this first in a new session that continues this work.
 - **A+ checklist:** drafted from videos 3, 4, 6 and 7 (see "Watchlist rules and A+ checklist"). Videos 7-8 give no grading system of their own.
 - **Paper test length: at least 2 months** before judging.
 - **After-market analysis definition: left to Claude** (draft defaults below, under "After-market analysis: draft defaults").
+- **Daily loss limit: -$500 per day** (decided 2026-11-26). Once the day's realized + open loss on Trend Join trades reaches -$500, no new trades that day; open trades keep their stops. (With 2 trades max, that is one A+ stop or two normal stops.)
 - **Risk per trade (decided 2026-11-26, replaces the 1%/2% of $10k plan): sized for a $25k account. A+ risks $500 (2%), normal trades $250 (1%).** The stop is placed per the rules, and the position is sized so that hitting it loses that amount: notional = risk $ / stop %. Never more than $500 per trade.
   - Liquid's paper reset only restores the default $10,000 (it cannot be set to $25k), so the paper account stays at $10k and **$25k is a sizing base, tracked in the trade log** (results in $ and R). No reset was done.
   - Margin cap: 10% of $25k = **$2,500 of margin per position**; leverage 2-10x (lowest that fits; most stock perps allow 10x, MU's max is 10x). Example: $500 risk, 3% stop -> $16,667 notional at 7x ($2,381 margin). $250 risk, 3% stop -> $8,333 at 4x ($2,083 margin). Stops under ~2% would need more than 10x: size down and log the lower risk.
-  - Margin check on the real $10k paper balance: 2 Trend Join positions use up to $5,000 of margin; the RSI(2) test at 1x uses $5,000 per signal. **Open:** run RSI(2) at 2x (same $5k notional, $2.5k margin) so everything fits; not changed yet.
+  - Margin check on the real $10k paper balance: 2 Trend Join positions use up to $5,000 of margin; the RSI(2) test at 1x uses $5,000 per signal. **Done:** RSI(2) now runs at 2x ($5k notional, $2.5k margin; `docs/live-setup.md` updated 2026-11-26), so max margin in use = 2 x $2,500 (Trend Join) + 2 x $2,500 (RSI(2)) = $10,000.
 - **Keep all filters, in tiers** so there is activity most days on paper: the core Trend Join filters are the daily screen (setups on about 65-70% of days); the focus filters (ADR >= 4-6%, $100B+ cap, high liquidity, hot sector, near highs, not extended) grade a setup A+ and size it up. Paper results by grade will show whether the focus filters matter.
 
 ## Sources reviewed (all Humbled Trader, YouTube)
@@ -402,7 +403,7 @@ Done 2026-11-26 (see "Liquid checks for the paper test"). Remaining: confirm the
 
 ### 4. Operations during the session
 - Who watches the trigger from 10:00 to 3:30: user check-ins by message, a TradingView alert, or a script on the user's PC. Every Liquid order still needs the user's approval.
-- Risk limits: max daily loss, max open positions (2), stop for the day after N losses.
+- ~~Risk limits~~ Done: -$500 daily loss limit, max 2 trades a day.
 - Trade log: where each trade is logged (Liquid history + Notion?), with setup, grade, size, R, time window, regime, holding period, so the after-session audit (video 3 style) can run.
 
 ### 5. Paper-test success criteria
