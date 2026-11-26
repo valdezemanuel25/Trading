@@ -182,6 +182,24 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - Prompt used for each video:
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
 
+## Trade-frequency estimate (2026-11-26)
+Liquid can't answer this historically (200 candles per call; daily candles run 00:00-24:00 UTC, so no 9:30 open or gap). Used Databento **EQUS.SUMMARY ohlcv-1d** (consolidated US daily bars, available from 2024-07-01, cost $0.07) for the 74 US-listed single stocks on Liquid (ETFs left out). Window with a valid 200d SMA: 2025-04-17 to 2026-11-25, 405 trading days. The ad-hoc script and data stayed in the session scratchpad (not in the repo).
+
+Definitions (all known before the open): gap = open / prior close - 1; prior close > 200d SMA and > $3; ADR20 = mean of (high/low - 1) over the prior 20 days; $vol20 = mean of close x volume over the prior 20 days. "Trigger proxy" = the day's high later exceeds both the open and the prior day's high by 0.1% (a crude daily stand-in for the intraday breakout; it can't check the 10:00-3:30 window or the premarket high). Market cap isn't available historically, so $vol20 >= $5B stands in for the large-cap focus filter.
+
+| Variant | Days with a setup | Setup days/week | Trades/week (cap 2/day) | 2025 / 2026 days with a setup |
+|---|---|---|---|---|
+| A: gap >= 3%, above 200d | 70% (66% with trigger proxy) | 3.5 | 6.0 | 69% / 71% |
+| B: A + ADR20 >= 4% | 64% (60%) | 3.2 | 5.3 | 61% / 67% |
+| **C: B + $vol20 >= $5B** (video 3 focus) | **24% (21%)** | **1.2** | **1.9** | **12% / 34%** |
+| D: C with ADR20 >= 6% | 14% (13%) | 0.7 | 1.1 | 2% / 24% |
+| E: C with gap >= 2% | 36% (30%) | 1.8 | 2.9 | 25% / 45% |
+
+- **The full focus set (C) gives about 1 setup day a week, about 2 trades a week at the 2/day cap.** Most of the cut comes from the $5B dollar-volume filter.
+- **Strongly regime- and sector-dependent:** C had setups on 12% of days in 2025 vs 34% in 2026; by month from 0 (2025-09) to 13 (2026-05). C's names are dominated by memory/semis: MU 51, SNDK 43, INTC 29, AMD 28, MRVL 20, LITE 13, AVGO 8.
+- The looser sets (A/B) have a setup most days, so the 2/day cap binds; the question becomes picking the best 1-2, not finding any.
+- Counts only, not results: nothing here says these setups make money.
+
 ## Gaps to fill (reviewed 2026-11-26, after all six videos)
 
 ### 1. Evidence: does it work at all?
@@ -217,7 +235,7 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - Trade log and audit format (video 3's dashboard), to measure whether filters and grades help.
 
 ## Next steps (suggested order)
-1. Estimate trade frequency from Liquid daily candles (quick, no new data). Cap is 2 trades/day (decided); the open question is how many days have any qualifying setup.
+1. ~~Estimate trade frequency~~ Done (see "Trade-frequency estimate"): full focus filters about 1 setup day/week; core filters most days. Decide which filter level to use.
 2. Read the presenter's blog rules (linked from video 4) and reconcile with video 6's `rules.json`; then lock the rule decisions above.
 3. Check Liquid's costs and order features (stop/TP at entry, partials, trailing stops).
 4. Choose a historical stock-data source for a real backtest.
