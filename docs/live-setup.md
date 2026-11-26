@@ -1,5 +1,13 @@
 # Live setup and handoff (as of 2026-11-25)
 
+## New session: start here (updated 2026-11-26)
+- Work lives on branch **`claude/loving-davinci-phos45`** (not merged into main). Check it out first.
+- Trend Join Long paper test: rules and decisions in `docs/intraday-stock-research.md`, daily steps in `docs/tjl-routines.md`, code `tjl/` (`python3 -m pytest tests/test_tjl.py -q`), daily outputs `runs/tjl/<date>/`.
+- Messages the user sends: "after-close check" (also runs the RSI(2) check below), "morning check" (9:00 ET), "TJ trigger <ticker>", "TJ check <ticker>" (the 3:45 check decides overnight holds), "TJ audit".
+- Dashboard: https://claude.ai/artifact/WjNZG5N292zVtoE2cMZkVZ (refresh its status/plan files after each after-close and morning check; see the routines doc). Figma copy: https://www.figma.com/design/gNMWAXQTASKEiqIPMDShkL
+- Trade log: Notion "TJL Trades" (`collection://424af207-66ae-8152-bcb1-000b322dc897`). Webull watchlist "Trend Join" (`469684da9c224d59978706608a36c55a`).
+- Last state: after-close for session 2026-11-25 done; watchlist GME, TWST, MRNA, CRWD, NET; SPY trend down below the 200-day (A+ longs only); 11/27 half day (no trades); first trade day Mon 11/30. No trades logged yet. Shorts on hold.
+
 Read this first in a new session. Research history: `docs/strategy-search.md` and `docs/backtest-log.md`.
 
 **New (2026-11-26):** intraday **stock** strategy (Trend Join Long, Liquid stock perps, paper), built: research `docs/intraday-stock-research.md`, daily routines `docs/tjl-routines.md`. The "after-close check" message runs the RSI(2) check below in the same report.
