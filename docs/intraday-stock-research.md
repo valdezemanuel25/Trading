@@ -220,7 +220,7 @@ Fallback with no app at all: the user messages Claude at fixed times (e.g. 10:00
 **Webull connector test (2026-11-26): works, read-only.**
 - Authorization: the one account (`...9227`) is **Non-Trading**: market data, account info and watchlists only; no orders (fine: orders go through Liquid paper).
 - **No tool creates price alerts.** The trigger alerts have to be set by hand in the Webull app (the `get_financial_alert` tool is a risk-indicator lookup, not price alerts).
-- Watchlists: can list, create (max 20), add/remove symbols. A "Trend Join" watchlist could be kept in sync by Claude (not created yet).
+- Watchlists: can list, create (max 20), add/remove symbols. **"Trend Join" watchlist created 2026-11-26** (id `469684da9c224d59978706608a36c55a`), empty for now. The after-market analysis fills it with the day's top names (`add_watchlist_instruments` / `remove_watchlist_instruments`, category US_STOCK); the user sets trigger alerts on them in the Webull app.
 - **Fills the Liquid data gaps with real exchange data:**
   - `get_stock_snapshot` (up to 100 symbols, `extend_hour_required`): price, open/high/low, real volume, market cap, 52-week high/low, pre/after-hours last price, change, volume and high/low. (MU: market cap $680B, 52-week high $1,254.61, close $601.25, after-hours $615.30.)
   - `get_stock_bars` (up to 20 symbols, 1200 bars, M1-M240/D/W, `trading_sessions` PRE/RTH/ATH/OVN): real premarket high and 5m bars with real volume (real VWAP).
