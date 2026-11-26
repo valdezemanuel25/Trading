@@ -20,7 +20,7 @@ Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high dem
 | 2 | "ChatGPT AI Made Me A TRADING STRATEGY" (`Jh5rJskkEkU`) | Plain VWAP cross has ~no edge |
 | 3 | "I'm a Verified 7 Figure Trader, Here's how I use AI for Trading" (`zU0i9rBbEkI`, 12:32) | Stock-selection filters, regime and time-of-day data from a real trade log |
 | 4 | "I Replaced my 6AM Premarket Trading Routine with Claude + Codex" (`PKFkJ4TprVo`, 23:29) | **Complete backtested rule set: Trend Join Long**, premarket report pipeline |
-| 5 | `gn02_Ic9i5U` | **Pending**: not watched yet (Gemini down); user to run `/watch` on their PC and paste the summary |
+| 5 | "Live Trading on the 5-Minute Time Frame (how I keep it simple)" (25:57; presumably `gn02_Ic9i5U`) | **5m entry trigger (close above VWAP + 8 EMA)**, 8 EMA trail, first-red-day short |
 | 6 | `UgWQtQ3MEVE` | **Pending**: same as video 5 |
 
 ### 1. VWAP crash course
@@ -82,10 +82,25 @@ Rules were only on screen, in a prompt (about 5:14-6:15). Her blog post (linked 
 - Pipeline: rules file (WATCHLIST_CRITERIA.md) -> free data (Yahoo, earnings/economic calendars) -> pass/fail flags ("the code never has an opinion") -> Claude writes the report, Codex reviews independently -> HTML email by about 8:45am. Rules decide who is on the list; the AIs only comment on quality.
 - Context checked each morning: risk-on/off, VIX, oil, dollar, rates, breadth, economic calendar. Skip names whose catalyst is a denied rumor.
 
+### 5. Live trading on the 5-minute chart
+English captions + frames (a selection of the 100 frames was read). Mostly a 1m vs 5m comparison plus one live short.
+- Indicators: VWAP and the **8 EMA** only (3:27); volume; prior day's high/low marked from the daily first (1:41). Daily MAs look like EMA 10/20 (too small to confirm).
+- **Long trigger** (TSLA, 4:10-7:21): enter after the **first 5m candle that closes above both VWAP and the 8 EMA**. Wicks or intrabar pops don't count; 1m double bottoms and repeated 1m VWAP/EMA crosses are called false signals (5:57, 17:48).
+- Stop: below VWAP / the 8 EMA (7:15). No fixed distance. A 1m low-of-day stop would have been hit by a false double bottom (5:30).
+- Exits: partial at a daily level (TSLA prior-day high ~$252, 11:15); **trail the rest until a 5m candle closes below the 8 EMA** (8:44-11:15; TSLA ran ~$248 -> $259).
+- **First-red-day short** (ZAPP live, 19:47-25:20): after a parabolic daily run, short the first red day once 5m candles stay below VWAP and the 8 EMA with weak bounces; add on a 5m bear flag; a bounce on lower volume than the prior selling candle keeps the short valid (21:17). Starter 500 sh at $12 avg, built to ~1,900 sh at $11.70; covered in pieces ($10.82, $10.22, rest ~12:00); target ~$10; closed ~$8.90. ZAPP was a hard-to-borrow, short-sale-restricted small cap.
+- Time: open to ~11:30 is the most volatile "golden window" (15:03); choppy opens happen too; TSLA chopped 10:15-11:00.
+- Filters: skip range-bound names (NVDA with a $1-2 range on $120, 16:25) and sideways, choppy days (15:23). Check SPY/QQQ before treating a gap down as bearish; gap downs get bought in strong markets without bad news (2:45).
+- Performance: one day only, +$1,723.64 (ZAPP +$2,009.47, LGVN -$285.83). No win rate or sample.
+- Warnings: 1m charts drive FOMO and revenge trading; 5m gives fewer trades but better R:R; some of it is hindsight (7:00, 21:17).
+
 ## Candidate strategy (draft, not final)
 - **Core:** Trend Join Long (video 4 rules).
 - **On top:** video 3 focus filters (ADR >= 4-6%, $100B+ cap, hot sector, near the 52-week high, not stretched above the 20 SMA), skip sideways SPY days, 1-2 names per day, A+ sizing 2-3x.
-- **Shorts:** video 1 breakdown fade and parabolic-open short, same day only.
+- **Entry confirmation (video 5):** act only on a 5m candle **close** (above VWAP and the 8 EMA for longs, below both for shorts), not on wicks or 1m signals. Could serve as the confirmation for Trend Join breakouts, or as its own VWAP-reclaim trigger.
+- **Trail option (video 5):** 5m close below the 8 EMA, as an alternative to video 4's unspecified 21-EMA trail. Test both.
+- **Shorts:** video 1 breakdown fade and parabolic-open short, plus video 5's first-red-day short after a parabolic daily run; same day only. On Liquid there is no borrow or short-sale restriction, but Liquid lists few parabolic small caps, so first-red-day shorts will be rare on large caps.
+- **Chop filter (videos 3 and 5):** skip sideways SPY days and range-bound names.
 - **Overnight:** idea: on A+ trades only, carry the trailed last third overnight while above the 21-EMA; everything else flat by 3:51.
 
 ### Routine
@@ -134,7 +149,7 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
 
 ## Next steps
-1. Add videos 5 (`gn02_Ic9i5U`) and 6 (`UgWQtQ3MEVE`) when the summaries arrive.
+1. Add video 6 (`UgWQtQ3MEVE`) when the summary arrives.
 2. Confirm the Trend Join rules in the blog post linked from video 4.
 3. Decide the overnight rule and the short-side rules.
 4. Only then design the after-close screen, the morning update and the intraday alerts.
