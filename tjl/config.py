@@ -38,7 +38,9 @@ REGIME_SLOPE_DAYS = 5
 
 # --- Session times (ET, minutes after midnight) ---
 WINDOW = {"A": (10 * 60, 15 * 60 + 30), "B": (10 * 60 + 5, 15 * 60 + 30)}
-FLAT_BY = 15 * 60 + 51
+FLAT_BY = 15 * 60 + 51          # close by here unless the overnight rule says carry
+CARRY_CHECK = 15 * 60 + 45      # overnight decision time (user allowed overnight holds 2026-11-26)
+MORNING_CHECK = 9 * 60          # morning check runs at 9:00 ET (30 min before the open; user 2026-11-26)
 RTH_OPEN, RTH_CLOSE = 9 * 60 + 30, 16 * 60
 
 VERSION_NAME = {"A": "A: TJL-report", "B": "B: TJL-bot"}

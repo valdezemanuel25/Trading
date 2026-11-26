@@ -5,6 +5,8 @@ with the next 5m bar; inside a bar the stop is checked before targets; flat at t
 A: 1/3 at +1R, 1/3 at +2R; the last third exits on a 5m close below the 21 EMA once both partials are
 done (stop only before that). B: 1/3 at +0.75R; stop to breakeven at +1R; then trail under confirmed
 5m swing lows (2 bars each side). Fees: 0.15% of notional estimated round trip.
+Overnight carries are not simulated: a part the real rule would carry is marked at the 15:50 open and labelled
+"Carry (marked 15:50)", so shadow results understate (or overstate) multi-day outcomes.
 """
 from . import config as C
 from .indicators import ema_series
@@ -26,10 +28,12 @@ def simulate(bars, day, entry_min, entry, stop, version):
     for i in idx:
         b = day_bars[i]
         if minutes_et(b["t"]) >= C.FLAT_BY - 1:   # 15:50 bar
+            prev = day_bars[i - 1]
+            carry = prev["close"] > entry and e21[i - 1] and prev["close"] >= e21[i - 1]
             for k in range(3):
                 if open_[k]:
                     open_[k] = False
-                    exits.append((k, b["open"], "Time 3:51", b["t"]))
+                    exits.append((k, b["open"], "Carry (marked 15:50)" if carry else "Time 3:51", b["t"]))
             break
         mfe = max(mfe, (b["high"] - entry) / one_r)
         mae = min(mae, (b["low"] - entry) / one_r)
@@ -90,7 +94,8 @@ def run(trade, bars5, version=None):
         "Status": "Shadow" if v == trade.get("shadow") else "Closed",
         "Final exit price": round(sim["final_price"], 4),
         "date:Exit time:start": sim["final_time"].isoformat(), "date:Exit time:is_datetime": 1,
-        "Exit reason": reason if reason in ("Stop", "Breakeven", "Trail", "Time 3:51") else "Manual",
+        "Exit reason": reason if reason in ("Stop", "Breakeven", "Trail", "Time 3:51") else
+            ("Overnight exit" if reason.startswith("Carry") else "Manual"),
         "MFE R": round(sim["mfe_r"], 2), "MAE R": round(sim["mae_r"], 2),
         "Fees $": round(fee_r * risk, 2), "P&L $": out["pnl"],
     }

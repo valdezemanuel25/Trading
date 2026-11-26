@@ -90,6 +90,7 @@ def main(argv=None):
     c.add_argument("--liquid-price", type=float, required=True)
     c.add_argument("--fill", type=float, help="actual entry fill on Liquid")
     c.add_argument("--sz-decimals", type=int, default=2)
+    c.add_argument("--date", help="today, if the position was carried from an earlier day")
     c.add_argument("--out")
 
     u = sub.add_parser("audit")
@@ -121,7 +122,7 @@ def main(argv=None):
     elif args.cmd == "check":
         tr = json.load(open(args.trade))
         st = manage.run(tr, load_bars(args.bars5), args.now, args.qty, args.stop, args.liquid_price,
-                        args.fill, args.sz_decimals)
+                        args.fill, args.sz_decimals, args.date)
         md = manage.report(st)
         d = _save(st["date"], f"check-{st['ticker']}-{args.now.replace(':', '')}", st, md, args.out)
     elif args.cmd == "audit":

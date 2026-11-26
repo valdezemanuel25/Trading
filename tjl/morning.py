@@ -90,7 +90,7 @@ def run(prev, snapshot, pre_bars, date=None, now=None):
         hh, mm = map(int, now.split(":"))
         now_min = hh * 60 + mm
     else:
-        now_min = C.RTH_OPEN
+        now_min = C.MORNING_CHECK
     spy = prev["spy"]
     half = sessions.is_half_day(day)
     rows = []

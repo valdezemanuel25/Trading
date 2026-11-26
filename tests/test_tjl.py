@@ -201,7 +201,7 @@ def test_shadow_a_partials_and_time_exit():
         + series(DAY, "10:40", [104] * 80)
     s = shadow.simulate(bars, DAY, 10 * 60 + 30, 100.0, 98.0, "A")
     reasons = sorted(e[2] for e in s["exits"])
-    assert reasons == ["Partial +1.0R", "Partial +2.0R", "Time 3:51"]
+    assert reasons == ["Carry (marked 15:50)", "Partial +1.0R", "Partial +2.0R"]   # in profit, above 21 EMA
     assert s["r_gross"] == pytest.approx((1 + 2 + 2) / 3)
 
 
@@ -267,3 +267,18 @@ def test_audit_verdicts():
     assert "PAUSE" in audit.run(dd, dt.date(2027, 3, 1))["verdict"]
     mid = [_row(i, 250 if i % 2 else -200) for i in range(40)]   # +0.1R
     assert audit.run(mid, dt.date(2027, 3, 1))["verdict"].startswith("EXTEND")
+
+
+def test_check_overnight_carry_or_close():
+    tr = _trade("A")
+    entry = tr["legs"]["A"]["liquid_entry_ref"]
+    up = {"MU": _today()["MU"] + series(DAY, "10:35", [(104.8, 106, 105.5)] * 63)}   # trends up to 15:45
+    st = manage.run(tr, up, "15:46", 9.0, tr["legs"]["A"]["liquid_stop"], entry * 1.02)
+    assert st["actions"][0]["do"] == "move stop" and st["actions"][0]["to"] >= entry   # carry, stop to breakeven
+    assert any("CARRY" in n for n in st["notes"])
+    st = manage.run(tr, up, "15:46", 9.0, tr["legs"]["A"]["liquid_stop"], entry * 0.99)
+    assert st["actions"][0]["do"] == "close"                                            # losing -> flat
+    nxt = dt.date(2026, 12, 2)
+    day2 = {"MU": up["MU"] + series(nxt, "09:30", [106] * 30 + [(100, 101, 100.5)])}
+    st = manage.run(tr, day2, "12:10", 3.0, entry, 101.0, today=nxt)
+    assert st["carried"] and st["actions"][0]["do"] == "close"                          # close below 21 EMA next day

@@ -25,6 +25,8 @@ Read this first in a new session that continues this work.
   - Margin check on the real $10k paper balance: 2 Trend Join positions use up to $5,000 of margin; the RSI(2) test at 1x uses $5,000 per signal. **Done:** RSI(2) now runs at 2x ($5k notional, $2.5k margin; `docs/live-setup.md` updated 2026-11-26), so max margin in use = 2 x $2,500 (Trend Join) + 2 x $2,500 (RSI(2)) = $10,000.
 - **Build: hybrid** (decided 2026-11-26). Mechanical rules in Python (`tjl/`, tested); a written routine (`docs/tjl-routines.md`) for the connector calls, report layout and approvals. Claude judges catalysts and traps in the report text.
 - **Half days (1:00 PM closes): no Trend Join trades** (decided 2026-11-26). Logged as no-trade days.
+- **Overnight holds allowed** (decided 2026-11-26, replaces "flat by 3:51"). Claude's default rule: at the 15:45 check, the rest of the position carries overnight if it is in profit and the last 5m close is above the 21 EMA; the stop then goes to at least breakeven. Otherwise flat by 15:51. On later days the same management continues (A: exit on a 5m close below the 21 EMA; B: trail under 5m swing lows) and the 15:45 check repeats. Funding is checked and logged. Shadow rows don't simulate overnight: a carried part is marked at the 15:50 open ("Carry (marked 15:50)").
+- **Morning check at 9:00 ET every day** (30 minutes before the open; decided 2026-11-26). Entries keep the rules' 10:00 (A) / 10:05 (B) start.
 - **Versions A and B share one Liquid position per ticker, so: alternate + shadow** (decided 2026-11-26). The real order follows one version, alternating when both qualify; the other version is logged as a **Shadow** row (new Status option in Notion) whose result is simulated from Webull 5m bars after the close. Shadow rows don't count toward the 30 trades; they give a paired A vs B comparison.
 - **Keep all filters, in tiers** so there is activity most days on paper: the core Trend Join filters are the daily screen (setups on about 65-70% of days); the focus filters (ADR >= 4-6%, $100B+ cap, high liquidity, hot sector, near highs, not extended) grade a setup A+ and size it up. Paper results by grade will show whether the focus filters matter.
 
@@ -335,7 +337,7 @@ Routines: `docs/tjl-routines.md` (after-close check, morning check, TJ trigger).
 
 **Added later on 2026-11-26:** "TJ check <ticker>" (`tjl/manage.py`: hold / breakeven / swing-low trail / 21-EMA exit / 15:51 close, proposed as Liquid previews for approval; replayed on the TSLA test: hold at 14:30, close at 15:47) and "TJ audit" (`tjl/audit.py`: go/no-go verdict and splits from the Notion log; today: TOO EARLY, 0 trades). 18 tests pass.
 
-**Still open (user decisions):** overnight rule (draft: A+ only, last third, while above the 21 EMA), entry start 9:30 vs 10:00, shorts. **To verify on the first live days:** Webull snapshot fields in premarket, Liquid size decimals and real fees from the first fill.
+**Still open (user decisions):** shorts. (Overnight and the 9:00 morning check decided 2026-11-26.) **To verify on the first live days:** Webull snapshot fields in premarket, Liquid size decimals and real fees from the first fill.
 
 ## Intraday trigger: connection options (2026-11-26)
 | Option | What it gives | Status |
@@ -462,4 +464,4 @@ Done 2026-11-26 (see "Liquid checks for the paper test"). Remaining: confirm the
 2. Run the quick Liquid checks in section 3 (fees, order features, paper capital).
 3. Define the after-market analysis in section 2 and the session operations in section 4.
 4. Set the paper-test success criteria (section 5).
-5. ~~Then build: after-close report, morning gap update, intraday alerts, trade log.~~ Done 2026-11-26 (see "Build"). Next: run the paper test from Mon 2026-11-30; still open: overnight rule, entry start 9:30 vs 10:00, shorts.
+5. ~~Then build: after-close report, morning gap update, intraday alerts, trade log.~~ Done 2026-11-26 (see "Build"). Next: run the paper test from Mon 2026-11-30; still open: shorts.

@@ -7,7 +7,7 @@ No scheduled tasks: each routine starts when the user sends its message.
 | Message | When (ET) | What happens |
 |---|---|---|
 | **after-close check** | After 4:00 PM; after 7:00 PM (winter) / 8:00 PM (summer) for a fresh RSI(2) candle | Close out today's trades, SPY regime, sector heat, screen, catalysts, top-5 watchlist, Webull watchlist update, RSI(2) check |
-| **morning check** | About 9:00-9:30 | Gappers (3%+), premarket high/volume/RVOL, final 1-2 names with trigger, stop, 1R, size |
+| **morning check** | **9:00** (30 min before the open) | Gappers (3%+), premarket high/volume/RVOL, final 1-2 names with trigger, stop, 1R, size |
 | **TJ trigger \<TICKER\>** | When a Webull alert fires, 10:00-15:30 | 5m chart check, version choice, Liquid paper order with stop + reduce-only partials for approval, Notion log |
 | **TJ check \<TICKER\>** | Any time a position is open (suggested: 10:30, 11:30, 13:00, 14:30, 15:45) | Breakeven / trail / 21-EMA exit / 15:51 close, proposed for approval |
 | **TJ audit** | Weekly (e.g. Friday after the close), and at the 2-month mark | Go/no-go metrics from the Notion log, splits by version, grade, box, window, regime |
@@ -101,10 +101,13 @@ watchlist change, RSI(2) result, and what tomorrow is (full day / half day / clo
 2. **Run:** `python3 -m tjl check --trade runs/tjl/<D>/trigger-<T>.json --bars5 <file> --now HH:MM --qty <coins>
    --stop <current Liquid stop> --liquid-price <mark> [--fill <entry fill>]`
 3. It proposes one of: **hold**; **move stop** (B: breakeven once +1R was reached, then under the latest confirmed
-   5m swing low; never lower) as a `modify_position` preview -> approval -> `execute_tpsl`; **close** (A: both
-   partials filled and a 5m close below the 21 EMA; both: from 15:45, flat by 15:51) as a `close_position` preview ->
+   5m swing low; never lower; carry: breakeven) as a `modify_position` preview -> approval -> `execute_tpsl`; **close** (A: both
+   partials filled, or carried, and a 5m close below the 21 EMA; both: 15:45 overnight check failed) as a `close_position` preview ->
    approval -> execute. Cancel leftover reduce-only partials after a close (`cancel_order`).
-4. Update the Notion row (partials filled, stop moves in Notes). Overnight holds: rule still open, so flat by 15:51.
+4. **15:45 check = overnight decision:** carry the rest if it is in profit and the last 5m close is above the 21 EMA
+   (stop to at least breakeven; check funding with `analyze_market`; tick "Held overnight"); otherwise close by 15:51.
+   For a carried position, run the check on later days with `--date <today>` (same rules; 15:45 check repeats).
+5. Update the Notion row (partials filled, stop moves in Notes).
 
 ## 5. TJ audit
 

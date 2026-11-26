@@ -243,8 +243,10 @@ def report(st):
     for o in st["orders"]:
         out.append(f"{o['step']}: `{o.get('suggest_order') or o.get('execute_order')}`")
     if st["real"] == "A":
-        out.append("Management A: after both partials, exit the last third on a 5m close below the 21 EMA; flat by 15:51.")
+        out.append("Management A: after both partials, exit the last third on a 5m close below the 21 EMA. "
+                   "15:45: carry overnight if in profit and above the 21 EMA (stop to at least breakeven), else flat by 15:51.")
     else:
         out.append(f"Management B: at +1R ({st['legs']['B']['breakeven_at']}) stop to breakeven, then trail under "
-                   "5m swing lows (2 bars each side); flat by 15:51.")
+                   "5m swing lows (2 bars each side). 15:45: carry overnight if in profit and above the 21 EMA "
+                   "(stop to at least breakeven), else flat by 15:51.")
     return "\n".join(out)
