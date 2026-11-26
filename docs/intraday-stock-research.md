@@ -222,6 +222,44 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - Prompt used for each video:
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
 
+## Confirmed Trend Join Long rules (from the presenter's blog posts, read 2026-11-26)
+Sources: "How to Build a Free AI Premarket Analyst with Claude & Codex" (https://www.humbledtrader.com/blog/claude-codex-ai-premarket-analyst/, 2026-06-16; linked from video 4 as linktw.in/ai-premarket-analyst) and "Build an AI Trading Bot with Claude + Interactive Brokers" (https://www.humbledtrader.com/blog/ai-trading-bot-claude-ibkr/, 2026-05-21, updated 2026-09-24; video 6). The bot post says its rules come from the strategy backtested in "the last blog post" (TradingView + Claude, Part 1 of the series).
+
+### Version A: "TJL-report" (premarket report, `WATCHLIST_CRITERIA.md`, video 4)
+Verbatim rules: "Premarket selection, all required: Gap % vs prev close > 3%; Price > $3; Market cap > $1B; Premarket relative volume (RVOL) > 1.5; Price breaking above yesterday's high. Intraday plan: window 10:00am to 3:30pm ET; trigger price > premarket high AND > prior high-of-day; stop 1% below premarket high or LOD (whichever is lower) = 1R; scale 1/3 at +1R, 1/3 at +2R, trail the last 1/3 on the 21-EMA; flat by 3:51pm." Backtest stated: 54.6% win rate, profit factor 1.59, 280 trades.
+- Her scanner's code flag: `day_eligible = gap > 3 AND price > 3 AND market_cap > $1B AND rvol > 1.5 AND price > prior-day high`.
+- RVOL caveat (hers): free data (yfinance) has almost no premarket volume, so her RVOL is today's volume / 20-day average volume, a full-day stand-in; true premarket RVOL needs a premarket feed. **We use Webull's real extended-hours volume instead.**
+- Her scanner pre-filters movers at |gap| >= 4% and price >= $3 (top 12) before the 3% rule; a quiet morning can be thin ("temporarily lower the gap filter to 2%" for a demo).
+- Swing list (not traded by us yet): gap >= 8%, price > $3, open > prior-day high, open > 200-day SMA, market cap >= $800M, real catalyst (earnings on the gap day, or news with no earnings); entries/exits "still being built". Backtest: 57.6% / PF 5.34 (news), 44.7% / PF 2.57 (earnings).
+- Catalyst handling in her prompts: no catalyst found = SKIP; up on bad news (dilution, probe, miss) = TRAP. Catalyst ranking used by her second AI: earnings/guidance > M&A > FDA > index inclusion > sympathy > analyst upgrade > none.
+
+### Version B: "TJL-bot" (IBKR bot, `rules.json`, video 6)
+Verbatim `rules.json`:
+```
+strategy_name: Trend Join Long; direction: long_only; trade_timeframe: 5m
+universe_filters: index S&P 500, min_price_usd 3.0
+daily_filters: D1_above_prior_day_high true; D2_prior_close_above_sma200 true; D3_min_gap_pct_from_prior_close 3.0
+intraday_filters: I1_above_premarket_high true; I2_above_today_hod true; I3_rvol_min 2.0; I3_rvol_lookback_days 14
+time_filter: earliest_entry_et 10:05; latest_entry_et 15:30; force_close_et 15:51
+exit: initial_stop_rule lod_minus_1pct; partial_profit_trigger_R 0.75; partial_profit_fraction 0.3333;
+      breakeven_trigger_R 1.0; post_breakeven_trail swing_low_5m_2_2
+risk: max_risk_per_trade_pct 1.0; max_position_size_pct_of_portfolio 10; max_concurrent_positions 5
+```
+- Her words: "I2: price above today's high so far (joining strength, not buying a fade)"; "If all six filters pass, the bot takes a trade on the stock. If any one fails, it doesn't execute."
+- Her `.env`: paper trading, portfolio $25,000, max trade size $2,500, max 5 trades a day, max risk 1% per trade.
+
+### What the blogs settle
+- **"Prior high-of-day" = today's high so far** (version B states it; same trigger in both).
+- **Version B's partial = 1/3** at +0.75R; trail after breakeven = **5m swing lows with 2 bars on each side** (`swing_low_5m_2_2`, our reading of the name).
+- Both versions run on the **5-minute** chart (B states it; A's 21-EMA trail is assumed to be on the 5m too, not stated).
+- Version B also caps concurrent positions at 5; we cap at **2 trades a day** (user decision).
+
+### Our assumptions where the blogs are silent (tag them in the trade log)
+- A's 21-EMA trail: 5m chart; exit when a 5m candle closes below the 21-EMA.
+- A's stop when "1% below premarket high" vs LOD: take the lower price, as written.
+- B's RVOL >= 2.0 over 14 days: Webull volume so far today vs the 14-day average volume for the same time of day if available, otherwise vs the 14-day average daily volume (full-day stand-in, like hers).
+- Market cap > $1B (A) is implied for B by the S&P 500 universe; we apply it to both.
+
 ## Watchlist rules and A+ checklist (draft, 2026-11-26)
 Built from videos 3 (trade-log audit), 4 and 6 (Trend Join rules) and 7 (scanner). Universe: Liquid's US-listed single stocks. Data: Webull (real quotes, extended hours, market cap, 52-week range, sectors), Liquid for orders. Long only for now.
 
@@ -322,8 +360,7 @@ Definitions (all known before the open): gap = open / prior close - 1; prior clo
 Closed: historical data source and backtest (not doing them); trade frequency (estimated); filter level (core screens, focus grades); Trend Join version (run both, tagged); long only for now; sizing (1% normal, 2% A+); A+ checklist (drafted); paper test length (>= 2 months); trigger tool (Webull price alerts) and data source (Webull read-only); after-market analysis (Claude's draft defaults).
 
 ### 1. Rules to lock before paper trading
-- **Trend Join version:** video 4 (stop = lower of PMH - 1% or LOD; thirds at +1R/+2R; 21-EMA trail) or video 6 (stop 1% under LOD; partial at +0.75R, breakeven at +1R, trail under 5m swing lows; RVOL >= 2.0). Or run both on paper and tag each trade. Read the presenter's blog rules (linked from video 4) first.
-- 21-EMA trail timeframe (probably 5m) and the partial size in video 6's version.
+- ~~Trend Join version~~ Done: both run on paper, tagged; exact rules confirmed from the blogs (see "Confirmed Trend Join Long rules"). Remaining assumption: version A's 21-EMA trail on the 5m.
 - Entry start: 10:00/10:05 (rules) vs 9:30 (best window in video 3).
 - Video 5's confirmation: require a 5m close above VWAP and the 8 EMA on the breakout, or not.
 - **Overnight rule:** which part carries (draft: A+ only, last third, while above the 21-EMA), its stop, Fridays/weekends, funding cost.
@@ -353,7 +390,7 @@ Closed: historical data source and backtest (not doing them); trade frequency (e
 - Length decided: at least 2 months. Still open: what decides go / no-go (expectancy in R after fees, A+ vs other grades, drawdown).
 
 ## Next steps (suggested order)
-1. Read the presenter's blog rules and lock section 1 (rules).
+1. ~~Read the presenter's blog rules~~ Done (see "Confirmed Trend Join Long rules"). Lock the rest of section 1.
 2. Run the quick Liquid checks in section 3 (fees, order features, paper capital).
 3. Define the after-market analysis in section 2 and the session operations in section 4.
 4. Set the paper-test success criteria (section 5).
