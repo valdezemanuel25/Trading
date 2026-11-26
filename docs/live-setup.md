@@ -81,7 +81,7 @@ Plan fixed on 2026-11-26 after "patterns suggested by the first live check" in `
    - The daily report shows one "WATCH" line per entry or exit, the open shadow trades, and running totals.
    - Shadow trades are logged to `liquid/watch/<candle date>.json` (that day's events, open shadow trades, all closed
      ones) and committed with the daily run.
-   - Wired into the "RSI2 daily check" prompt only once the user approves the exact prompt diff.
+   - Wired into the "RSI2 daily check" prompt (diff approved and saved 2026-11-26; first run 2026-11-27 00:20 UTC).
 2. **Adoption rule (fixed now).** At the review, a setup is proposed for live only if all three hold:
    - at least 8 closed shadow trades;
    - net > 0 after costs;
