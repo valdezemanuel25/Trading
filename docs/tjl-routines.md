@@ -9,6 +9,8 @@ No scheduled tasks: each routine starts when the user sends its message.
 | **after-close check** | After 4:00 PM; after 7:00 PM (winter) / 8:00 PM (summer) for a fresh RSI(2) candle | Close out today's trades, SPY regime, sector heat, screen, catalysts, top-5 watchlist, Webull watchlist update, RSI(2) check |
 | **morning check** | About 9:00-9:30 | Gappers (3%+), premarket high/volume/RVOL, final 1-2 names with trigger, stop, 1R, size |
 | **TJ trigger \<TICKER\>** | When a Webull alert fires, 10:00-15:30 | 5m chart check, version choice, Liquid paper order with stop + reduce-only partials for approval, Notion log |
+| **TJ check \<TICKER\>** | Any time a position is open (suggested: 10:30, 11:30, 13:00, 14:30, 15:45) | Breakeven / trail / 21-EMA exit / 15:51 close, proposed for approval |
+| **TJ audit** | Weekly (e.g. Friday after the close), and at the 2-month mark | Go/no-go metrics from the Notion log, splits by version, grade, box, window, regime |
 
 How it works: Claude fetches data with the Webull, Liquid and Notion connectors and saves the raw JSON in the
 session scratchpad. Then it runs `python3 -m tjl <command>` on those files. The script prints a markdown
@@ -90,9 +92,28 @@ watchlist change, RSI(2) result, and what tomorrow is (full day / half day / clo
       Check the quantity against the actual fill; the script assumes `--sz-decimals 2` (fix it from the preview if Liquid rejects it).
 5. **Notion:** create the rows printed under `notion` (real = Planned -> Open after the fill with the fill price
    and Liquid order IDs; shadow = Shadow). Commit `runs/tjl/<D>/trigger-<T>.*`.
-6. **Management** (user check-ins, "TJ check <T>"): A: after both partials, exit the last third on a 5m close
-   below the 21 EMA. B: at +1R stop to breakeven (`modify_position` -> `execute_tpsl`), then trail under 5m swing
-   lows (2 bars each side). Everything flat by 15:51 (`close_position` preview -> approval). Overnight rule still open.
+6. Management: see "TJ check".
+
+## 4. TJ check \<TICKER\>
+
+1. Liquid `get_portfolio`: position size (coins), current stop, mark. Webull `get_stock_bars` (ticker, M5, `PRE,RTH`,
+   count 200, `real_time_required` true).
+2. **Run:** `python3 -m tjl check --trade runs/tjl/<D>/trigger-<T>.json --bars5 <file> --now HH:MM --qty <coins>
+   --stop <current Liquid stop> --liquid-price <mark> [--fill <entry fill>]`
+3. It proposes one of: **hold**; **move stop** (B: breakeven once +1R was reached, then under the latest confirmed
+   5m swing low; never lower) as a `modify_position` preview -> approval -> `execute_tpsl`; **close** (A: both
+   partials filled and a 5m close below the 21 EMA; both: from 15:45, flat by 15:51) as a `close_position` preview ->
+   approval -> execute. Cancel leftover reduce-only partials after a close (`cancel_order`).
+4. Update the Notion row (partials filled, stop moves in Notes). Overnight holds: rule still open, so flat by 15:51.
+
+## 5. TJ audit
+
+1. Notion: `notion-query-data-sources` SQL `SELECT * FROM "collection://424af207-66ae-8152-bcb1-000b322dc897"`
+   (the R multiple formula can't be selected; the audit computes P&L $ / Risk $). Save the result as JSON.
+2. **Run:** `python3 -m tjl audit --rows <file>`. Rows titled "TEST..." are ignored.
+3. Report: verdict (TOO EARLY until 30 closed trades and 61 days; PAUSE at -$3,000 drawdown; then GO / EXTEND /
+   NO-GO per the criteria), overall stats, splits by version (with and without shadow rows), grade, entry window,
+   SPY regime, catalyst type, overnight, 5m confirm, each A+ box with/without, paired A vs B setups, Skipped/Missed.
 
 ---
 
@@ -105,6 +126,8 @@ watchlist change, RSI(2) result, and what tomorrow is (full day / half day / clo
 | `tjl/morning.py` | Gap, premarket high/vol/RVOL, morning rules, provisional plan |
 | `tjl/trigger.py` | 5m checks, version choice, sizing, Liquid order plan, Notion rows |
 | `tjl/shadow.py` | Exit simulation on 5m bars (shadow rows, MFE/MAE) |
+| `tjl/manage.py` | TJ check: breakeven, trail, 21-EMA exit, 15:51 close proposals |
+| `tjl/audit.py` | Go/no-go audit of the Notion log |
 | `tjl/sizing.py` | Sizing and Liquid price/size rounding (5 significant figures, 6 - szDecimals decimals) |
 | `runs/tjl/<date>/` | Each routine's JSON state + markdown report (committed) |
 

@@ -4,6 +4,8 @@
   python3 -m tjl morning --state runs/tjl/<D>/after_close.json --snapshot F --pre F [--now HH:MM] [--date D]
   python3 -m tjl trigger TICKER --state runs/tjl/<D>/morning.json --bars5 F [--hist5 F] --liquid-price P ...
   python3 -m tjl shadow --trade runs/tjl/<D>/trigger-<T>.json --bars5 F
+  python3 -m tjl check --trade runs/tjl/<D>/trigger-<T>.json --bars5 F --now HH:MM --qty Q --stop S --liquid-price P
+  python3 -m tjl audit --rows F   (Notion SQL result of SELECT * on TJL Trades)
 
 Each command prints a markdown report and writes JSON + markdown under runs/tjl/<date>/.
 """
@@ -12,7 +14,7 @@ import json
 import os
 import sys
 
-from . import after_close, morning, shadow, trigger
+from . import after_close, audit, manage, morning, shadow, trigger
 from .webull import load_bars, load_snapshot
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -79,6 +81,22 @@ def main(argv=None):
     s.add_argument("--version", choices=["A", "B"], help="default: the shadow version in the trade file")
     s.add_argument("--out")
 
+    c = sub.add_parser("check")
+    c.add_argument("--trade", required=True, help="trigger-<T>.json")
+    c.add_argument("--bars5", nargs="+", required=True, help="get_stock_bars M5 PRE,RTH for today")
+    c.add_argument("--now", required=True, help="ET clock time HH:MM")
+    c.add_argument("--qty", type=float, required=True, help="position size in coins (get_portfolio)")
+    c.add_argument("--stop", type=float, required=True, help="current stop on Liquid")
+    c.add_argument("--liquid-price", type=float, required=True)
+    c.add_argument("--fill", type=float, help="actual entry fill on Liquid")
+    c.add_argument("--sz-decimals", type=int, default=2)
+    c.add_argument("--out")
+
+    u = sub.add_parser("audit")
+    u.add_argument("--rows", required=True, help="saved Notion query result (JSON with 'results')")
+    u.add_argument("--date", help="today (default: system date)")
+    u.add_argument("--out")
+
     args = p.parse_args(argv)
     if args.cmd == "after-close":
         st = after_close.run(load_bars(args.stocks), load_bars(args.etfs), load_snapshot(args.snapshot),
@@ -100,6 +118,19 @@ def main(argv=None):
                          sz_decimals=args.sz_decimals, max_lev=args.max_lev)
         md = trigger.report(st)
         d = _save(st["date"], f"trigger-{st['ticker']}", st, md, args.out)
+    elif args.cmd == "check":
+        tr = json.load(open(args.trade))
+        st = manage.run(tr, load_bars(args.bars5), args.now, args.qty, args.stop, args.liquid_price,
+                        args.fill, args.sz_decimals)
+        md = manage.report(st)
+        d = _save(st["date"], f"check-{st['ticker']}-{args.now.replace(':', '')}", st, md, args.out)
+    elif args.cmd == "audit":
+        import datetime as _dt
+        data = json.load(open(args.rows))
+        rows = data["results"] if isinstance(data, dict) else data
+        st = audit.run(rows, _dt.date.fromisoformat(args.date) if args.date else None)
+        md = audit.report(st)
+        d = _save(st["date"], "audit", st, md, args.out)
     else:
         tr = json.load(open(args.trade))
         st = shadow.run(tr, load_bars(args.bars5), args.version)

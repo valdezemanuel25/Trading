@@ -213,3 +213,57 @@ def test_shadow_stop_first_and_b_breakeven():
     s = shadow.simulate(bars, DAY, 10 * 60 + 30, 100.0, 98.0, "B")
     assert s["final_reason"] == "Breakeven"
     assert s["r_gross"] == pytest.approx(0.75 / 3)
+
+
+# ---------- manage (TJ check) ----------
+from tjl import audit, manage  # noqa: E402
+
+
+def _trade(version="B"):
+    st = trigger.run("MU", _ms(), _today(), _hist(), 105.0, now="10:33",
+                     prev_version="A" if version == "B" else "B")
+    assert st["real"] == version
+    return st
+
+
+def test_check_b_breakeven_then_trail():
+    tr = _trade("B")
+    entry, stop = tr["chart"]["last"], tr["legs"]["B"]["webull_stop"]
+    r = entry - stop
+    later = series(DAY, "10:35", [(entry, entry + 1.1 * r, entry + r)] + [(entry + 0.5 * r, entry + 1.2 * r, entry + r)] * 3)
+    bars = {"MU": _today()["MU"] + later}
+    st = manage.run(tr, bars, "10:55", 7.0, tr["legs"]["B"]["liquid_stop"], 106.0)
+    assert st["actions"][0]["do"] == "move stop"
+    assert st["actions"][0]["to"] >= tr["legs"]["B"]["liquid_entry_ref"]
+
+
+def test_check_time_and_flat():
+    tr = _trade("A")
+    st = manage.run(tr, _today(), "15:46", 9.0, 100.0, 105.0)
+    assert st["actions"][0]["do"] == "close"
+    st = manage.run(tr, _today(), "11:00", 0, 100.0, 105.0)
+    assert st["actions"][0]["do"] == "nothing open"
+
+
+# ---------- audit ----------
+def _row(i, pnl, risk=250, status="Closed", version="A: TJL-report", followed=True, title=None):
+    return {"Trade": title or f"t{i}", "Status": status, "Version": version, "P&L $": pnl, "Risk $": risk,
+            "date:Date:start": (dt.date(2026, 12, 1) + dt.timedelta(days=i)).isoformat(), "Ticker": "MU",
+            "Rule followed": "__YES__" if followed else "__NO__", "Mistakes": None,
+            "A+ boxes": '["2 ADR20 4%+"]', "Grade": "Normal"}
+
+
+def test_audit_verdicts():
+    rows = [_row(0, 0, title="TEST x")]
+    assert audit.run(rows, dt.date(2027, 3, 1))["overall"]["n"] == 0
+    good = [_row(i, 250 if i % 2 else -125) for i in range(40)]
+    st = audit.run(good, dt.date(2027, 3, 1))
+    assert st["overall"]["exp_r"] == pytest.approx(0.25) and st["verdict"].startswith("GO")
+    st = audit.run(good[:10], dt.date(2026, 12, 20))
+    assert st["verdict"].startswith("TOO EARLY")
+    bad = [_row(i, -250 if i % 2 else 200) for i in range(40)]
+    assert audit.run(bad, dt.date(2027, 3, 1))["verdict"].startswith("NO-GO")
+    dd = [_row(i, -250) for i in range(13)]
+    assert "PAUSE" in audit.run(dd, dt.date(2027, 3, 1))["verdict"]
+    mid = [_row(i, 250 if i % 2 else -200) for i in range(40)]   # +0.1R
+    assert audit.run(mid, dt.date(2027, 3, 1))["verdict"].startswith("EXTEND")

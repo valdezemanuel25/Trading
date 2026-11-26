@@ -333,7 +333,9 @@ Routines: `docs/tjl-routines.md` (after-close check, morning check, TJ trigger).
 - Forced test (not a real setup): TSLA broke its premarket high at 13:45 on 11/25. The trigger, order plan and both shadow simulations were checked against the raw bars (+0.15R MFE, -0.10R MAE, flat at 15:50 for about +0.06R net). A test row "TEST (delete) 2026-11-25 TSLA A" was written to Notion to check the field mapping (all fields accepted).
 - RSI(2) (11/25 candle): S&P500 RSI 56.0, below the 200d -> EXIT signal but nothing held; NASDAQ100 RSI 39.0 -> NONE. Paper account $10,000, no positions.
 
-**Not built yet:** a "TJ check <ticker>" management helper (trail/breakeven levels at check-ins; done by hand from the 5m chart for now); a weekly audit report from the Notion rows.
+**Added later on 2026-11-26:** "TJ check <ticker>" (`tjl/manage.py`: hold / breakeven / swing-low trail / 21-EMA exit / 15:51 close, proposed as Liquid previews for approval; replayed on the TSLA test: hold at 14:30, close at 15:47) and "TJ audit" (`tjl/audit.py`: go/no-go verdict and splits from the Notion log; today: TOO EARLY, 0 trades). 18 tests pass.
+
+**Still open (user decisions):** overnight rule (draft: A+ only, last third, while above the 21 EMA), entry start 9:30 vs 10:00, shorts. **To verify on the first live days:** Webull snapshot fields in premarket, Liquid size decimals and real fees from the first fill.
 
 ## Intraday trigger: connection options (2026-11-26)
 | Option | What it gives | Status |
