@@ -356,6 +356,29 @@ Fallback with no app at all: the user messages Claude at fixed times (e.g. 10:00
 - **Order flow per trade (paper):** (1) entry with stop attached; (2) reduce-only partial(s); (3) later stop moves or a native trailing stop; (4) close by 3:51 with `close_position` (preview + approval). Every step needs the user's approval in chat.
 - **Paper capital: decided 2026-11-26 (see Decisions).** Background: The $10k paper account is shared with the RSI(2) test ($5k notional per signal, up to two markets). Trend Join risk sizing: 1% = $100, A+ 2% = $200 of risk; with a 3% stop that is about $3,300 / $6,700 notional. Version B's "max 10% of the portfolio per position" ($1,000) conflicts with that risk (it would cap risk far below 1% unless the stop is 10%+). Options: reset the paper account to a larger balance (`reset_paper_account`, affects RSI(2) too), use 2-5x leverage so margin stays small, or apply the 10% cap to margin instead of notional.
 
+## Trade log (Notion, created 2026-11-26)
+- Page: **"Forward Test: Trend Join Long (stocks)"** (private, workspace level): https://app.notion.com/p/424af20766ae813a85dbcaddf592a712 . Holds the setup summary and logging rules.
+- Database: **"TJL Trades"** inside it: https://app.notion.com/p/424af20766ae81f8a9b9e7b9c3f59db5 , data source `collection://424af207-66ae-8152-bcb1-000b322dc897`. IDs `TJL-STK-n`.
+- **One row per setup that reached the trade list**: taken trades (Status Planned -> Open -> Closed) and setups not taken (Skipped = a rule said no; Missed = the rules said yes but it wasn't taken).
+- Fields (all labeled for later analysis): Trade (title, "date ticker version"), Date, Ticker, Status, Version (A: TJL-report / B: TJL-bot), Grade (A+ / Normal), A+ boxes (multi-select of the 9 checklist items, tick only those met), Sector, Catalyst (headline), Catalyst type, SPY regime, Gap %, Premarket RVOL, ADR20 %, Extension vs 20d SMA %, 52w range position %, Premarket high, Trigger price, 5m confirm (VWAP + 8 EMA), Entry time, Entry window (10-11 / 11-14 / 14-15:30), Entry price, Stop price, Stop %, Risk $, Position $, Leverage, Margin $, Partial 1 price, Partial 2 price, Final exit price, Exit time, Exit reason (Stop / Breakeven / Trail / Time 3:51 / Overnight exit / Manual), Trail method (21-EMA 5m / Swing low 5m / Native trailing / None), Held overnight, Fees $, Funding $, P&L $ (net), **R multiple** (formula = P&L $ / Risk $), MFE R, MAE R, Rule followed, Mistakes (Chased / Early entry / Late exit / Moved stop / Ignored rule / Missed alert), Liquid order IDs, Notes.
+- The Liquid paper history (`get_position_history`) is the source of truth for fills and fees; copy them into the row when the trade closes.
+
+## Go / no-go criteria for the 2-month paper test (set by Claude, 2026-11-26)
+Judge after **at least 2 months and at least 30 closed trades** (if fewer than 30, extend until there are 30). All numbers net of fees and funding, in R (P&L $ / Risk $).
+- **Go** (consider small real-money trading at the same $ risk or lower) only if all hold:
+  1. Expectancy >= **+0.20R per trade** over all closed trades.
+  2. Profit factor >= **1.3** and total net P&L > $0.
+  3. Max drawdown no worse than **-$3,000** (about -12% of the $25k sizing base, ~6-12R).
+  4. **Rules followed on >= 90%** of trades (Rule followed ticked, no "Ignored rule"/"Moved stop").
+  5. No single loss worse than **-1.3R** (stops and slippage under control).
+- **Extend one more month** (once) if expectancy is between 0 and +0.20R or profit factor between 1.1 and 1.3.
+- **No-go** (stop, back to research) if expectancy <= 0R, or profit factor < 1.1, or drawdown hits -$3,000 at any point (that also pauses the test immediately for a review).
+- **Decisions inside the test:**
+  - Version A vs B: keep the version with the higher expectancy; drop a version whose expectancy is below 0R after 15+ trades of its own.
+  - A+ vs normal: if A+ trades don't beat normal trades in expectancy, drop the 2x size ($500) and risk $250 on everything.
+  - Each A+ box and each field (entry window, SPY regime, catalyst type, overnight, 5m confirm) gets a split: expectancy with vs without. Any filter whose "with" group is not better after 30+ trades is a candidate to drop.
+  - Skipped/Missed rows: if Missed setups would have done better than taken ones, look at execution (alerts, approvals, speed).
+
 ## Trade-frequency estimate (2026-11-26)
 Liquid can't answer this historically (200 candles per call; daily candles run 00:00-24:00 UTC, so no 9:30 open or gap). Used Databento **EQUS.SUMMARY ohlcv-1d** (consolidated US daily bars, available from 2024-07-01, cost $0.07) for the 74 US-listed single stocks on Liquid (ETFs left out). Window with a valid 200d SMA: 2025-04-17 to 2026-11-25, 405 trading days. The ad-hoc script and data stayed in the session scratchpad (not in the repo).
 
@@ -404,10 +427,10 @@ Done 2026-11-26 (see "Liquid checks for the paper test"). Remaining: confirm the
 ### 4. Operations during the session
 - Who watches the trigger from 10:00 to 3:30: user check-ins by message, a TradingView alert, or a script on the user's PC. Every Liquid order still needs the user's approval.
 - ~~Risk limits~~ Done: -$500 daily loss limit, max 2 trades a day.
-- Trade log: where each trade is logged (Liquid history + Notion?), with setup, grade, size, R, time window, regime, holding period, so the after-session audit (video 3 style) can run.
+- ~~Trade log~~ Done: Notion "TJL Trades" database (see "Trade log").
 
 ### 5. Paper-test success criteria
-- Length decided: at least 2 months. Still open: what decides go / no-go (expectancy in R after fees, A+ vs other grades, drawdown).
+- ~~Done~~: see "Go / no-go criteria" (2 months and 30+ trades). Previously open: what decides go / no-go (expectancy in R after fees, A+ vs other grades, drawdown).
 
 ## Next steps (suggested order)
 1. ~~Read the presenter's blog rules~~ Done (see "Confirmed Trend Join Long rules"). Lock the rest of section 1.
