@@ -1,0 +1,75 @@
+{
+ "rows": [
+  {
+   "ticker": "GME",
+   "group": "Consumer/auto",
+   "status": "Watch",
+   "gap_pct": null,
+   "pm_high": null,
+   "trigger": null,
+   "stop_a": null,
+   "stop_b": null,
+   "grade": "Normal",
+   "risk": 250,
+   "note": "close 26.97, PDH 27.48, ADR 4.0%"
+  },
+  {
+   "ticker": "TWST",
+   "group": "Health",
+   "status": "Watch",
+   "gap_pct": null,
+   "pm_high": null,
+   "trigger": null,
+   "stop_a": null,
+   "stop_b": null,
+   "grade": "Normal",
+   "risk": 250,
+   "note": "close 108.07, PDH 110.04, ADR 11.6%"
+  },
+  {
+   "ticker": "MRNA",
+   "group": "Health",
+   "status": "Watch",
+   "gap_pct": null,
+   "pm_high": null,
+   "trigger": null,
+   "stop_a": null,
+   "stop_b": null,
+   "grade": "Normal",
+   "risk": 250,
+   "note": "close 220.84, PDH 228.69, ADR 7.5%"
+  },
+  {
+   "ticker": "CRWD",
+   "group": "Software",
+   "status": "Watch",
+   "gap_pct": null,
+   "pm_high": null,
+   "trigger": null,
+   "stop_a": null,
+   "stop_b": null,
+   "grade": "Normal",
+   "risk": 250,
+   "note": "close 209.30, PDH 210.30, ADR 6.7%, earnings 2026-12-01 post-market"
+  },
+  {
+   "ticker": "NET",
+   "group": "Software",
+   "status": "Watch",
+   "gap_pct": null,
+   "pm_high": null,
+   "trigger": null,
+   "stop_a": null,
+   "stop_b": null,
+   "grade": "Normal",
+   "risk": 250,
+   "note": "close 283.30, PDH 284.49, ADR 6.9%"
+  }
+ ],
+ "meta": [
+  {
+   "label": "Built from",
+   "value": "runs/tjl/2026-11-25/after_close.json"
+  }
+ ]
+}

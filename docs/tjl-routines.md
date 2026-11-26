@@ -120,6 +120,17 @@ watchlist change, RSI(2) result, and what tomorrow is (full day / half day / clo
 
 ---
 
+## Dashboard ("Trend Join Tracker")
+
+- Live page: https://claude.ai/artifact/WjNZG5N292zVtoE2cMZkVZ (private until shared). Design copy in Figma:
+  https://www.figma.com/design/gNMWAXQTASKEiqIPMDShkL (desktop + phone frames, "Stat tile" component, TJ tokens).
+- Live on open: trade log (Notion SQL, TEST rows excluded), Liquid account and positions (`get_portfolio`).
+  Scorecard, A vs B and recent setups are worked out on the page from the trade log.
+- Updated by Claude at the end of each after-close and morning check:
+  `python3 -m tjl dashboard --state runs/tjl/<D>/after_close.json [--morning runs/tjl/<next>/morning.json]
+  --rsi2 "sp=<rsi>:<action>,nq=<rsi>:<action>"`, then upload `runs/tjl/dashboard/status.json` and `plan.json`
+  as assets and point the `status` / `plan` datasets at the new `/_blob/` urls (`update` with `source.url` and `updated`).
+
 ## Files
 | Path | What |
 |---|---|

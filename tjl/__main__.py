@@ -14,7 +14,7 @@ import json
 import os
 import sys
 
-from . import after_close, audit, manage, morning, shadow, trigger
+from . import after_close, audit, dashboard, manage, morning, shadow, trigger
 from .webull import load_bars, load_snapshot
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -98,7 +98,25 @@ def main(argv=None):
     u.add_argument("--date", help="today (default: system date)")
     u.add_argument("--out")
 
+    b = sub.add_parser("dashboard", help="build status.json + plan.json for the Trend Join Tracker dashboard")
+    b.add_argument("--state", required=True, help="after_close.json")
+    b.add_argument("--morning", help="morning.json of the next session, once run")
+    b.add_argument("--rsi2", default="", help='"sp=56.0:EXIT,nq=39.0:NONE"')
+    b.add_argument("--out", default=os.path.join(ROOT, "runs", "tjl", "dashboard"))
+
     args = p.parse_args(argv)
+    if args.cmd == "dashboard":
+        rs = {}
+        for part in filter(None, args.rsi2.split(",")):
+            k, _, v = part.partition("=")
+            val, _, act = v.partition(":")
+            rs[k], rs[k + "_action"] = float(val), act
+        ac = json.load(open(args.state))
+        mo = json.load(open(args.morning)) if args.morning else None
+        status, rows = dashboard.build(ac, mo, rs)
+        dashboard.write(args.out, status, rows, os.path.relpath(args.morning or args.state, ROOT))
+        print(json.dumps(status[0], indent=1)); print(json.dumps(rows, indent=1))
+        return
     if args.cmd == "after-close":
         st = after_close.run(load_bars(args.stocks), load_bars(args.etfs), load_snapshot(args.snapshot),
                              _earnings(args.earnings), args.asof)
