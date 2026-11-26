@@ -665,3 +665,81 @@ Once fills are realistic, none of the intraday variants beats the close-based ru
 **Recommendation: keep the close-based workflow and don't build the order agent.** `liquid/order_agent.md` stays as a design for later, e.g. if a future rule needs intraday orders.
 
 The earlier entry "Adopt in principle" for the TR buy-stop (section "intraday entries") is superseded by this test.
+
+## 2026-11-26: patterns suggested by the first live check (candle 2026-11-25), research only
+
+No Liquid order, live rule, scheduled task or dashboard changed. Script: `python3 research/state_patterns.py` (engine, data and costs of `research/strategies2.py`).
+
+### Today's state (from the official run, work dir `rsi2/2026-11-26`)
+
+| Market | Close | vs 200-day SMA | RSI(2) | 5-day SMA | 20-day close range (position) | vs 20-day SMA (z) | Down streak | 20-day change | Smart / crowd long, funding |
+|---|---|---|---|---|---|---|---|---|---|
+| S&P 500 | 7,203.6 | -4.8% | 56.0 | 7,156.0 | 6,978-7,692 (32%) | -3.0% (z -1.2) | 0 | -6.7% | 36% / 84%, 0.0006% |
+| Nasdaq 100 | 26,076 | -10.9% | 39.0 | 26,134 | 25,301-28,972 (21%) | -4.9% (z -1.4) | 2 | -11.7% | 33% / 88%, 0.0017% |
+| NVDA | 150.59 | -28.1% | 44.7 | 148.80 | 129.46-210.03 (26%) | -12.7% (z -1.0) | 2 | -29.6% | 33% / 89%, 0.0022% |
+| GOOGL | 274.40 | -20.2% | 28.3 | 276.39 | 270.78-301.04 (12%) | -3.4% (z -1.3) | 2 | -6.3% | 34% / 80%, 0.0017% |
+| WTI | 83.98 | -4.0% | 77.4 | 82.51 | 80.50-103.18 (15%) | -4.8% (z -0.6) | 0 | -17.5% | 47% / 57%, 0.0006% |
+
+**The "EXIT" flags on S&P 500 and WTI.** Both closed back above their 5-day SMA after a close below it (S&P 7,203.6 vs 7,156.0; WTI 83.98 vs 82.51). That is the RSI(2) exit condition, so the script flags it. With no position it means nothing: the todo is "no action". It is a one-day bounce, not a signal.
+
+**What the state shows:**
+- Every market is in a downtrend: 4-28% below the 200-day SMA, near the bottom of its 20-day range, down 6-30% in 20 days. The live rules can't buy any of them:
+  - RSI(2) needs the close above the 200-day;
+  - trend reclaim needs a close back above it, which WTI (-4.0%) is closest to.
+- **Positioning:** the losing crowd is 46-56 points more long than smart money in the four equity markets, an extreme one-sidedness. WTI is the exception (10 points).
+
+### Candidates the live rules don't cover
+
+All long only, all from daily data (testable 2020 to 2026-10-28; the 1-minute data adds nothing for daily rules).
+
+| Candidate | Rule | Testable? |
+|---|---|---|
+| Bear-market dip, deep (DEEP) | RSI(2) < 10 with the close at least 10 / 15 / 20% below the 200-day SMA; exit first close above the 5-day SMA | Yes |
+| Consecutive down days (DOWN3, DOWN4) | 3 or 4 lower closes in a row, below the 200-day (bear rebound) or anywhere; exit first close above the 5-day SMA | Yes |
+| Distance-from-mean extreme (BB2) | Close 2+ standard deviations below the 20-day mean, below the 200-day or anywhere; exit first close above the 5-day SMA | Yes |
+| Bear-market rally (RALLY) | Below the 200-day, close crosses above the 20-day SMA; exit close back below it or 20 days | Yes |
+| 20-day breakout (BO20) | Close above the previous 20-day high, any trend or above the 200-day; exit close below the previous 10-day low or 20 days | Yes |
+| Positioning extreme | Crowd long % far above smart money; funding | **No** (2 days logged). Future filter only, once the log has months of data |
+
+Already tested and not repeated here: RSI(2) < 10 below the 200-day (DIP, on watch; DEEP is a subset of it), and everything dropped earlier.
+
+### Results
+
+Variant and markets picked on 2020-23 only (markets with 2020-23 net > 0), then checked on the 2026 holdout. Live portfolio for reference: $+7,974 / $+3,088 / $+3,495.
+
+| Candidate (picked markets) | On its own 2020-23 | 2024-25 | 2026 holdout | Entries while live rules hold nothing | **Portfolio change vs live** 2020-23 / 2024-25 / holdout |
+|---|---|---|---|---|---|
+| BO20, no filter (all five), **best BO20 on 2020-23** | 148 tr (37/yr), 51% win, $+15,875, worst -$569, DD -$2,711 | $+6,845 | 33 tr, 36% win, $+937, DD -$2,924 | 142 of 260 | $+5,987 / $+1,821 / **$-776** |
+| BO20, above 200-day (all five) | 124 tr, 52%, $+12,197, DD -$4,019 | $+5,290 | 33 tr, $+793 | 112 of 235 | $+4,918 / $+1,523 / $-3,308 |
+| DOWN4, anywhere (ES NQ NVDA GOOGL), **best DOWN on 2020-23** | 102 tr (26/yr), 75%, $+6,991, worst -$226, DD -$405 | $+2,132 | 24 tr, 79%, $+1,050 | 50 of 167 | $+3,355 / $+623 / **$-88** |
+| DOWN4, below 200-day (ES NQ NVDA GOOGL) | 47 tr (12/yr), 83%, $+3,715, worst -$127, DD -$167 | $+515 | 5 tr, 80%, $+226 | 40 of 63 | $+3,102 / $+146 / $+249 |
+| DOWN3, below 200-day (ES NQ NVDA GOOGL) | 89 tr, 74%, $+5,701, DD -$612 | $+2,215 | 10 tr, $+800 | 76 of 117 | $+1,391 / $+2,101 / $-212 |
+| DOWN3, anywhere (all five) | 260 tr, 72%, $+10,275, worst -$1,909 | $+7,261 | 59 tr, $+1,625 | 189 of 453 | $-638 / $+1,645 / $-972 |
+| BB2, below 200-day (ES NVDA GOOGL), **best BB2 on 2020-23** | 31 tr (8/yr), 65%, $+1,957, worst -$668 | $+1,125 | 7 tr, $+28 | 28 of 45 | $+2,501 / $+254 / **$-437** |
+| BB2, anywhere (all five) | 117 tr, 72%, $+5,644, worst -$1,044 | $+3,408 | 29 tr, $+814 | 59 of 189 | $+119 / $+687 / $-503 |
+| RALLY (ES NVDA GOOGL) | 36 tr (9/yr), 36%, $+3,726, DD -$1,230 | $+814 | 1 tr, $+436 | 36 of 48 | $+929 / **$-1,595** / $-244 |
+| DEEP 10% (NVDA GOOGL), **best DEEP on 2020-23** | 31 tr (8/yr), 71%, $+3,216, worst -$365, DD -$552 | 7 tr, $+2,450 | **1 tr**, $-5 | 33 of 39 | $+2,669 / $+2,597 / **$-5** |
+| DEEP 15% (NVDA GOOGL) | 24 tr, 71%, $+2,444 | 5 tr, $+2,555 | 0 tr | 25 of 29 | $+2,444 / $+2,555 / $0 |
+| DEEP 20% (NQ NVDA GOOGL) | 16 tr, 69%, $+1,515 | 2 tr, $+1,373 | 0 tr | n/a | $+1,497 / $+1,373 / $0 |
+
+**Findings:**
+- **On their own, most candidates are profitable in every period**, including the holdout (BO20 $+937, DOWN4 $+1,050, DOWN3 $+1,625, BB2 $+814). But the live rules had a strong 2026 ($+3,495 on 37 trades), and **in the shared 2 slots every best-on-2020-23 variant lowers the holdout**: BO20 $-776, DOWN4 $-88, BB2 $-437, RALLY $-244. They take slots the live trades would have used.
+- **BO20** adds the most in 2020-23 (the 2020-21 and 2023 trends), but with a 36% win rate and a -$2,924 drawdown on the holdout. Not worth the slots.
+- **DOWN4 below the 200-day** (the bear-rebound version) is the only one positive on the holdout in the portfolio ($+249, 2 of its trades taken). It was not the variant 2020-23 picked, and +$249 on 5 trades is noise.
+- **DEEP:** the deep-dip rule fits today's NVDA (-28%) and GOOGL (-20%), but the 2026 holdout (to Oct 28) has only one deep dip, so it can't be confirmed. 2020-23 and 2024-25 are both strong ($+2,669 / $+2,597 in the portfolio). If RSI(2) drops below 10 on NVDA or GOOGL from here, this would be a live example.
+- **Positioning:** can't be tested until the log has months of data. Today's 46-56 point crowd-vs-smart-money gaps are the kind of extreme to check first.
+
+### Adopt / drop / watch
+
+| Candidate | Verdict | Why |
+|---|---|---|
+| BO20 20-day breakout | **Drop** | Holdout $-776 (no filter) / $-3,308 (above 200-day) in the portfolio; 36% win rate, -$2,924 drawdown on the holdout. |
+| DOWN4 anywhere (picked on 2020-23) | **Drop** | Holdout $-88 in the portfolio. |
+| DOWN4 below 200-day | **Watch** | Holdout $+249 in the portfolio, 5 trades; not the 2020-23 pick. |
+| DOWN3 (either) | **Drop** | Holdout $-212 / $-972. |
+| BB2 (either) | **Drop** | Holdout $-437 / $-503. |
+| RALLY | **Drop** | $-1,595 in 2024-25, $-244 on the holdout. |
+| DEEP (RSI(2) < 10, 10%+ below the 200-day) on NVDA, GOOGL | **Watch** | Strong in 2020-23 and 2024-25; no holdout evidence (1 trade). It's the case the current market is closest to. |
+| Positioning extremes | **Future filter** | Needs months of the daily log. |
+
+Nothing to adopt. No approval needed.
