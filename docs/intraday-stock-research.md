@@ -21,7 +21,7 @@ Videos were watched with the `/watch` skill. Gemini returned HTTP 503 ("high dem
 | 3 | "I'm a Verified 7 Figure Trader, Here's how I use AI for Trading" (`zU0i9rBbEkI`, 12:32) | Stock-selection filters, regime and time-of-day data from a real trade log |
 | 4 | "I Replaced my 6AM Premarket Trading Routine with Claude + Codex" (`PKFkJ4TprVo`, 23:29) | **Complete backtested rule set: Trend Join Long**, premarket report pipeline |
 | 5 | "Live Trading on the 5-Minute Time Frame (how I keep it simple)" (25:57; presumably `gn02_Ic9i5U`) | **5m entry trigger (close above VWAP + 8 EMA)**, 8 EMA trail, first-red-day short |
-| 6 | `UgWQtQ3MEVE` | **Pending**: same as video 5 |
+| 6 | "Claude + IBKR API: Complete AI Trading Bot Guide" (`UgWQtQ3MEVE`, 23:27) | Automated Trend Join Long (second rule version); **bot is slightly negative on paper** |
 
 ### 1. VWAP crash course
 - Chart setup: session VWAP (bands off) + volume only; 2m and 5m intraday, daily alongside.
@@ -94,8 +94,40 @@ English captions + frames (a selection of the 100 frames was read). Mostly a 1m 
 - Performance: one day only, +$1,723.64 (ZAPP +$2,009.47, LGVN -$285.83). No win rate or sample.
 - Warnings: 1m charts drive FOMO and revenge trading; 5m gives fewer trades but better R:R; some of it is hindsight (7:00, 21:17).
 
+### 6. Automated Trend Join Long on an IBKR paper account
+English captions + frames (strategy, backtest, scanner and dashboard frames read; sponsor 7:29-9:44 skipped). Rules read aloud at 12:05; `rules.json` shown at 13:37.
+- **Rules (bot version):**
+  - Filters: price above the prior day's high; prior close above the 200d SMA; gap >= 3% from the prior close.
+  - Intraday: price above the premarket high and above today's high of day; relative volume >= 2.0 (14-day lookback). 5m chart, long only.
+  - Stop: 1% below the low of day (12:26). Example: LITE entry 976.79, stop 940.75, R/share 36.04.
+  - Exits: partial at +0.75R (size not stated), stop to breakeven at +1R, then trail under 5m swing lows; forced close 15:51.
+  - Window: entries 10:05-15:30.
+  - Size: risk 1% of the account per trade, max 10% of the account per position (12:47).
+- **How it runs:** rescans every 30 minutes (5 possible, 15:14), places orders, Telegram alerts (scan list, buys, sells, partials, trails), end-of-day P&L, dashboard of R per trade. Demo universe: S&P 500 (503 tickers scanned in ~14 s, 20 survived the 3% gap filter, heavy semis/storage tilt). Her live manual trading: any stock > $1B cap and > $3; sectors with outsized relative strength (semis, AI).
+- **Results:**
+  - TradingView backtest, MU 5m, 2026-03-09 to 05-21: 14 trades, 64.3% win, PF 2.48, +12.1%, max DD 7.25%. Same strategy on TSLA (2025-10-01 to 2026-05-15): -7.8%, max DD 24.9%.
+  - "Previously" recap: 175 trades, 55.4% win, +$16,218 across a stock list.
+  - **Live paper bot (to 2026-05-31): month 17 trades, 35.3% win, total -0.72R (-$134.78); year 29 trades, 44.8% win, avg -0.04R (-$47.75).** She calls it "very meh": the backtest doesn't carry over, and her manual execution isn't fully coded; her manual trading does much better.
+- **Warnings:** AI is a multiplier; with no edge a bot loses faster. Paper trade "until it runs clean for weeks". Backtests don't transfer directly to live.
+
+**The two Trend Join Long versions disagree:**
+
+| | Video 4 (premarket report) | Video 6 (IBKR bot) |
+|---|---|---|
+| Relative volume | > 1.5 | >= 2.0 (14-day lookback) |
+| Entry window | 10:00-3:30 | 10:05-3:30 |
+| Stop | Lower of PMH - 1% or low of day | 1% below the low of day |
+| Exits | 1/3 at +1R, 1/3 at +2R, trail last 1/3 on the 21-EMA | Partial at +0.75R, breakeven at +1R, trail under 5m swing lows |
+| Backtest | 54.6% win, PF 1.59, 280 trades | 64% win, PF 2.48, 14 trades on MU (TSLA lost) |
+| Sizing | Not given | 1% risk per trade, max 10% of the account |
+
+Shared by both: gap > 3%, price > $3, cap > $1B, prior close above the 200d SMA, price above the prior day's high, trigger above both the premarket high and the high of day, flat by 3:51.
+
+**What this means for us:** the only out-of-sample, automated evidence for Trend Join Long (her own paper bot) is flat to slightly negative. Her edge looks discretionary (stock and sector selection, manual execution), which matches video 3's finding that selection, not entries, made her year. Treat the published backtests as unproven; test both exit versions as separate variants on the same stock list.
+
 ## Candidate strategy (draft, not final)
-- **Core:** Trend Join Long (video 4 rules).
+- **Core:** Trend Join Long, two exit variants to compare (video 4: thirds at +1R/+2R and a 21-EMA trail; video 6: partial at +0.75R, breakeven at +1R, trail under 5m swing lows). Add the 200d SMA filter (both versions use it).
+- **Base sizing (video 6):** risk 1% of the account per trade, max 10% of the account per position; A+ 2-3x would need that cap revisited.
 - **On top:** video 3 focus filters (ADR >= 4-6%, $100B+ cap, hot sector, near the 52-week high, not stretched above the 20 SMA), skip sideways SPY days, 1-2 names per day, A+ sizing 2-3x.
 - **Entry confirmation (video 5):** act only on a 5m candle **close** (above VWAP and the 8 EMA for longs, below both for shorts), not on wicks or 1m signals. Could serve as the confirmation for Trend Join breakouts, or as its own VWAP-reclaim trigger.
 - **Trail option (video 5):** 5m close below the 8 EMA, as an alternative to video 4's unspecified 21-EMA trail. Test both.
@@ -139,6 +171,7 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
 - **Stop size:** the low-of-day stop can be wide (5% on SSRM). Size from the stop distance, not a fixed notional, especially with 2-3x A+ size.
 - **10:00 start vs 9:30-10:00 being the best window** in video 3. Test both.
 - **Overnight vs flat by 3:51:** the rules say flat; video 3 data favors overnight holds. User allowed overnight; the exact rule is undecided.
+- **The automated version already underperformed:** video 6's paper bot is -0.72R over 29 trades. A mechanical copy may not have an edge; any test must include costs and a period the rules were not tuned on.
 - **Evidence quality:** one trader, one year (a semis/memory boom), top 5 trades = 58% of gross; the Trend Join backtest has no period or costs and was run on the whole market, not Liquid's list.
 - **Real dollar volume / exchange data:** if needed later, a stock-data source (Yahoo as in video 4, Databento equities, Polygon or Alpaca). Not added yet (Liquid first).
 
@@ -149,7 +182,7 @@ On 2026-11-26 MU was about $605, down about 50% from a June high near $1,250 and
   `/watch:watch <URL> | Summarize this trading video for building an intraday stock strategy. With timestamps, list: setups and exact entry triggers, stop placement, targets/exits, position sizing and adding/scaling rules, time-of-day windows, indicators and settings, stock selection criteria (catalysts, gaps, volume, market cap), any pre-market or after-close routine, any performance numbers (win rate, P/L, sample size), and warnings/pitfalls. Separate what is said from what is only shown on screen.`
 
 ## Next steps
-1. Add video 6 (`UgWQtQ3MEVE`) when the summary arrives.
-2. Confirm the Trend Join rules in the blog post linked from video 4.
+1. All six videos are logged.
+2. Confirm the Trend Join rules in the blog post linked from video 4 (and reconcile with video 6's `rules.json`).
 3. Decide the overnight rule and the short-side rules.
 4. Only then design the after-close screen, the morning update and the intraday alerts.
