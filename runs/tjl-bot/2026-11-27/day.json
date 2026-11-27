@@ -1,0 +1,11 @@
+{
+ "date": "2026-11-27",
+ "orders": 0,
+ "halted": null,
+ "plan_done": false,
+ "eod_done": true,
+ "final": [],
+ "catalyst": {},
+ "skipped": {},
+ "notes": []
+}
