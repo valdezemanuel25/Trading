@@ -1,0 +1,610 @@
+{
+ "date": "2026-11-27",
+ "bot_ran": false,
+ "names": {
+  "AAOI": {
+   "webull_prior_close": 37.02,
+   "bot_prior_close": null,
+   "webull_gap": 0.09373311723392752,
+   "webull_pmh": 41.01,
+   "webull_pm_vol": 417198.0,
+   "webull_pm_rvol": null
+  },
+  "AAPL": {
+   "webull_prior_close": 355.58,
+   "bot_prior_close": null,
+   "webull_gap": 0.009027504359075511,
+   "webull_pmh": 360.07,
+   "webull_pm_vol": 339308.0,
+   "webull_pm_rvol": null
+  },
+  "AMAT": {
+   "webull_prior_close": 311.18,
+   "bot_prior_close": null,
+   "webull_gap": 0.049874670608650806,
+   "webull_pmh": 332.9045,
+   "webull_pm_vol": 164691.0,
+   "webull_pm_rvol": null
+  },
+  "AMD": {
+   "webull_prior_close": 406.03,
+   "bot_prior_close": null,
+   "webull_gap": 0.04391301135384085,
+   "webull_pmh": 435.5488,
+   "webull_pm_vol": 541514.0,
+   "webull_pm_rvol": null
+  },
+  "AMZN": {
+   "webull_prior_close": 244.43,
+   "bot_prior_close": null,
+   "webull_gap": 0.02606063085545962,
+   "webull_pmh": 252.75,
+   "webull_pm_vol": 451451.0,
+   "webull_pm_rvol": null
+  },
+  "ARM": {
+   "webull_prior_close": 161.51,
+   "bot_prior_close": null,
+   "webull_gap": 0.06292923038821119,
+   "webull_pmh": 174.9,
+   "webull_pm_vol": 58472.0,
+   "webull_pm_rvol": null
+  },
+  "ASML": {
+   "webull_prior_close": 1303.08,
+   "bot_prior_close": null,
+   "webull_gap": 0.020470730883752397,
+   "webull_pmh": 1354.0,
+   "webull_pm_vol": 27341.0,
+   "webull_pm_rvol": null
+  },
+  "AVGO": {
+   "webull_prior_close": 300.86,
+   "bot_prior_close": null,
+   "webull_gap": 0.03234062354583522,
+   "webull_pmh": 315.68,
+   "webull_pm_vol": 839517.0,
+   "webull_pm_rvol": null
+  },
+  "BABA": {
+   "webull_prior_close": 86.26,
+   "bot_prior_close": null,
+   "webull_gap": 0.044168792024112946,
+   "webull_pmh": 90.74,
+   "webull_pm_vol": 485779.0,
+   "webull_pm_rvol": null
+  },
+  "BB": {
+   "webull_prior_close": 8.5,
+   "bot_prior_close": null,
+   "webull_gap": 0.02941176470588225,
+   "webull_pmh": 8.89,
+   "webull_pm_vol": 76990.0,
+   "webull_pm_rvol": null
+  },
+  "BE": {
+   "webull_prior_close": 152.89,
+   "bot_prior_close": null,
+   "webull_gap": 0.07574072862842574,
+   "webull_pmh": 168.0,
+   "webull_pm_vol": 318435.0,
+   "webull_pm_rvol": null
+  },
+  "BMNR": {
+   "webull_prior_close": 13.44,
+   "bot_prior_close": null,
+   "webull_gap": 0.04166666666666674,
+   "webull_pmh": 14.3679,
+   "webull_pm_vol": 706555.0,
+   "webull_pm_rvol": null
+  },
+  "BX": {
+   "webull_prior_close": 118.95,
+   "bot_prior_close": null,
+   "webull_gap": 0.019335855401429125,
+   "webull_pmh": 122.3625,
+   "webull_pm_vol": 2894.0,
+   "webull_pm_rvol": null
+  },
+  "CBRS": {
+   "webull_prior_close": 89.68,
+   "bot_prior_close": null,
+   "webull_gap": 0.05820695807314902,
+   "webull_pmh": 95.8,
+   "webull_pm_vol": 92025.0,
+   "webull_pm_rvol": null
+  },
+  "CIEN": {
+   "webull_prior_close": 242.79,
+   "bot_prior_close": null,
+   "webull_gap": 0.05852794596153066,
+   "webull_pmh": 261.4042,
+   "webull_pm_vol": 13591.0,
+   "webull_pm_rvol": null
+  },
+  "CIFR": {
+   "webull_prior_close": 5.51,
+   "bot_prior_close": null,
+   "webull_gap": 0.06352087114337568,
+   "webull_pmh": 6.07,
+   "webull_pm_vol": 681309.0,
+   "webull_pm_rvol": null
+  },
+  "COHR": {
+   "webull_prior_close": 196.19,
+   "bot_prior_close": null,
+   "webull_gap": 0.07742494520617771,
+   "webull_pmh": 217.0,
+   "webull_pm_vol": 181129.0,
+   "webull_pm_rvol": null
+  },
+  "COIN": {
+   "webull_prior_close": 103.72,
+   "bot_prior_close": null,
+   "webull_gap": 0.0478885460856151,
+   "webull_pmh": 109.4055,
+   "webull_pm_vol": 130203.0,
+   "webull_pm_rvol": null
+  },
+  "COST": {
+   "webull_prior_close": 1086.81,
+   "bot_prior_close": null,
+   "webull_gap": 0.0010949475989363577,
+   "webull_pmh": 1089.7275,
+   "webull_pm_vol": 60109.0,
+   "webull_pm_rvol": null
+  },
+  "CRCL": {
+   "webull_prior_close": 48.27,
+   "bot_prior_close": null,
+   "webull_gap": 0.052206339341205554,
+   "webull_pmh": 51.07,
+   "webull_pm_vol": 262962.0,
+   "webull_pm_rvol": null
+  },
+  "CRDO": {
+   "webull_prior_close": 106.795,
+   "bot_prior_close": null,
+   "webull_gap": 0.058382883093777815,
+   "webull_pmh": 116.52,
+   "webull_pm_vol": 132166.0,
+   "webull_pm_rvol": null
+  },
+  "CRWD": {
+   "webull_prior_close": 209.3,
+   "bot_prior_close": null,
+   "webull_gap": 0.010176779741997155,
+   "webull_pmh": 217.57,
+   "webull_pm_vol": 135004.0,
+   "webull_pm_rvol": null
+  },
+  "CRWV": {
+   "webull_prior_close": 42.57,
+   "bot_prior_close": null,
+   "webull_gap": 0.04674653511862825,
+   "webull_pmh": 46.05,
+   "webull_pm_vol": 1311082.0,
+   "webull_pm_rvol": null
+  },
+  "CVX": {
+   "webull_prior_close": 210.95,
+   "bot_prior_close": null,
+   "webull_gap": 0.01104527139132494,
+   "webull_pmh": 214.7,
+   "webull_pm_vol": 12878.0,
+   "webull_pm_rvol": null
+  },
+  "DELL": {
+   "webull_prior_close": 297.06,
+   "bot_prior_close": null,
+   "webull_gap": 0.04524338517471227,
+   "webull_pmh": 319.5,
+   "webull_pm_vol": 348538.0,
+   "webull_pm_rvol": null
+  },
+  "DKNG": {
+   "webull_prior_close": 17.65,
+   "bot_prior_close": null,
+   "webull_gap": 0.01168838526912186,
+   "webull_pmh": 18.0,
+   "webull_pm_vol": 19717.0,
+   "webull_pm_rvol": null
+  },
+  "EBAY": {
+   "webull_prior_close": 115.54,
+   "bot_prior_close": null,
+   "webull_gap": 0.011799376839189746,
+   "webull_pmh": 117.34,
+   "webull_pm_vol": 208.0,
+   "webull_pm_rvol": 0.021111310634510435
+  },
+  "GEV": {
+   "webull_prior_close": 715.0,
+   "bot_prior_close": null,
+   "webull_gap": 0.034503356643356575,
+   "webull_pmh": 750.0,
+   "webull_pm_vol": 15089.0,
+   "webull_pm_rvol": null
+  },
+  "GLW": {
+   "webull_prior_close": 100.24,
+   "bot_prior_close": null,
+   "webull_gap": 0.04998004788507582,
+   "webull_pmh": 107.05,
+   "webull_pm_vol": 65912.0,
+   "webull_pm_rvol": null
+  },
+  "GME": {
+   "webull_prior_close": 26.97,
+   "bot_prior_close": null,
+   "webull_gap": 0.0,
+   "webull_pmh": 27.13,
+   "webull_pm_vol": 21611.0,
+   "webull_pm_rvol": null
+  },
+  "GOOGL": {
+   "webull_prior_close": 273.1,
+   "bot_prior_close": null,
+   "webull_gap": 0.02547162211644083,
+   "webull_pmh": 282.39,
+   "webull_pm_vol": 454518.0,
+   "webull_pm_rvol": null
+  },
+  "HIMS": {
+   "webull_prior_close": 14.65,
+   "bot_prior_close": null,
+   "webull_gap": 0.047098976109214874,
+   "webull_pmh": 15.5575,
+   "webull_pm_vol": 129019.0,
+   "webull_pm_rvol": null
+  },
+  "HOOD": {
+   "webull_prior_close": 65.78,
+   "bot_prior_close": null,
+   "webull_gap": 0.052751596229857034,
+   "webull_pmh": 70.29,
+   "webull_pm_vol": 347229.0,
+   "webull_pm_rvol": null
+  },
+  "IBM": {
+   "webull_prior_close": 243.47,
+   "bot_prior_close": null,
+   "webull_gap": 0.007927054667926203,
+   "webull_pmh": 247.253,
+   "webull_pm_vol": 15036.0,
+   "webull_pm_rvol": null
+  },
+  "ICE": {
+   "webull_prior_close": 177.81,
+   "bot_prior_close": null,
+   "webull_gap": 0.009760418424160644,
+   "webull_pmh": 182.9988,
+   "webull_pm_vol": 296.0,
+   "webull_pm_rvol": 0.003686724500081403
+  },
+  "INTC": {
+   "webull_prior_close": 54.47,
+   "bot_prior_close": null,
+   "webull_gap": 0.04507435285478234,
+   "webull_pmh": 57.71,
+   "webull_pm_vol": 2696974.0,
+   "webull_pm_rvol": null
+  },
+  "IONQ": {
+   "webull_prior_close": 23.54,
+   "bot_prior_close": null,
+   "webull_gap": 0.04885301614273585,
+   "webull_pmh": 25.3,
+   "webull_pm_vol": 561425.0,
+   "webull_pm_rvol": null
+  },
+  "IREN": {
+   "webull_prior_close": 12.85,
+   "bot_prior_close": null,
+   "webull_gap": 0.07392996108949434,
+   "webull_pmh": 14.2384,
+   "webull_pm_vol": 2823569.0,
+   "webull_pm_rvol": null
+  },
+  "LITE": {
+   "webull_prior_close": 476.58,
+   "bot_prior_close": null,
+   "webull_gap": 0.07906332619916911,
+   "webull_pmh": 527.01,
+   "webull_pm_vol": 91174.0,
+   "webull_pm_rvol": null
+  },
+  "LLY": {
+   "webull_prior_close": 1392.22,
+   "bot_prior_close": null,
+   "webull_gap": -0.005185961988766197,
+   "webull_pmh": 1403.4491,
+   "webull_pm_vol": 274298.0,
+   "webull_pm_rvol": null
+  },
+  "LRCX": {
+   "webull_prior_close": 185.01,
+   "bot_prior_close": null,
+   "webull_gap": 0.05399708123885194,
+   "webull_pmh": 199.5,
+   "webull_pm_vol": 48997.0,
+   "webull_pm_rvol": null
+  },
+  "MELI": {
+   "webull_prior_close": 1467.3,
+   "bot_prior_close": null,
+   "webull_gap": 0.07128739862332178,
+   "webull_pmh": 1577.77,
+   "webull_pm_vol": 14035.0,
+   "webull_pm_rvol": null
+  },
+  "META": {
+   "webull_prior_close": 609.89,
+   "bot_prior_close": null,
+   "webull_gap": 0.030825230779320867,
+   "webull_pmh": 635.85,
+   "webull_pm_vol": 327428.0,
+   "webull_pm_rvol": null
+  },
+  "MRNA": {
+   "webull_prior_close": 220.84,
+   "bot_prior_close": null,
+   "webull_gap": 0.02277667089295421,
+   "webull_pmh": 230.3543,
+   "webull_pm_vol": 45948.0,
+   "webull_pm_rvol": null
+  },
+  "MRVL": {
+   "webull_prior_close": 130.93,
+   "bot_prior_close": null,
+   "webull_gap": 0.060108454899564734,
+   "webull_pmh": 142.6,
+   "webull_pm_vol": 554180.0,
+   "webull_pm_rvol": null
+  },
+  "MSFT": {
+   "webull_prior_close": 489.93,
+   "bot_prior_close": null,
+   "webull_gap": 0.01822709366644215,
+   "webull_pmh": 502.0,
+   "webull_pm_vol": 90403.0,
+   "webull_pm_rvol": null
+  },
+  "MSTR": {
+   "webull_prior_close": 79.96,
+   "bot_prior_close": null,
+   "webull_gap": 0.05427713856928462,
+   "webull_pmh": 85.57,
+   "webull_pm_vol": 684964.0,
+   "webull_pm_rvol": null
+  },
+  "MU": {
+   "webull_prior_close": 601.25,
+   "bot_prior_close": null,
+   "webull_gap": 0.06130561330561335,
+   "webull_pmh": 650.4,
+   "webull_pm_vol": 1575109.0,
+   "webull_pm_rvol": null
+  },
+  "NBIS": {
+   "webull_prior_close": 84.99,
+   "bot_prior_close": null,
+   "webull_gap": 0.0721590775385339,
+   "webull_pmh": 93.867,
+   "webull_pm_vol": 982141.0,
+   "webull_pm_rvol": null
+  },
+  "NET": {
+   "webull_prior_close": 283.3,
+   "bot_prior_close": null,
+   "webull_gap": 0.03558065654782916,
+   "webull_pmh": 299.86,
+   "webull_pm_vol": 10571.0,
+   "webull_pm_rvol": null
+  },
+  "NFLX": {
+   "webull_prior_close": 59.41,
+   "bot_prior_close": null,
+   "webull_gap": 0.01363406833866354,
+   "webull_pmh": 60.28,
+   "webull_pm_vol": 217632.0,
+   "webull_pm_rvol": null
+  },
+  "NOK": {
+   "webull_prior_close": 7.3,
+   "bot_prior_close": null,
+   "webull_gap": 0.02327397260273978,
+   "webull_pmh": 7.6,
+   "webull_pm_vol": 1422135.0,
+   "webull_pm_rvol": null
+  },
+  "NOW": {
+   "webull_prior_close": 92.16,
+   "bot_prior_close": null,
+   "webull_gap": 0.01974826388888906,
+   "webull_pmh": 94.9,
+   "webull_pm_vol": 685448.0,
+   "webull_pm_rvol": null
+  },
+  "NVDA": {
+   "webull_prior_close": 149.3,
+   "bot_prior_close": null,
+   "webull_gap": 0.02434963161419934,
+   "webull_pmh": 156.97,
+   "webull_pm_vol": 7887108.0,
+   "webull_pm_rvol": null
+  },
+  "ORCL": {
+   "webull_prior_close": 103.88,
+   "bot_prior_close": null,
+   "webull_gap": 0.03831343858298042,
+   "webull_pmh": 109.58,
+   "webull_pm_vol": 2042100.0,
+   "webull_pm_rvol": null
+  },
+  "PANW": {
+   "webull_prior_close": 356.14,
+   "bot_prior_close": null,
+   "webull_gap": -0.02426012242376585,
+   "webull_pmh": 364.1709,
+   "webull_pm_vol": 83769.0,
+   "webull_pm_rvol": null
+  },
+  "PLTR": {
+   "webull_prior_close": 163.59,
+   "bot_prior_close": null,
+   "webull_gap": 0.031420013448254736,
+   "webull_pmh": 170.0,
+   "webull_pm_vol": 213144.0,
+   "webull_pm_rvol": null
+  },
+  "QCOM": {
+   "webull_prior_close": 168.66,
+   "bot_prior_close": null,
+   "webull_gap": 0.033262184276058315,
+   "webull_pmh": 175.94,
+   "webull_pm_vol": 36982.0,
+   "webull_pm_rvol": null
+  },
+  "RDDT": {
+   "webull_prior_close": 91.51,
+   "bot_prior_close": null,
+   "webull_gap": 0.028849306086766502,
+   "webull_pmh": 95.79,
+   "webull_pm_vol": 18676.0,
+   "webull_pm_rvol": null
+  },
+  "RIVN": {
+   "webull_prior_close": 11.71,
+   "bot_prior_close": null,
+   "webull_gap": 0.02853116994022198,
+   "webull_pmh": 12.17,
+   "webull_pm_vol": 168307.0,
+   "webull_pm_rvol": null
+  },
+  "RKLB": {
+   "webull_prior_close": 47.02,
+   "bot_prior_close": null,
+   "webull_gap": 0.052530837941301645,
+   "webull_pmh": 50.9287,
+   "webull_pm_vol": 482097.0,
+   "webull_pm_rvol": null
+  },
+  "SMCI": {
+   "webull_prior_close": 23.31,
+   "bot_prior_close": null,
+   "webull_gap": 0.038610038610038755,
+   "webull_pmh": 24.73,
+   "webull_pm_vol": 644020.0,
+   "webull_pm_rvol": null
+  },
+  "SNDK": {
+   "webull_prior_close": 73.61,
+   "bot_prior_close": null,
+   "webull_gap": 0.10609971471267499,
+   "webull_pmh": 82.5,
+   "webull_pm_vol": 5695097.0,
+   "webull_pm_rvol": null
+  },
+  "SOFI": {
+   "webull_prior_close": 13.07,
+   "bot_prior_close": null,
+   "webull_gap": 0.045256312165264045,
+   "webull_pmh": 13.84,
+   "webull_pm_vol": 693214.0,
+   "webull_pm_rvol": null
+  },
+  "STX": {
+   "webull_prior_close": 472.33,
+   "bot_prior_close": null,
+   "webull_gap": 0.06428450447780154,
+   "webull_pmh": 509.0152,
+   "webull_pm_vol": 36125.0,
+   "webull_pm_rvol": null
+  },
+  "TER": {
+   "webull_prior_close": 212.15,
+   "bot_prior_close": null,
+   "webull_gap": 0.05962762196559046,
+   "webull_pmh": 228.71,
+   "webull_pm_vol": 403769.0,
+   "webull_pm_rvol": null
+  },
+  "TSLA": {
+   "webull_prior_close": 380.14,
+   "bot_prior_close": null,
+   "webull_gap": 0.026595464828747417,
+   "webull_pmh": 391.74,
+   "webull_pm_vol": 416421.0,
+   "webull_pm_rvol": null
+  },
+  "TSM": {
+   "webull_prior_close": 342.34,
+   "bot_prior_close": null,
+   "webull_gap": 0.03849973710346433,
+   "webull_pmh": 357.4,
+   "webull_pm_vol": 319423.0,
+   "webull_pm_rvol": null
+  },
+  "TTWO": {
+   "webull_prior_close": 227.34,
+   "bot_prior_close": null,
+   "webull_gap": -0.004706606844374073,
+   "webull_pmh": 227.38,
+   "webull_pm_vol": 30305.0,
+   "webull_pm_rvol": null
+  },
+  "TWST": {
+   "webull_prior_close": 108.07,
+   "bot_prior_close": null,
+   "webull_gap": 0.04071435180901273,
+   "webull_pmh": 115.27,
+   "webull_pm_vol": 3854.0,
+   "webull_pm_rvol": null
+  },
+  "UMC": {
+   "webull_prior_close": 13.19,
+   "bot_prior_close": null,
+   "webull_gap": 0.021228203184230576,
+   "webull_pmh": 13.69,
+   "webull_pm_vol": 148988.0,
+   "webull_pm_rvol": null
+  },
+  "USAR": {
+   "webull_prior_close": 6.59,
+   "bot_prior_close": null,
+   "webull_gap": 0.05766312594840661,
+   "webull_pmh": 7.09,
+   "webull_pm_vol": 293923.0,
+   "webull_pm_rvol": null
+  },
+  "VST": {
+   "webull_prior_close": 121.32,
+   "bot_prior_close": null,
+   "webull_gap": 0.028849324101549723,
+   "webull_pmh": 127.223,
+   "webull_pm_vol": 15376.0,
+   "webull_pm_rvol": null
+  },
+  "WDC": {
+   "webull_prior_close": 272.45,
+   "bot_prior_close": null,
+   "webull_gap": 0.06228665810240419,
+   "webull_pmh": 293.5,
+   "webull_pm_vol": 106308.0,
+   "webull_pm_rvol": null
+  },
+  "ZM": {
+   "webull_prior_close": 88.56,
+   "bot_prior_close": null,
+   "webull_gap": -0.0006775067750677266,
+   "webull_pmh": 91.9988,
+   "webull_pm_vol": 113055.0,
+   "webull_pm_rvol": null
+  }
+ },
+ "data_issues": [],
+ "missed": [],
+ "flagged_both": [],
+ "flagged_bot_only": []
+}
