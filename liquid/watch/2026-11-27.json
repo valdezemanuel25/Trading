@@ -1,0 +1,33 @@
+{
+ "date": "2026-11-27",
+ "info_only": true,
+ "events": [
+  {
+   "setup": "DOWN4-B200",
+   "market": "NVDA",
+   "entry_date": "2026-11-27",
+   "entry_px": 149.0,
+   "notional": 5000.0,
+   "last_date": "2026-11-27",
+   "last_px": 149.0,
+   "unrealized": -5.0,
+   "days": 0,
+   "event": "ENTRY",
+   "note": "4 lower closes in a row, -28.6% vs 200-day SMA 208.62 (Liquid sma200 (145/200 trading days saved))"
+  }
+ ],
+ "open": [
+  {
+   "setup": "DOWN4-B200",
+   "market": "NVDA",
+   "entry_date": "2026-11-27",
+   "entry_px": 149.0,
+   "notional": 5000.0,
+   "last_date": "2026-11-27",
+   "last_px": 149.0,
+   "unrealized": -5.0,
+   "days": 0
+  }
+ ],
+ "closed": []
+}
